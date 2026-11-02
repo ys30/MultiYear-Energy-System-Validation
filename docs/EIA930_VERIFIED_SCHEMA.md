@@ -22,3 +22,12 @@ Audit run: https://github.com/ys30/MultiYear-Energy-System-Validation/actions/ru
 
 ## Next empirical validation
 Download an entire candidate BA-year with an adequate `max_rows` limit; retain the raw SHA256 manifest, check 8760/8784 hourly periods, missing/duplicates, physical plausibility, and independent data-definition references before producing Table 1.
+
+## Full-year CISO 2021 observed period-label audit (2026-11-02)
+- Workflow run: https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41545175223
+- Requested labels: 2021-01-01T00 through 2021-12-31T23 inclusive; `frequency=hourly` in request code.
+- API returned 8,759 rows, 8,759 distinct period labels, no duplicates or out-of-year labels.
+- The only absent raw label relative to a 8,760-label calendar grid: **2021-11-07T06**.
+- This coincides with the US autumn daylight-saving transition date, but causation is **not established**. Do not fill, interpolate, or silently discard this gap.
+- Unit is `megawatthours` for all 8,759 rows; respondent CISO, series D.
+- Research status: observed missing raw label, not a validated missing UTC interval. Confirm official EIA hourly period semantics and compare alternate EIA endpoint/frequency before using in annual results.
