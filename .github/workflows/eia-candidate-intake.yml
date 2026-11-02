@@ -62,6 +62,9 @@ jobs:
           python -m multiyear_energy_validation.download_cli \
             --respondent "$RESPONDENT" --start "$START" --end "$END" \
             --output-dir outputs/eia-candidate --max-rows 20000
+      - name: Audit returned candidate schema
+        run: |
+          python -c 'from multiyear_energy_validation.schema_audit import audit_candidate_file; import json; r=audit_candidate_file("outputs/eia-candidate/eia930_candidate_rows.json", "outputs/eia-candidate/schema_audit.json"); print(json.dumps(r, sort_keys=True))'
       - name: Upload private candidate snapshot
         uses: actions/upload-artifact@v4
         with:
