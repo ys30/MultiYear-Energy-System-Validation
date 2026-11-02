@@ -51,3 +51,25 @@ print(report)
 ```
 
 This writes `CISO_2021_audit.json` (source SHA256 and all quality checks) and `CISO_2021_table1.csv` (a one-row input for manuscript Table 1). These files are **candidate quality reports**, not evidence of real EIA-930 coverage until actual observed records, variable definitions, provider URL and acquisition timestamp are verified. The function does not download, impute, or redistribute third-party records. A `complete` result only establishes compliance with the declared CSV contract; it does not independently verify the provider or physical meaning of the demand column.
+
+
+## Command-line audit (no data download)
+
+Once the source schema and timestamp semantics have been independently checked, run:
+
+```bash
+python -m multiyear_energy_validation.cli \
+  --csv data/raw/verified_demand.csv \
+  --output-dir outputs/coverage \
+  --year 2021 \
+  --timestamp-column time_utc \
+  --demand-column demand_mw \
+  --region-column balancing_authority \
+  --region CISO \
+  --source-uri "REPLACE_WITH_OFFICIAL_SOURCE_URL" \
+  --retrieved-at "REPLACE_WITH_ACTUAL_UTC_RETRIEVAL_TIME" \
+  --confirm-utc-interval-start \
+  --confirm-observed-demand-mw
+```
+
+The confirmation flags are **user assertions**, not automated verification of the EIA schema. The command returns exit code 0 for complete CSV-contract coverage, 2 for incomplete coverage, and a nonzero error for invalid arguments or unexpected input failures. Do not include the raw CSV in a public commit. Replace placeholders with actual provenance; a successful audit is not by itself empirical validation.
