@@ -73,3 +73,15 @@ python -m multiyear_energy_validation.cli \
 ```
 
 The confirmation flags are **user assertions**, not automated verification of the EIA schema. The command returns exit code 0 for complete CSV-contract coverage, 2 for incomplete coverage, and a nonzero error for invalid arguments or unexpected input failures. Do not include the raw CSV in a public commit. Replace placeholders with actual provenance; a successful audit is not by itself empirical validation.
+
+
+## Official-source verification (2026-11-02)
+
+EIA confirms that Form EIA-930 reports balancing-authority **demand, demand forecasts, net generation, and interchange as distinct data elements**. Reported demand is a BA-calculated quantity derived from metered net generation and interchange, not a direct measure of customer-metered consumption. The official EIA API v2 supports data filtering by series facets and date ranges, pagination, and metadata discovery. Sources:
+
+- https://www.eia.gov/electricity/930-content/about.html
+- https://www.eia.gov/Survey/
+- https://www.eia.gov/opendata/documentation.php
+- https://www.eia.gov/opendata/
+
+**Important:** This source review verifies the *provider and broad data definitions*, not the exact live API route response, data-field codes, or any BA-year coverage. Before writing a production downloader, inspect the live `electricity/rto` API metadata and specifically verify the region-data series facet codes, hourly timestamp format, API key requirements, and whether reported periods denote interval start or interval end. Never infer the interval convention solely from an ISO-looking timestamp. The current local CSV adapter intentionally requires explicit UTC interval-start records and should not be applied to raw EIA exports without verified transformation.
