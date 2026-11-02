@@ -6,12 +6,15 @@ from pathlib import Path
 
 
 def normalize_candidate_rows(rows, output_csv, *, respondent, period_is_utc_interval_end,
-                             demand_type="D", units="megawatthours"):
+                             demand_type="D", units="megawatthours",
+                             period_frequency=None):
     """Convert vetted EIA hourly interval-energy observations into UTC mean MW.
 
     Requires independently confirmed EIA period convention and energy units.
     No raw EIA API fields are assumed to be UTC interval starts.
     """
+    if period_frequency != "hourly":
+        raise ValueError("EIA API frequency=hourly (UTC) must be explicitly verified")
     if period_is_utc_interval_end is not True:
         raise ValueError("UTC interval-end semantics must be explicitly verified")
     if units != "megawatthours":
@@ -26,6 +29,8 @@ def normalize_candidate_rows(rows, output_csv, *, respondent, period_is_utc_inte
         period = row.get("period")
         try:
             stamp = datetime.fromisoformat(period.replace("Z", "+00:00"))
+            if stamp.tzinfo is None and period_frequency == "hourly":
+                stamp = stamp.replace(tzinfo=timezone.utc)
         except (ValueError, TypeError, AttributeError) as exc:
             raise ValueError("invalid period timestamp") from exc
         if stamp.tzinfo is None or stamp.utcoffset() != timedelta(0):
