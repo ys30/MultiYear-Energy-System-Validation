@@ -28,10 +28,17 @@ jobs:
           import json, os
           from pathlib import Path
           from urllib.parse import urlencode
+          from urllib.error import HTTPError
           from multiyear_energy_validation.eia_api import BASE, fetch_json
           if not os.environ.get("EIA_API_KEY"):
               raise RuntimeError("EIA_API_KEY missing")
           output = {"scope": "CISO D, 2021-11-07, candidate API labels only", "results": {}}
+          from multiyear_energy_validation.eia_api import fetch_metadata
+          try:
+              metadata = fetch_metadata(api_key=os.environ["EIA_API_KEY"])
+              output["metadata_frequencies"] = metadata.get("frequency")
+          except Exception as exc:
+              output["metadata_error"] = {"type": type(exc).__name__, "message": str(exc)[:200]}
           for freq in ("hourly", "local-hourly"):
               params = [
                   ("api_key", os.environ["EIA_API_KEY"]),
@@ -50,11 +57,15 @@ jobs:
                       "units": sorted({str(r.get("value-units")) for r in rows}),
                       "respondents": sorted({str(r.get("respondent")) for r in rows}),
                   }
+              except HTTPError as exc:
+                  output["results"][freq] = {"error_type": "HTTPError", "status": exc.code, "error": str(exc)[:300]}
               except Exception as exc:
                   output["results"][freq] = {"error_type": type(exc).__name__, "error": str(exc)[:300]}
           Path("outputs").mkdir(exist_ok=True)
           Path("outputs/dst_frequency_probe.json").write_text(json.dumps(output, indent=2))
           print("DST_PROBE=" + json.dumps(output, sort_keys=True))
+          if any("error_type" in item for item in output["results"].values()):
+              raise SystemExit("INCOMPLETE_PROBE: one or more frequency comparisons failed")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
