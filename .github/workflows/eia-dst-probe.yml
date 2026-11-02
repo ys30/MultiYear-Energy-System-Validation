@@ -1,0 +1,63 @@
+name: EIA CISO DST frequency probe
+
+on:
+  push:
+    paths:
+      - '.github/workflows/eia-dst-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compare raw hourly and local-hourly API labels around fall DST
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from urllib.parse import urlencode
+          from multiyear_energy_validation.eia_api import BASE, fetch_json
+          if not os.environ.get("EIA_API_KEY"):
+              raise RuntimeError("EIA_API_KEY missing")
+          output = {"scope": "CISO D, 2021-11-07, candidate API labels only", "results": {}}
+          for freq in ("hourly", "local-hourly"):
+              params = [
+                  ("api_key", os.environ["EIA_API_KEY"]),
+                  ("frequency", freq), ("data[0]", "value"),
+                  ("facets[type][]", "D"), ("facets[respondent][]", "CISO"),
+                  ("start", "2021-11-07T00"), ("end", "2021-11-07T23"),
+                  ("sort[0][column]", "period"), ("sort[0][direction]", "asc"),
+                  ("length", "100"), ("offset", "0"),
+              ]
+              try:
+                  response = fetch_json(BASE + "data/?" + urlencode(params))
+                  rows = response.get("data", [])
+                  output["results"][freq] = {
+                      "total": response.get("total"),
+                      "periods": [r.get("period") for r in rows],
+                      "units": sorted({str(r.get("value-units")) for r in rows}),
+                      "respondents": sorted({str(r.get("respondent")) for r in rows}),
+                  }
+              except Exception as exc:
+                  output["results"][freq] = {"error_type": type(exc).__name__, "error": str(exc)[:300]}
+          Path("outputs").mkdir(exist_ok=True)
+          Path("outputs/dst_frequency_probe.json").write_text(json.dumps(output, indent=2))
+          print("DST_PROBE=" + json.dumps(output, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eia-dst-frequency-probe
+          path: outputs/dst_frequency_probe.json
+          if-no-files-found: warn
+          retention-days: 30
