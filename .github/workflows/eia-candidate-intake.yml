@@ -1,6 +1,8 @@
-name: EIA candidate intake (manual only)
+name: EIA candidate intake (manual and weekly)
 
 on:
+  schedule:
+    - cron: '23 15 * * 1'
   workflow_dispatch:
     inputs:
       respondent:
@@ -35,11 +37,27 @@ jobs:
             echo "Missing EIA_API_KEY repository secret"
             exit 1
           fi
+      - name: Resolve scheduled period (7-day reporting lag)
+        id: period
+        env:
+          REQUEST_RESPONDENT: ${{ inputs.respondent }}
+          REQUEST_START: ${{ inputs.start }}
+          REQUEST_END: ${{ inputs.end }}
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "respondent=CISO" >> "$GITHUB_OUTPUT"
+            echo "start=$(date -u -d '8 days ago' +%Y-%m-%dT00)" >> "$GITHUB_OUTPUT"
+            echo "end=$(date -u -d '8 days ago' +%Y-%m-%dT23)" >> "$GITHUB_OUTPUT"
+          else
+            echo "respondent=$REQUEST_RESPONDENT" >> "$GITHUB_OUTPUT"
+            echo "start=$REQUEST_START" >> "$GITHUB_OUTPUT"
+            echo "end=$REQUEST_END" >> "$GITHUB_OUTPUT"
+          fi
       - name: Download candidate only (not validated observations)
         env:
-          RESPONDENT: ${{ inputs.respondent }}
-          START: ${{ inputs.start }}
-          END: ${{ inputs.end }}
+          RESPONDENT: ${{ steps.period.outputs.respondent }}
+          START: ${{ steps.period.outputs.start }}
+          END: ${{ steps.period.outputs.end }}
         run: |
           python -m multiyear_energy_validation.download_cli \
             --respondent "$RESPONDENT" --start "$START" --end "$END" \
