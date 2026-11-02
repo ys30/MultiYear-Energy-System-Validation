@@ -11,7 +11,7 @@ def summarize_candidate_schema(rows):
         raise ValueError("all rows must be objects")
     keys = sorted(set().union(*(r.keys() for r in rows)))
     examples = {}
-    for field in ("period", "respondent", "type", "units"):
+    for field in ("period", "respondent", "type", "units", "value-units"):
         if field in keys:
             values = [str(r.get(field)) for r in rows]
             counts = Counter(values)
