@@ -1,0 +1,52 @@
+name: EIA candidate intake (manual only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      respondent:
+        description: "EIA respondent code; verify via live metadata"
+        required: true
+        default: CISO
+      start:
+        description: "EIA API start period, e.g. 2021-01-01T00"
+        required: true
+        default: "2021-01-01T00"
+      end:
+        description: "EIA API end period, e.g. 2021-01-01T23"
+        required: true
+        default: "2021-01-01T23"
+
+jobs:
+  candidate-intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Check API secret configured
+        run: |
+          if [ -z "$EIA_API_KEY" ]; then
+            echo "Missing EIA_API_KEY repository secret"
+            exit 1
+          fi
+      - name: Download candidate only (not validated observations)
+        env:
+          RESPONDENT: ${{ inputs.respondent }}
+          START: ${{ inputs.start }}
+          END: ${{ inputs.end }}
+        run: |
+          python -m multiyear_energy_validation.download_cli \
+            --respondent "$RESPONDENT" --start "$START" --end "$END" \
+            --output-dir outputs/eia-candidate --max-rows 20000
+      - name: Upload private candidate snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: eia-candidate-unverified
+          path: outputs/eia-candidate/
+          retention-days: 7
