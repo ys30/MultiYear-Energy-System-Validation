@@ -37,3 +37,34 @@ Raw third-party data will not be redistributed without permission. Code, manifes
 ## Items requiring final decisions
 
 Study region, observed datasets, year range, transmission/storage treatment, calibration parameters, held-out years, validation metrics, sensitivity design and journal reporting requirements.
+
+
+## Pre-specified analysis protocol (v0.3; pending empirical intake)
+
+### Study-unit eligibility and coverage
+
+The primary observational unit will be an hourly balancing-authority (BA) record within a defined calendar year. Before choosing the final sample, create a source inventory that distinguishes **reported demand**, net generation, interchange, and any balancing or adjustment fields; these variables are not interchangeable. For each BA–year, report expected and observed UTC timestamps, duplicated records, missing values, nonnumeric or negative readings, source revisions, and completeness after deduplication. The minimum acceptable coverage threshold must be registered **before** inspecting model performance; until then, no BA–year is declared eligible.
+
+### Time alignment and leakage prevention
+
+Parse source timestamps with explicit source-timezone and interval-end/interval-start conventions; convert to UTC before joining sources. Distinguish local daylight-saving transitions from actual missing UTC hours. Record whether reported hourly values represent instantaneous power, hourly mean power, or interval energy before converting units. No interpolation or forward filling may cross training/hold-out boundaries. If imputation is permitted, fit its parameters on training years only and report both imputed and complete-case sensitivity analyses.
+
+### Comparability of model outputs and observations
+
+Create a variable-level correspondence table linking each observed target to its modeled counterpart, geographic aggregation, unit, time resolution, and allowable tolerance. Validate only like-for-like quantities. In particular, observed BA demand is not a direct target for simulated shortage-proxy generation; the latter remains a scenario diagnostic unless an independently defined, comparable observed adequacy measure is available.
+
+### Chronological validation and baselines
+
+Reserve entire calendar years for validation, with all tuning, feature selection, harmonization thresholds and calibration performed using earlier years. Register the specific train/validation/test years after source coverage has been audited but before inspecting held-out prediction errors. Compare the calibrated PyPSA-based approach against at least a transparent seasonal/hour-of-week benchmark on targets where both methods are scientifically meaningful. Report sample sizes, bias, MAE and RMSE by BA and year; normalize metrics only when denominators and zero-handling are declared in advance.
+
+### Sensitivity attribution
+
+Use a frozen baseline dataset and model configuration. Change one harmonization or modeling decision at a time where identifiable, keeping the evaluation sample fixed for paired comparisons. Separately report the effect of changing the eligible sample itself. Do not interpret a difference in outcomes as caused by one preprocessing choice if capacity, topology, temporal coverage or other model inputs changed simultaneously.
+
+### Uncertainty and claims
+
+Where hourly serial dependence matters, avoid interpreting independent-hour bootstrap intervals as valid inferential uncertainty. If uncertainty intervals are reported, justify a time-block or year-level resampling scheme and its effective sample size. Numerical solver agreement, source-data consistency and predictive validation are three distinct claims, each requiring its own evidence. The study will not claim observed outage reduction, causal effects or generalizable forecasting skill from synthetic engineering tests.
+
+### Release gate for empirical Results
+
+Before replacing any Results placeholders, require: (1) recorded raw-input checksums and source versions; (2) explicit eligible BA–year inventory; (3) frozen geographic/technology crosswalk; (4) complete timestamp and energy-reconciliation audits; (5) solver diagnostics; (6) leakage-safe held-out evaluation; and (7) scripts that reproduce every reported figure and table. Failed checks must be documented rather than silently excluded.
