@@ -20,7 +20,8 @@ def normalize_candidate_rows(rows, output_csv, *, respondent, period_is_utc_inte
     for row in rows:
         if row.get("respondent") != respondent or row.get("type") != demand_type:
             raise ValueError("unexpected respondent or series type")
-        if row.get("units") != units:
+        actual_units = row.get("value-units", row.get("units"))
+        if actual_units != units:
             raise ValueError("unexpected EIA units")
         period = row.get("period")
         try:
