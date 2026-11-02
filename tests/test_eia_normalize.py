@@ -14,13 +14,13 @@ def row(**overrides):
 def test_requires_confirmed_interval_end(tmp_path):
     with pytest.raises(ValueError, match="interval-end"):
         normalize_candidate_rows([row()], tmp_path / "x.csv",
-                                 respondent="CISO", period_is_utc_interval_end=False)
+                                 respondent="CISO", period_is_utc_interval_end=False, period_frequency='hourly')
 
 
 def test_normalizes_hour_end_to_start(tmp_path):
     p = tmp_path / "x.csv"
     assert normalize_candidate_rows([row()], p, respondent="CISO",
-                                    period_is_utc_interval_end=True) == 1
+                                    period_is_utc_interval_end=True, period_frequency='hourly') == 1
     with p.open() as f:
         rows = list(csv.DictReader(f))
     assert rows[0]["time_utc"] == "2021-01-01T00:00:00+00:00"
@@ -41,7 +41,7 @@ def test_real_api_value_units_field(tmp_path):
                                     respondent="CISO", period_is_utc_interval_end=True) == 1
 
 
-def test_real_api_unzoned_period_remains_blocked(tmp_path):
+def test_real_api_unzoned_period_requires_verified_frequency(tmp_path):
     actual = row(period="2021-01-01T00")
     actual["value-units"] = actual.pop("units")
     with pytest.raises(ValueError, match="UTC timezone"):
