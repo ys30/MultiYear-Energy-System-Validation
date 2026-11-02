@@ -1,0 +1,63 @@
+name: EIA full-year CISO candidate intake
+
+on:
+  workflow_dispatch:
+    inputs:
+      year:
+        description: "UTC candidate year"
+        required: true
+        type: choice
+        options: ["2021", "2022", "2023", "2024", "2025"]
+        default: "2021"
+  schedule:
+    - cron: '37 16 3 * *'
+
+permissions:
+  contents: read
+
+jobs:
+  candidate-year:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: python -m pip install -e .
+      - name: Validate secret
+        run: test -n "$EIA_API_KEY"
+      - name: Choose year
+        id: selection
+        env:
+          INPUT_YEAR: ${{ inputs.year }}
+        run: |
+          echo "year=${INPUT_YEAR:-2021}" >> "$GITHUB_OUTPUT"
+      - name: Download full-year unverified EIA candidate
+        env:
+          YEAR: ${{ steps.selection.outputs.year }}
+        run: |
+          python -m multiyear_energy_validation.download_cli \
+            --respondent CISO --start "${YEAR}-01-01T00" --end "${YEAR}-12-31T23" \
+            --output-dir outputs/eia-ciso-year --max-rows 10000
+      - name: Audit actual response schema
+        run: |
+          python - <<'PY'
+          import json
+          from multiyear_energy_validation.schema_audit import audit_candidate_file
+          report = audit_candidate_file(
+              "outputs/eia-ciso-year/eia930_candidate_rows.json",
+              "outputs/eia-ciso-year/schema_audit.json")
+          print(json.dumps(report, sort_keys=True))
+          PY
+      - name: Upload private candidate and audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eia-ciso-full-year-candidate
+          path: outputs/eia-ciso-year/
+          if-no-files-found: warn
+          retention-days: 30
