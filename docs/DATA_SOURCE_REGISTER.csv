@@ -1,0 +1,4 @@
+dataset_id,provider,geography,years,temporal_resolution,variable,units,timezone,license_status,validation_status,notes
+candidate_eia930,EIA,US balancing authorities,TBD,hourly,reported demand,MW,TBD,review_required,not_ingested,Check BA boundaries and reported demand definition by year
+candidate_era5,ECMWF,regional weather grids,TBD,hourly,weather covariates,varies,UTC,review_required,not_ingested,Weather covariates only; not a measured electric load series
+candidate_lut2020,LUT-DEMAND,5 continents,2020,annual,electricity energy-service demand,source units,N/A,review_required,engineering_baseline_only,Do not treat as observed US hourly load
