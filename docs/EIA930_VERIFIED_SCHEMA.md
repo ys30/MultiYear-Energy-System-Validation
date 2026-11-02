@@ -31,3 +31,11 @@ Download an entire candidate BA-year with an adequate `max_rows` limit; retain t
 - This coincides with the US autumn daylight-saving transition date, but causation is **not established**. Do not fill, interpolate, or silently discard this gap.
 - Unit is `megawatthours` for all 8,759 rows; respondent CISO, series D.
 - Research status: observed missing raw label, not a validated missing UTC interval. Confirm official EIA hourly period semantics and compare alternate EIA endpoint/frequency before using in annual results.
+
+## Live EIA route metadata and DST probe (2026-11-02)
+- Probe run: https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41548601632
+- Live route metadata lists `hourly` alias `hourly (UTC)`, description `One data point for each hour in UTC time.`, format `YYYY-MM-DDTHH24`.
+- Live route metadata lists `local-hourly` alias `hourly (Local Time Zone)`, description `One data point for each hour in local time.`, format includes timezone offset.
+- Independent CISO D request for 2021-11-07 using `hourly` returned 23 labels, omitting `2021-11-07T06`.
+- Equivalent `local-hourly` query returned HTTP 500. Workflow now correctly fails incomplete comparisons while retaining its diagnostic artifact.
+- This supports UTC label interpretation for `hourly`, **not** a causal attribution of the absent label to DST. Investigate alternate local-hourly query boundaries and source data before imputation or manuscript results.
