@@ -32,3 +32,18 @@ def test_rejects_unexpected_series_and_units(tmp_path):
         with pytest.raises(ValueError):
             normalize_candidate_rows([data], tmp_path / "x.csv",
                                      respondent="CISO", period_is_utc_interval_end=True)
+
+
+def test_real_api_value_units_field(tmp_path):
+    actual = row()
+    actual["value-units"] = actual.pop("units")
+    assert normalize_candidate_rows([actual], tmp_path / "real.csv",
+                                    respondent="CISO", period_is_utc_interval_end=True) == 1
+
+
+def test_real_api_unzoned_period_remains_blocked(tmp_path):
+    actual = row(period="2021-01-01T00")
+    actual["value-units"] = actual.pop("units")
+    with pytest.raises(ValueError, match="UTC timezone"):
+        normalize_candidate_rows([actual], tmp_path / "real.csv",
+                                 respondent="CISO", period_is_utc_interval_end=True)
