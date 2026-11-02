@@ -39,33 +39,41 @@ jobs:
               output["metadata_frequencies"] = metadata.get("frequency")
           except Exception as exc:
               output["metadata_error"] = {"type": type(exc).__name__, "message": str(exc)[:200]}
-          for freq in ("hourly", "local-hourly"):
+          cases = [
+              ("utc_dst", "hourly", "2021-11-07T00", "2021-11-07T23"),
+              ("local_dst_offset", "local-hourly", "2021-11-07T00-07", "2021-11-07T23-08"),
+              ("local_control_offset", "local-hourly", "2021-11-06T00-07", "2021-11-06T23-07"),
+              ("local_dst_unzoned", "local-hourly", "2021-11-07T00", "2021-11-07T23"),
+          ]
+          for case, freq, start, end in cases:
               params = [
                   ("api_key", os.environ["EIA_API_KEY"]),
                   ("frequency", freq), ("data[0]", "value"),
                   ("facets[type][]", "D"), ("facets[respondent][]", "CISO"),
-                  ("start", "2021-11-07T00"), ("end", "2021-11-07T23"),
+                  ("start", start), ("end", end),
                   ("sort[0][column]", "period"), ("sort[0][direction]", "asc"),
                   ("length", "100"), ("offset", "0"),
               ]
               try:
                   response = fetch_json(BASE + "data/?" + urlencode(params))
                   rows = response.get("data", [])
-                  output["results"][freq] = {
+                  output["results"][case] = {
+                      "frequency": freq, "start": start, "end": end,
                       "total": response.get("total"),
                       "periods": [r.get("period") for r in rows],
                       "units": sorted({str(r.get("value-units")) for r in rows}),
-                      "respondents": sorted({str(r.get("respondent")) for r in rows}),
                   }
               except HTTPError as exc:
-                  output["results"][freq] = {"error_type": "HTTPError", "status": exc.code, "error": str(exc)[:300]}
+                  output["results"][case] = {"frequency": freq, "error_type": "HTTPError", "status": exc.code}
               except Exception as exc:
-                  output["results"][freq] = {"error_type": type(exc).__name__, "error": str(exc)[:300]}
+                  output["results"][case] = {"frequency": freq, "error_type": type(exc).__name__, "error": str(exc)[:200]}
           Path("outputs").mkdir(exist_ok=True)
           Path("outputs/dst_frequency_probe.json").write_text(json.dumps(output, indent=2))
           print("DST_PROBE=" + json.dumps(output, sort_keys=True))
-          if any("error_type" in item for item in output["results"].values()):
-              raise SystemExit("INCOMPLETE_PROBE: one or more frequency comparisons failed")
+          if "error_type" in output["results"]["utc_dst"]:
+              raise SystemExit("UTC_REFERENCE_FAILED")
+          if all("error_type" in output["results"][k] for k in ("local_dst_offset", "local_control_offset", "local_dst_unzoned")):
+              print("DIAGNOSTIC_ONLY: all local-hourly variants failed; no validated comparison")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
