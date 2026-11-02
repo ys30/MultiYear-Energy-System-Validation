@@ -66,8 +66,18 @@ jobs:
         run: |
           python -c 'from multiyear_energy_validation.schema_audit import audit_candidate_file; import json; r=audit_candidate_file("outputs/eia-candidate/eia930_candidate_rows.json", "outputs/eia-candidate/schema_audit.json"); print(json.dumps(r, sort_keys=True))'
       - name: Upload private candidate snapshot
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: eia-candidate-unverified
           path: outputs/eia-candidate/
+          if-no-files-found: warn
           retention-days: 7
+      - name: Upload schema audit separately
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eia-schema-audit
+          path: outputs/eia-candidate/schema_audit.json
+          if-no-files-found: warn
+          retention-days: 30
