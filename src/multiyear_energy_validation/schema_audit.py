@@ -2,6 +2,7 @@
 import json
 from collections import Counter
 from pathlib import Path
+from datetime import datetime, timedelta
 
 
 def summarize_candidate_schema(rows):
@@ -37,3 +38,32 @@ def audit_candidate_file(input_path, output_path):
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n",
                       encoding="utf-8")
     return report
+
+
+def audit_period_label_grid(rows, *, year):
+    """Audit raw API period labels against requested calendar-hour labels.
+
+    This does not interpret labels as interval starts or ends, nor certify UTC.
+    """
+    if not isinstance(year, int) or year < 1900:
+        raise ValueError("invalid year")
+    start = datetime(year, 1, 1)
+    end = datetime(year + 1, 1, 1)
+    expected = set()
+    current = start
+    while current < end:
+        expected.add(current.strftime("%Y-%m-%dT%H"))
+        current += timedelta(hours=1)
+    labels = [str(r.get("period")) for r in rows]
+    counts = Counter(labels)
+    observed = set(labels)
+    return {
+        "year": year,
+        "expected_labels": len(expected),
+        "observed_rows": len(labels),
+        "distinct_labels": len(observed),
+        "missing_labels": sorted(expected - observed),
+        "unexpected_labels": sorted(observed - expected),
+        "duplicate_labels": {k: v for k, v in sorted(counts.items()) if v > 1},
+        "interpretation": "raw_period_labels_only_not_verified_utc_intervals",
+    }
