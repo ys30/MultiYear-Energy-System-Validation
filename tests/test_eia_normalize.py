@@ -38,12 +38,16 @@ def test_real_api_value_units_field(tmp_path):
     actual = row()
     actual["value-units"] = actual.pop("units")
     assert normalize_candidate_rows([actual], tmp_path / "real.csv",
-                                    respondent="CISO", period_is_utc_interval_end=True) == 1
+                                    respondent="CISO", period_is_utc_interval_end=True, period_frequency="hourly") == 1
 
 
 def test_real_api_unzoned_period_requires_verified_frequency(tmp_path):
     actual = row(period="2021-01-01T00")
     actual["value-units"] = actual.pop("units")
-    with pytest.raises(ValueError, match="UTC timezone"):
+    with pytest.raises(ValueError, match="frequency=hourly"):
         normalize_candidate_rows([actual], tmp_path / "real.csv",
                                  respondent="CISO", period_is_utc_interval_end=True)
+
+    assert normalize_candidate_rows([actual], tmp_path / "verified.csv",
+                                    respondent="CISO", period_is_utc_interval_end=True,
+                                    period_frequency="hourly") == 1
