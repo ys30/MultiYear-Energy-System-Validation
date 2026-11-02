@@ -1,6 +1,10 @@
 name: EIA full-year CISO candidate intake
 
 on:
+  push:
+    paths:
+      - 'src/multiyear_energy_validation/schema_audit.py'
+      - '.github/workflows/eia-full-year-candidate.yml'
   workflow_dispatch:
     inputs:
       year:
@@ -44,14 +48,22 @@ jobs:
             --respondent CISO --start "${YEAR}-01-01T00" --end "${YEAR}-12-31T23" \
             --output-dir outputs/eia-ciso-year --max-rows 10000
       - name: Audit actual response schema
+        env:
+          YEAR: ${{ steps.selection.outputs.year }}
         run: |
           python - <<'PY'
           import json
-          from multiyear_energy_validation.schema_audit import audit_candidate_file
+          from multiyear_energy_validation.schema_audit import audit_candidate_file, audit_period_label_grid
           report = audit_candidate_file(
               "outputs/eia-ciso-year/eia930_candidate_rows.json",
               "outputs/eia-ciso-year/schema_audit.json")
           print(json.dumps(report, sort_keys=True))
+          from pathlib import Path
+          import os
+          rows = json.loads(Path("outputs/eia-ciso-year/eia930_candidate_rows.json").read_text())
+          grid = audit_period_label_grid(rows, year=int(os.environ["YEAR"]))
+          Path("outputs/eia-ciso-year/period_label_grid.json").write_text(json.dumps(grid, indent=2))
+          print("PERIOD_LABEL_GRID=" + json.dumps(grid, sort_keys=True))
           PY
       - name: Upload private candidate and audit
         if: always()
