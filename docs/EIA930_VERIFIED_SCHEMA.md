@@ -39,3 +39,11 @@ Download an entire candidate BA-year with an adequate `max_rows` limit; retain t
 - Independent CISO D request for 2021-11-07 using `hourly` returned 23 labels, omitting `2021-11-07T06`.
 - Equivalent `local-hourly` query returned HTTP 500. Workflow now correctly fails incomplete comparisons while retaining its diagnostic artifact.
 - This supports UTC label interpretation for `hourly`, **not** a causal attribution of the absent label to DST. Investigate alternate local-hourly query boundaries and source data before imputation or manuscript results.
+
+## Resolved local-hourly request syntax (2026-11-02)
+- Successful probe: https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41548821393
+- `local-hourly` **requires offset-bearing start/end query labels** in this observed API behavior. Unzoned query returned HTTP 500, while offset-bearing requests succeeded.
+- On the 2021-11-07 Pacific fall-back day, local CISO demand response returned 25 labels including both `2021-11-07T01-07` and `2021-11-07T01-08` (distinct offsets).
+- UTC `hourly` response for that date returned 23 labels, omitting `2021-11-07T06`.
+- A 2021-11-06 local query bounded `00-07` to `23-07` returned 23 labels; **do not interpret this as a missing hour** without checking API boundary semantics.
+- Next validation must compare offset-converted UTC instants and values between frequency representations, including cross-day boundaries. No interpolation or full-year acceptance yet.
