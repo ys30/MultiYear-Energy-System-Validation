@@ -1,6 +1,10 @@
 name: Audit existing EIA candidate artifact
 
 on:
+  push:
+    paths:
+      - 'src/multiyear_energy_validation/schema_audit.py'
+      - '.github/workflows/audit-existing-eia-artifact.yml'
   workflow_dispatch:
     inputs:
       source_run_id:
@@ -26,7 +30,7 @@ jobs:
       - name: Retrieve candidate artifact from earlier run
         env:
           GH_TOKEN: ${{ github.token }}
-          RUN_ID: ${{ inputs.source_run_id }}
+          RUN_ID: ${{ inputs.source_run_id || '41529332150' }}
         run: |
           gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" \
             --name eia-candidate-unverified --dir outputs/eia-existing
