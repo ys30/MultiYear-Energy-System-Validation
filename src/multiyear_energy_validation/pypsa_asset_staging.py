@@ -63,6 +63,12 @@ def build_asset_staging_network(nonbattery_csv, battery_csv, output_nc):
         raise AssertionError("NetCDF roundtrip changed generator count")
     if not math.isclose(float(restored.generators.p_nom.sum()), gen_mw, abs_tol=1e-5):
         raise AssertionError("NetCDF roundtrip changed generator nameplate MW")
+    # Every generator must remain disabled until independently sourced
+    # hourly availability is attached. Guard against NetCDF attribute loss.
+    if not (restored.generators.p_max_pu == 0.0).all():
+        raise AssertionError("NetCDF roundtrip enabled unvalidated generators")
+    if len(restored.storage_units) or len(restored.stores):
+        raise AssertionError("unvalidated storage was introduced")
     result = {
         "generator_count": len(generators), "generator_nameplate_mw": gen_mw,
         "battery_count_not_modeled": len(batteries),
