@@ -77,3 +77,16 @@ def test_midyear_retirement_is_flagged(tmp_path):
     assert result["active_generators"] == 1
     assert result["units_with_in_year_status_changes"] == 1
     assert result["dispatch_model_approved"] is False
+
+
+def test_hourly_commissioning_limits_leap_year(tmp_path):
+    from multiyear_energy_validation.generation_contract import build_hourly_commissioning_limits
+    path = tmp_path / "fleet.csv"
+    write_fleet(path, [example(online_date="2024-07-01", retirement_date="2024-10-01")])
+    limits = build_hourly_commissioning_limits(path, year=2024)
+    col = "example-plant::example-unit"
+    assert len(limits) == 8784
+    assert limits.loc["2024-06-30 23:00:00+00:00", col] == 0
+    assert limits.loc["2024-07-01 00:00:00+00:00", col] == 1
+    assert limits.loc["2024-09-30 23:00:00+00:00", col] == 1
+    assert limits.loc["2024-10-01 00:00:00+00:00", col] == 0
