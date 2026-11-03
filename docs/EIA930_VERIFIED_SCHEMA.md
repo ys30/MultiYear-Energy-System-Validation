@@ -88,3 +88,11 @@ Verified GitHub Actions run: https://github.com/ys30/MultiYear-Energy-System-Val
 | 2025 | 8760 | 8759 | 1 |
 
 **Important:** boundary consistency does not independently establish EIA's interval convention. The normalization helper currently requires explicit interval-end confirmation; do not invoke it on the live hourly data based only on these observations. Before using any year in PyPSA, obtain documented interval semantics, verify the proper year-edge query window, and validate the resulting contiguous UTC index. No year is approved for model ingestion by this check.
+
+## Official interval semantics confirmed (2026-11-03)
+
+EIA's own EIA-930 About page https://www.eia.gov/electricity/930-content/about.html states that hourly values are time-weighted hourly averages and are published using **hour ending** time reporting. The EIA-930 instructions https://omb.report/icr/202112-1905-001/doc/117324000 likewise require reporting hourly integrated values by hour ending time with UTC timestamps. The API's `hourly` frequency is UTC; API metadata gives `megawatthours` as the value unit. Thus the interval-start UTC timestamp for each API record is the labeled UTC time minus one hour; one-hour MWh becomes one-hour mean MW numerically.
+
+**Critical correction to earlier candidate coverage:** previous yearly queries used raw period labels `YYYY-01-01T00` through `YYYY-12-31T23`. They cover the *hour-ending label year*, NOT the complete interval-start calendar year. For a model calendar year Y, request `Y-01-01T01` through `(Y+1)-01-01T00` inclusive. Consequently the previous 2024/2025 raw-label completeness cannot by itself establish a full 2024/2025 model-year series. The first raw label of each prior query belongs to the previous model year and the next year's Jan 1 00 raw label is needed. Existing 2021-2023 source nulls and absent labels remain independently observed but must be re-audited against the corrected model-year window.
+
+Do not treat source publication's mention of aggregate imputation as permission to impute individual BA demand: EIA explicitly notes hourly individual BA data are published as received. No historical numerical result has yet been approved for PyPSA.
