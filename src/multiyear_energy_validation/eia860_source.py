@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import io
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -30,9 +31,30 @@ def intake(year, output):
             {"name": info.filename, "bytes": info.file_size}
             for info in zf.infolist() if not info.is_dir()
         ]
+    # Read only the top few rows of plant/generator workbooks. Never guess
+    # which row is the header or which field represents balancing authority.
+    from openpyxl import load_workbook
+    layouts = {}
+    with zipfile.ZipFile(archive) as zf:
+        for member in zf.namelist():
+            if not (member.endswith(".xlsx") and (
+                "Plant_Y" in member or "Generator_Y" in member or "LayoutY" in member
+            )):
+                continue
+            wb = load_workbook(io.BytesIO(zf.read(member)), read_only=True, data_only=True)
+            sheets = {}
+            for ws in wb.worksheets:
+                preview = []
+                for row in ws.iter_rows(max_row=8, max_col=45, values_only=True):
+                    preview.append([str(v)[:160] if v is not None else None for v in row])
+                sheets[ws.title] = {"preview_first_8_rows_first_45_columns": preview}
+            layouts[member] = sheets
+            wb.close()
+    (output / "workbook_layouts.json").write_text(json.dumps(layouts, indent=2))
     inventory = {
         "year": year, "source_url": url, "sha256": hashlib.sha256(data).hexdigest(),
         "archive_bytes": len(data), "entries": entries,
+        "workbook_layouts_recorded": sorted(layouts),
         "generation_fleet_validated": False,
         "balancing_authority_mapping_validated": False,
         "dispatch_model_approved": False,
