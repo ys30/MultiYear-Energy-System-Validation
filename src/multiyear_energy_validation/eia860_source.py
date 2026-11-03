@@ -38,7 +38,7 @@ def intake(year, output):
     with zipfile.ZipFile(archive) as zf:
         for member in zf.namelist():
             if not (member.endswith(".xlsx") and (
-                "Plant_Y" in member or "Generator_Y" in member or "LayoutY" in member
+                "Plant_Y" in member or "Generator_Y" in member or "Energy_Storage_Y" in member or "LayoutY" in member
             )):
                 continue
             wb = load_workbook(io.BytesIO(zf.read(member)), read_only=True, data_only=True)
@@ -49,7 +49,7 @@ def intake(year, output):
                     preview.append([str(v)[:160] if v is not None else None for v in row])
                 sheets[ws.title] = {"preview_first_8_rows_first_45_columns": preview}
             layouts[member] = sheets
-            if "Generator_Y" in member or "Plant_Y" in member:
+            if "Generator_Y" in member or "Plant_Y" in member or "Energy_Storage_Y" in member:
                 for ws in wb.worksheets:
                     header = next(ws.iter_rows(min_row=2, max_row=2, values_only=True))
                     print("EIA860_FULL_HEADER=" + json.dumps({"year": year, "workbook": member, "sheet": ws.title, "columns": [str(v) if v is not None else None for v in header]}, sort_keys=True))
