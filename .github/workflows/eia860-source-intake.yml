@@ -7,6 +7,7 @@ on:
       - 'src/multiyear_energy_validation/eia860_source.py'
       - 'src/multiyear_energy_validation/eia860_fleet.py'
       - 'src/multiyear_energy_validation/pypsa_asset_staging.py'
+      - 'src/multiyear_energy_validation/pypsa_load.py'
 jobs:
   inventory:
     runs-on: ubuntu-latest
@@ -66,6 +67,55 @@ jobs:
               f"{base}/op_nonbattery_candidates.csv",
               f"{base}/op_battery_candidates.csv",
               f"{base}/ciso_asset_staging.nc")
+          PY
+      - name: Download independently audited EIA-930 hourly load
+        env:
+          YEAR: ${{ matrix.year }}
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: |
+          test -n "$EIA_API_KEY"
+          python -m multiyear_energy_validation.download_cli \
+            --respondent CISO --start "${YEAR}-01-01T01" --end "$((YEAR+1))-01-01T00" \
+            --output-dir outputs/eia-ciso-year --max-rows 10000
+      - name: Validate EIA-930 and build combined load-asset NetCDF
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from multiyear_energy_validation.schema_audit import (
+              audit_model_year_hour_ending_grid, audit_candidate_values,
+              candidate_combined_acceptance)
+          from multiyear_energy_validation.eia_normalize import normalize_candidate_rows
+          from multiyear_energy_validation.coverage import audit_coverage_csv
+          from multiyear_energy_validation.pypsa_load import build_pypsa_load_profile
+          from multiyear_energy_validation.pypsa_asset_staging import attach_observed_load_to_staged_assets
+          year = int(os.environ["YEAR"])
+          root = Path("outputs/eia-ciso-year")
+          rows = json.loads((root / "eia930_candidate_rows.json").read_text())
+          gate = candidate_combined_acceptance(
+              audit_model_year_hour_ending_grid(rows, year=year),
+              audit_candidate_values(rows))
+          if not gate["raw_candidate_eligible_for_semantic_review"]:
+              raise ValueError("EIA-930 candidate failed raw acceptance")
+          normalized = root / "normalized_utc_demand.csv"
+          normalize_candidate_rows(rows, normalized, respondent="CISO",
+                                   period_is_utc_interval_end=True,
+                                   period_frequency="hourly")
+          coverage = audit_coverage_csv(normalized, year=year,
+                                        timestamp_column="time_utc",
+                                        demand_column="demand_mw",
+                                        region_column="balancing_authority", region="CISO")
+          if not coverage["complete"]:
+              raise ValueError("EIA-930 normalized hourly coverage incomplete")
+          profile = root / "pypsa_load_profile.csv"
+          build_pypsa_load_profile(normalized, profile, year=year, region="CISO")
+          base = Path(f"outputs/eia860/{year}")
+          result = attach_observed_load_to_staged_assets(
+              base / "ciso_asset_staging.nc", profile, base / "ciso_combined_load_assets.nc")
+          assert result["snapshots"] == (8784 if year == 2024 else 8760)
+          print("COMBINED_OBSERVED_LOAD_ASSETS=" + json.dumps(result, sort_keys=True))
           PY
       - name: Upload source audit (private workflow artifact)
         if: always()
