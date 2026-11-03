@@ -1,0 +1,32 @@
+name: EIA-860 annual source intake
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/eia860-source-intake.yml'
+      - 'src/multiyear_energy_validation/eia860_source.py'
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        year: [2024, 2025]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download official ZIP and inventory workbook layouts
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python src/multiyear_energy_validation/eia860_source.py --year "$YEAR" --output "outputs/eia860/$YEAR"
+      - name: Upload source audit (private workflow artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eia860-source-inventory-${{ matrix.year }}
+          path: outputs/eia860/${{ matrix.year }}/
+          if-no-files-found: warn
+          retention-days: 30
