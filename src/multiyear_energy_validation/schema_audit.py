@@ -210,3 +210,40 @@ def audit_utc_interval_hypotheses(rows, *, year):
         "interval_semantics_verified": False,
         "model_input_approved": False,
     }
+
+
+def model_year_hour_ending_window(year):
+    """Inclusive EIA UTC hour-ending labels for calendar-year interval starts."""
+    if not isinstance(year, int) or isinstance(year, bool) or not 1900 <= year < 9999:
+        raise ValueError("invalid year")
+    return {
+        "start": f"{year}-01-01T01",
+        "end": f"{year + 1}-01-01T00",
+        "year": year,
+        "convention": "eia_930_utc_hour_ending",
+    }
+
+
+def audit_model_year_hour_ending_grid(rows, *, year):
+    """Audit EIA hour-ending labels for a true interval-start model year."""
+    if not isinstance(year, int) or isinstance(year, bool) or not 1900 <= year < 9999:
+        raise ValueError("invalid year")
+    first = datetime(year, 1, 1, 1)
+    last = datetime(year + 1, 1, 1)
+    expected = set()
+    cursor = first
+    while cursor <= last:
+        expected.add(cursor.strftime("%Y-%m-%dT%H"))
+        cursor += timedelta(hours=1)
+    counts = Counter(str(row.get("period")) for row in rows)
+    observed = set(counts)
+    return {
+        "year": year,
+        "expected_labels": len(expected),
+        "observed_rows": len(rows),
+        "distinct_labels": len(observed),
+        "missing_labels": sorted(expected - observed),
+        "unexpected_labels": sorted(observed - expected),
+        "duplicate_labels": {k: v for k, v in sorted(counts.items()) if v > 1},
+        "convention": "eia_930_utc_hour_ending",
+    }
