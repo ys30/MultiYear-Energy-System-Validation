@@ -1,0 +1,86 @@
+name: EIA UTC local timestamp reconciliation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/eia-utc-local-reconciliation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Compare actual UTC instants and EIA demand values
+        run: |
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from urllib.parse import urlencode
+          from multiyear_energy_validation.eia_api import BASE, fetch_json
+          key = os.environ.get("EIA_API_KEY")
+          if not key:
+              raise RuntimeError("missing EIA_API_KEY")
+          def get(freq, start, end):
+              params = [
+                  ("api_key", key), ("frequency", freq), ("data[0]", "value"),
+                  ("facets[type][]", "D"), ("facets[respondent][]", "CISO"),
+                  ("start", start), ("end", end),
+                  ("sort[0][column]", "period"), ("sort[0][direction]", "asc"),
+                  ("length", "500"), ("offset", "0"),
+              ]
+              response = fetch_json(BASE + "data/?" + urlencode(params))
+              rows = response["data"]
+              if len(rows) != int(response["total"]):
+                  raise ValueError("truncated response")
+              return rows
+          utc = get("hourly", "2021-11-06T00", "2021-11-09T00")
+          local = get("local-hourly", "2021-11-05T00-07", "2021-11-08T23-08")
+          def utc_label(row):
+              return datetime.strptime(row["period"], "%Y-%m-%dT%H").replace(tzinfo=timezone.utc).isoformat()
+          def local_label(row):
+              return datetime.strptime(row["period"], "%Y-%m-%dT%H%z").astimezone(timezone.utc).isoformat()
+          u = {utc_label(r): r for r in utc}
+          l = {local_label(r): r for r in local}
+          overlaps = sorted(set(u) & set(l))
+          mismatches = [
+              {"utc": t, "hourly_value": u[t]["value"], "local_hourly_value": l[t]["value"]}
+              for t in overlaps if str(u[t]["value"]) != str(l[t]["value"])
+          ]
+          report = {
+              "interpretation": "raw API period instants and exact string value comparison; no interval-end inference",
+              "hourly_rows": len(utc), "local_hourly_rows": len(local),
+              "overlap_count": len(overlaps), "value_mismatch_count": len(mismatches),
+              "value_mismatches_sample": mismatches[:20],
+              "hourly_only_utc_instants": sorted(set(u)-set(l)),
+              "local_only_utc_instants": sorted(set(l)-set(u)),
+              "target_2021_11_07T06_utc": {
+                  "hourly": u.get("2021-11-07T06:00:00+00:00"),
+                  "local_hourly": l.get("2021-11-07T06:00:00+00:00")
+              },
+          }
+          Path("outputs").mkdir(exist_ok=True)
+          Path("outputs/eia_utc_local_reconciliation.json").write_text(json.dumps(report, indent=2))
+          print("RECONCILIATION=" + json.dumps(report, sort_keys=True))
+          if mismatches:
+              raise SystemExit("VALUE_MISMATCH: matched UTC labels have different values")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eia-utc-local-reconciliation
+          path: outputs/eia_utc_local_reconciliation.json
+          if-no-files-found: warn
+          retention-days: 30
