@@ -26,7 +26,8 @@ jobs:
         run: |
           python - <<'PY'
           import json, os
-          from datetime import datetime, timezone
+          from datetime import datetime, timezone, timedelta
+          import re
           from pathlib import Path
           from urllib.parse import urlencode
           from multiyear_energy_validation.eia_api import BASE, fetch_json
@@ -51,7 +52,12 @@ jobs:
           def utc_label(row):
               return datetime.strptime(row["period"], "%Y-%m-%dT%H").replace(tzinfo=timezone.utc).isoformat()
           def local_label(row):
-              return datetime.strptime(row["period"], "%Y-%m-%dT%H%z").astimezone(timezone.utc).isoformat()
+              match = re.fullmatch(r"(\\d{4}-\\d{2}-\\d{2}T\\d{2})([+-])(\\d{2})", row["period"])
+              if not match:
+                  raise ValueError("unexpected EIA local-hourly period format")
+              hours = int(match.group(3)) * (1 if match.group(2) == "+" else -1)
+              local = datetime.strptime(match.group(1), "%Y-%m-%dT%H")
+              return local.replace(tzinfo=timezone(timedelta(hours=hours))).astimezone(timezone.utc).isoformat()
           u = {utc_label(r): r for r in utc}
           l = {local_label(r): r for r in local}
           overlaps = sorted(set(u) & set(l))
