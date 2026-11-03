@@ -43,6 +43,15 @@ def build_load_only_network(profile_csv, output_nc, *, bus="CISO", load="CISO_lo
     output = Path(output_nc)
     output.parent.mkdir(parents=True, exist_ok=True)
     network.export_to_netcdf(output)
+    restored = pypsa.Network(output)
+    if len(restored.snapshots) != len(records) or len(restored.loads) != 1:
+        raise ValueError("PyPSA NetCDF round-trip changed snapshot or load count")
+    actual = restored.loads_t.p_set[load].to_numpy()
+    if len(actual) != len(demand) or not all(
+        math.isclose(float(a), float(b), rel_tol=0, abs_tol=1e-6)
+        for a, b in zip(actual, demand)
+    ):
+        raise ValueError("PyPSA NetCDF round-trip changed observed load values")
     return {"snapshots": len(records), "bus": bus, "load": load,
             "generation_assets": 0, "optimized": False,
             "annual_observed_mwh": float(sum(demand))}
