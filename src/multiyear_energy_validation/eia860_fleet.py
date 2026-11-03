@@ -54,6 +54,7 @@ def audit_ciso_operable(zip_path, year, output_dir):
         status_counts = Counter()
         status_mw = Counter()
         status_technology_mw = Counter()
+        dispatch_candidate_mw = Counter()
         rejected_examples = []
         accepted = []
         seen = set()
@@ -99,6 +100,9 @@ def audit_ciso_operable(zip_path, year, output_dir):
                 "balancing_authority": "CISO",
             })
             tech_mw[tech] += mw
+            # Screening-only capacity: not an hourly availability or dispatch claim.
+            if status == "OP" and tech != "Batteries":
+                dispatch_candidate_mw[tech] += mw
             counts["accepted_rows"] += 1
     with (output / "ciso_operable_generators.csv").open("w", newline="", encoding="utf-8") as stream:
         fields = ["plant_id", "generator_id", "technology", "status_raw",
@@ -113,6 +117,9 @@ def audit_ciso_operable(zip_path, year, output_dir):
         "counts": dict(counts), "status_counts": dict(sorted(status_counts.items())),
         "rejected_examples": rejected_examples,
         "nameplate_mw_by_status": dict(sorted(status_mw.items())),
+        "op_nonbattery_screening_nameplate_mw": sum(dispatch_candidate_mw.values()),
+        "op_nonbattery_screening_by_technology_mw": dict(sorted(dispatch_candidate_mw.items())),
+        "screening_is_not_dispatch_eligibility": True,
         "nameplate_mw_by_status_and_technology": [
             {"status": status, "technology": technology, "nameplate_mw": capacity}
             for (status, technology), capacity in sorted(status_technology_mw.items())
