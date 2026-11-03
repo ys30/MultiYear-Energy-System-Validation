@@ -67,3 +67,26 @@ def audit_period_label_grid(rows, *, year):
         "duplicate_labels": {k: v for k, v in sorted(counts.items()) if v > 1},
         "interpretation": "raw_period_labels_only_not_verified_utc_intervals",
     }
+
+
+def candidate_year_acceptance(grid):
+    """Conservative raw-label gate; passing does NOT certify EIA interval semantics.
+
+    A failed gate prevents a candidate year being described as complete or
+    accepted for modeling. Missing hours must never be silently interpolated.
+    """
+    missing = grid["missing_labels"]
+    unexpected = grid["unexpected_labels"]
+    duplicates = grid["duplicate_labels"]
+    valid_count = grid["distinct_labels"] == grid["expected_labels"]
+    accepted = not (missing or unexpected or duplicates) and valid_count
+    return {
+        "candidate_label_grid_complete": accepted,
+        "model_input_approved": False,
+        "reason": ("raw_label_grid_complete_semantic_validation_still_required"
+                   if accepted else "incomplete_or_invalid_raw_hourly_label_grid"),
+        "missing_labels": missing,
+        "unexpected_labels": unexpected,
+        "duplicate_labels": duplicates,
+        "imputation_performed": False,
+    }
