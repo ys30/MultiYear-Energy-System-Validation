@@ -74,3 +74,17 @@ Source: https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/
 | 2025 | none | none | yes, raw checks only |
 
 Across 2021–2025, 43,813 of 43,824 expected hourly labels have a valid numeric demand observation. The 11 unavailable observations comprise 10 returned null values and one absent raw label. No interpolation, silent deletion, or model-input approval was performed. A successful CI run indicates the audit executed, **not** that the scientific acceptance gate passed. Before PyPSA ingestion, verify period interval semantics and year boundaries independently.
+
+## UTC interval-boundary hypothesis results (2026-11-03)
+
+Verified GitHub Actions run: https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41665296840 . For all five CISO years, raw API period labels span Jan 1 00 through Dec 31 23 (with the previously documented 2021 missing label). Under the interval-start hypothesis all labels map inside the named year; under interval-end interpretation the Jan 1 00 label maps to Dec 31 23 of the previous year.
+
+| Year | Interval-start labels inside year | Interval-end labels inside year | Interval-end labels outside year |
+| --- | ---: | ---: | ---: |
+| 2021 | 8759 | 8758 | 1 |
+| 2022 | 8760 | 8759 | 1 |
+| 2023 | 8760 | 8759 | 1 |
+| 2024 | 8784 | 8783 | 1 |
+| 2025 | 8760 | 8759 | 1 |
+
+**Important:** boundary consistency does not independently establish EIA's interval convention. The normalization helper currently requires explicit interval-end confirmation; do not invoke it on the live hourly data based only on these observations. Before using any year in PyPSA, obtain documented interval semantics, verify the proper year-edge query window, and validate the resulting contiguous UTC index. No year is approved for model ingestion by this check.
