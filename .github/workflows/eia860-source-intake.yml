@@ -8,6 +8,7 @@ on:
       - 'src/multiyear_energy_validation/eia860_fleet.py'
       - 'src/multiyear_energy_validation/eia860_storage.py'
       - 'src/multiyear_energy_validation/pypsa_storage_staging.py'
+      - 'src/multiyear_energy_validation/storage_scenarios.py'
       - 'src/multiyear_energy_validation/pypsa_asset_staging.py'
       - 'src/multiyear_energy_validation/pypsa_load.py'
 jobs:
@@ -145,6 +146,27 @@ jobs:
               f"{base}/ciso_combined_load_assets.nc",
               f"{base}/ciso_battery_storage_parameters.csv",
               f"{base}/ciso_joint_with_battery_audit.nc")
+          PY
+      - name: Generate labeled storage sensitivity assumptions (not dispatch)
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import os
+          from multiyear_energy_validation.storage_scenarios import build_storage_scenario
+          year = int(os.environ["YEAR"])
+          base = f"outputs/eia860/{year}"
+          for label, efficiency, soc in (
+              ("low_efficiency_low_soc", 0.90, 0.25),
+              ("reference_assumption", 0.95, 0.50),
+              ("high_efficiency_high_soc", 0.98, 0.75),
+          ):
+              build_storage_scenario(
+                  f"{base}/ciso_battery_storage_parameters.csv", base,
+                  charge_efficiency=efficiency,
+                  discharge_efficiency=efficiency,
+                  initial_soc_fraction=soc,
+                  scenario_name=label)
           PY
       - name: Upload source audit (private workflow artifact)
         if: always()
