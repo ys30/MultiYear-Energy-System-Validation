@@ -52,6 +52,8 @@ def audit_ciso_operable(zip_path, year, output_dir):
         counts = Counter()
         tech_mw = Counter()
         status_counts = Counter()
+        status_mw = Counter()
+        status_technology_mw = Counter()
         rejected_examples = []
         accepted = []
         seen = set()
@@ -85,6 +87,8 @@ def audit_ciso_operable(zip_path, year, output_dir):
                 counts["missing_technology_or_status"] += 1
                 continue
             status_counts[status] += 1
+            status_mw[status] += mw
+            status_technology_mw[(status, tech)] += mw
             accepted.append({
                 "plant_id": plant, "generator_id": gen, "technology": tech,
                 "status_raw": status, "nameplate_capacity_mw": mw,
@@ -108,6 +112,11 @@ def audit_ciso_operable(zip_path, year, output_dir):
         "year": year, "scope": "EIA-860 plant BA code CISO; Operable sheet",
         "counts": dict(counts), "status_counts": dict(sorted(status_counts.items())),
         "rejected_examples": rejected_examples,
+        "nameplate_mw_by_status": dict(sorted(status_mw.items())),
+        "nameplate_mw_by_status_and_technology": [
+            {"status": status, "technology": technology, "nameplate_mw": capacity}
+            for (status, technology), capacity in sorted(status_technology_mw.items())
+        ],
         "nameplate_mw_by_technology": dict(sorted(tech_mw.items())),
         "total_nameplate_mw": sum(tech_mw.values()),
         "hourly_availability_verified": False, "dispatch_model_approved": False,
