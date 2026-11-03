@@ -80,7 +80,7 @@ def build_asset_staging_network(nonbattery_csv, battery_csv, output_nc):
     return result
 
 
-def attach_observed_load_to_staged_assets(asset_nc, profile_csv, output_nc):
+def attach_observed_load_to_staged_assets(asset_nc, profile_csv, output_nc, *, expected_year):
     """Combine observed hourly CISO load with disabled annual OP asset inventory.
 
     This remains a NON-SOLVED screening network. Annual OP asset lists are not
@@ -91,6 +91,8 @@ def attach_observed_load_to_staged_assets(asset_nc, profile_csv, output_nc):
         import pypsa
     except ImportError as exc:
         raise RuntimeError("Install pypsa and pandas") from exc
+    if not isinstance(expected_year, int) or isinstance(expected_year, bool):
+        raise TypeError("expected_year must be an integer")
     network = pypsa.Network(asset_nc)
     # PyPSA initializes a network with one default snapshot even when no
     # observed time series has been attached. Reject actual loads instead.
@@ -114,6 +116,11 @@ def attach_observed_load_to_staged_assets(asset_nc, profile_csv, output_nc):
     if len(frame) not in (8760, 8784):
         raise ValueError("expected a complete calendar-year hourly profile")
     year = stamps.iloc[0].year
+    if year != expected_year:
+        raise ValueError("observed load year does not match EIA-860 fleet year")
+    expected_hours = 8784 if pd.Timestamp(f"{year}-12-31").is_leap_year else 8760
+    if len(frame) != expected_hours:
+        raise ValueError("hour count incompatible with calendar year")
     if (stamps.iloc[0] != pd.Timestamp(f"{year}-01-01T00:00:00Z") or
             stamps.iloc[-1] != pd.Timestamp(f"{year+1}-01-01T00:00:00Z") -
             pd.Timedelta(hours=1)):
