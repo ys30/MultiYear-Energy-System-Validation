@@ -52,7 +52,7 @@ jobs:
           def utc_label(row):
               return datetime.strptime(row["period"], "%Y-%m-%dT%H").replace(tzinfo=timezone.utc).isoformat()
           def local_label(row):
-              match = re.fullmatch(r"(\\d{4}-\\d{2}-\\d{2}T\\d{2})([+-])(\\d{2})", row["period"])
+              match = re.fullmatch(r"(\d{4}-\d{2}-\d{2}T\d{2})([+-])(\d{2})", row["period"])
               if not match:
                   raise ValueError("unexpected EIA local-hourly period format")
               hours = int(match.group(3)) * (1 if match.group(2) == "+" else -1)
