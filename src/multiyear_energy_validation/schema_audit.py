@@ -138,3 +138,33 @@ def candidate_combined_acceptance(grid, values):
                    if label["candidate_label_grid_complete"] and values_valid
                    else "raw_label_or_value_checks_failed"),
     }
+
+def diagnose_candidate_invalid_rows(rows, *, respondent="CISO",
+                                    demand_type="D", expected_units="megawatthours"):
+    """Describe invalid EIA records without changing or imputing them."""
+    details = []
+    for i, row in enumerate(rows):
+        reasons = []
+        if row.get("respondent") != respondent:
+            reasons.append("unexpected_respondent")
+        if row.get("type") != demand_type:
+            reasons.append("unexpected_type")
+        if row.get("value-units") != expected_units:
+            reasons.append("unexpected_units")
+        try:
+            value = float(row["value"])
+            if not math.isfinite(value):
+                reasons.append("nonfinite_value")
+            elif value < 0:
+                reasons.append("negative_value")
+        except (KeyError, ValueError, TypeError, OverflowError):
+            reasons.append("missing_or_non_numeric_value")
+        if reasons:
+            details.append({
+                "row_index": i,
+                "period": str(row.get("period")),
+                "reasons": reasons,
+                "raw_value": str(row.get("value")),
+                "raw_units": str(row.get("value-units")),
+            })
+    return {"invalid_count": len(details), "invalid_records": details}
