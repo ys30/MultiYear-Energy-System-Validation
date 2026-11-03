@@ -50,7 +50,7 @@ jobs:
         run: |
           python - <<'PY'
           import json
-          from multiyear_energy_validation.schema_audit import audit_candidate_file, audit_period_label_grid, candidate_year_acceptance, audit_candidate_values
+          from multiyear_energy_validation.schema_audit import audit_candidate_file, audit_period_label_grid, candidate_year_acceptance, audit_candidate_values, candidate_combined_acceptance
           report = audit_candidate_file(
               "outputs/eia-ciso-year/eia930_candidate_rows.json",
               "outputs/eia-ciso-year/schema_audit.json")
@@ -67,6 +67,9 @@ jobs:
           values = audit_candidate_values(rows)
           Path("outputs/eia-ciso-year/value_audit.json").write_text(json.dumps(values, indent=2))
           print("CANDIDATE_VALUES=" + json.dumps(values, sort_keys=True))
+          combined = candidate_combined_acceptance(grid, values)
+          Path("outputs/eia-ciso-year/combined_gate.json").write_text(json.dumps(combined, indent=2))
+          print("COMBINED_GATE=" + json.dumps(combined, sort_keys=True))
           PY
       - name: Upload private candidate and audit
         if: always()
