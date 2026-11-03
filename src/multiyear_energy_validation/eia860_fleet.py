@@ -112,7 +112,19 @@ def audit_ciso_operable(zip_path, year, output_dir):
         writer = csv.DictWriter(stream, fieldnames=fields)
         writer.writeheader()
         writer.writerows(accepted)
+    # Conservation checks catch accidental double counting during fleet updates.
+    total_mw = sum(tech_mw.values())
+    if not math.isclose(total_mw, sum(status_mw.values()), rel_tol=1e-12, abs_tol=1e-6):
+        raise AssertionError("technology/status nameplate capacity totals disagree")
+    if counts["accepted_rows"] != sum(status_counts.values()):
+        raise AssertionError("accepted generator count/status totals disagree")
+    op_nonbattery = sum(dispatch_candidate_mw.values())
+    op_battery = status_technology_mw.get(("OP", "Batteries"), 0.0)
+    if not math.isclose(op_nonbattery + op_battery, status_mw.get("OP", 0.0), rel_tol=1e-12, abs_tol=1e-6):
+        raise AssertionError("OP capacity not conserved across battery split")
     result = {
+        "capacity_reconciliation_passed": True,
+        "op_battery_nameplate_mw": op_battery,
         "year": year, "scope": "EIA-860 plant BA code CISO; Operable sheet",
         "counts": dict(counts), "status_counts": dict(sorted(status_counts.items())),
         "rejected_examples": rejected_examples,
