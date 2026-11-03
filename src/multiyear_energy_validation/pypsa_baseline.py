@@ -1,5 +1,6 @@
 """Construct a transparent load-only PyPSA network, without claiming a solve."""
 import csv
+import math
 from pathlib import Path
 
 
@@ -26,7 +27,7 @@ def build_load_only_network(profile_csv, output_nc, *, bus="CISO", load="CISO_lo
     if not ((stamps[1:] - stamps[:-1]) == pd.Timedelta(hours=1)).all():
         raise ValueError("snapshots must be contiguous hourly intervals")
     demand = pd.to_numeric([r["CISO_load_mw"] for r in records], errors="raise")
-    if not pd.Series(demand).map(lambda x: pd.notna(x) and x >= 0).all():
+    if not pd.Series(demand).map(lambda x: pd.notna(x) and math.isfinite(x) and x >= 0).all():
         raise ValueError("invalid demand")
     # PyPSA/xarray NetCDF serialization works reliably with timezone-naive UTC
     # snapshots; the output metadata explicitly states the UTC convention.
