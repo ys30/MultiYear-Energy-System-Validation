@@ -35,6 +35,21 @@ jobs:
           y = int(os.environ["YEAR"])
           audit_ciso_operable(f"outputs/eia860/{y}/eia860{y}.zip", y, f"outputs/eia860/{y}")
           PY
+      - name: Record empirical dispatch readiness (fail-closed)
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from multiyear_energy_validation.dispatch_readiness import assess_dispatch_readiness
+          year = int(os.environ["YEAR"])
+          base = Path(f"outputs/eia860/{year}")
+          result = assess_dispatch_readiness(base / "ciso_fleet_audit.json", {},
+                                             base / "dispatch_readiness.json")
+          assert not result["empirical_dispatch_ready"]
+          print("EMPIRICAL_DISPATCH_READINESS=" + json.dumps(result, sort_keys=True))
+          PY
       - name: Upload source audit (private workflow artifact)
         if: always()
         uses: actions/upload-artifact@v4
