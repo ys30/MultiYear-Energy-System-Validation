@@ -60,3 +60,17 @@ Source: https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/
 | 2025 | 8760 | 8760 | none | yes | no |
 
 Total 43,823 observed of 43,824 expected raw UTC hour labels; one missing. No duplicate or unexpected labels reported in any of the five years. **These are raw-label audits, not final certified MW demand, hourly interval-start semantics, or PyPSA-ready input.** Do not silently impute the missing hour. Prioritize source-semantic validation and normalized UTC boundary checks on 2022–2025 while investigating 2021 separately.
+
+## Exact null-demand observations (verified 2026-11-03)
+
+Source: https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41575917559 . All five year-specific jobs completed successfully. All ten invalid demand observations have `value: null` in the EIA API response, with expected respondent CISO, type D and units megawatthours. These are **source-returned null values**, not proven physical sensor outages.
+
+| Year | Null-value period labels (UTC hourly API) | Other missing period labels | Raw candidate eligible for semantic review |
+| --- | --- | --- | --- |
+| 2021 | 2021-08-29T06; 2021-08-29T17; 2021-08-30T16; 2021-08-31T09; 2021-08-31T14 | 2021-11-07T06 | no |
+| 2022 | 2022-01-05T10; 2022-05-17T18; 2022-06-13T18 | none | no |
+| 2023 | 2023-10-31T21; 2023-11-14T20 | none | no |
+| 2024 | none | none | yes, raw checks only |
+| 2025 | none | none | yes, raw checks only |
+
+Across 2021–2025, 43,813 of 43,824 expected hourly labels have a valid numeric demand observation. The 11 unavailable observations comprise 10 returned null values and one absent raw label. No interpolation, silent deletion, or model-input approval was performed. A successful CI run indicates the audit executed, **not** that the scientific acceptance gate passed. Before PyPSA ingestion, verify period interval semantics and year boundaries independently.
