@@ -70,3 +70,34 @@ def validate_generation_fleet(csv_path, *, year, balancing_authority="CISO"):
         "hourly_availability_verified": False,
         "imports_exports_modeled": False, "dispatch_model_approved": False,
     }
+
+
+def build_hourly_commissioning_limits(csv_path, *, year, balancing_authority="CISO"):
+    """Return commissioning/retirement status, NOT actual unit availability.
+
+    Each output column is a generator ID with a 0/1 time-series. A value of
+    one means the unit is within its declared operational date range; it does
+    not imply it is available to dispatch (outages, fuel, hydro, maintenance).
+    Date-only EIA evidence is applied at UTC midnight as an explicit
+    approximation, not a claim about the actual commissioning hour.
+    """
+    import pandas as pd
+
+    validate_generation_fleet(csv_path, year=year, balancing_authority=balancing_authority)
+    rows = pd.read_csv(csv_path, dtype=str, keep_default_na=False)
+    index = pd.date_range(
+        start=f"{year}-01-01", end=f"{year + 1}-01-01",
+        freq="h", inclusive="left", tz="UTC",
+    )
+    limits = pd.DataFrame(index=index)
+    for row in rows.to_dict("records"):
+        name = f"{row['plant_id']}::{row['generator_id']}"
+        online = pd.Timestamp(row["online_date"], tz="UTC")
+        retired = (
+            pd.Timestamp(row["retirement_date"], tz="UTC")
+            if row["retirement_date"] else None
+        )
+        limits[name] = ((index >= online) & (
+            (index < retired) if retired is not None else True
+        )).astype(int)
+    return limits
