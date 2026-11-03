@@ -1,5 +1,6 @@
 """Inspect EIA candidate JSON structure without asserting semantic validity."""
 import json
+import math
 from collections import Counter
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -89,4 +90,33 @@ def candidate_year_acceptance(grid):
         "unexpected_labels": unexpected,
         "duplicate_labels": duplicates,
         "imputation_performed": False,
+    }
+
+def audit_candidate_values(rows, *, respondent="CISO", demand_type="D",
+                           expected_units="megawatthours"):
+    """Audit raw numeric observations; no MW conversion or time interpretation."""
+    invalid = []
+    values = []
+    for index, row in enumerate(rows):
+        try:
+            value = float(row["value"])
+            valid = (row.get("respondent") == respondent
+                     and row.get("type") == demand_type
+                     and row.get("value-units") == expected_units
+                     and math.isfinite(value) and value >= 0)
+        except (KeyError, TypeError, ValueError, OverflowError):
+            valid = False
+        if valid:
+            values.append(value)
+        else:
+            invalid.append(index)
+    return {
+        "row_count": len(rows),
+        "valid_observation_count": len(values),
+        "invalid_observation_count": len(invalid),
+        "invalid_row_indices_sample": invalid[:20],
+        "min_raw_mwh": min(values) if values else None,
+        "max_raw_mwh": max(values) if values else None,
+        "all_observations_valid": len(invalid) == 0 and bool(rows),
+        "interpretation": "raw_energy_value_audit_only_not_model_input_approval",
     }
