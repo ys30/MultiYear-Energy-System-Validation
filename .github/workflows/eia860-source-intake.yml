@@ -6,6 +6,7 @@ on:
       - '.github/workflows/eia860-source-intake.yml'
       - 'src/multiyear_energy_validation/eia860_source.py'
       - 'src/multiyear_energy_validation/eia860_fleet.py'
+      - 'src/multiyear_energy_validation/pypsa_asset_staging.py'
 jobs:
   inventory:
     runs-on: ubuntu-latest
@@ -49,6 +50,22 @@ jobs:
                                              base / "dispatch_readiness.json")
           assert not result["empirical_dispatch_ready"]
           print("EMPIRICAL_DISPATCH_READINESS=" + json.dumps(result, sort_keys=True))
+          PY
+      - name: Install PyPSA for conservative asset staging
+        run: python -m pip install "pypsa>=0.35,<2"
+      - name: Stage real generator inventory in PyPSA (no optimization)
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import os
+          from multiyear_energy_validation.pypsa_asset_staging import build_asset_staging_network
+          year = int(os.environ["YEAR"])
+          base = f"outputs/eia860/{year}"
+          build_asset_staging_network(
+              f"{base}/op_nonbattery_candidates.csv",
+              f"{base}/op_battery_candidates.csv",
+              f"{base}/ciso_asset_staging.nc")
           PY
       - name: Upload source audit (private workflow artifact)
         if: always()
