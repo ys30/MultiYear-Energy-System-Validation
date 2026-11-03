@@ -113,7 +113,8 @@ jobs:
           build_pypsa_load_profile(normalized, profile, year=year, region="CISO")
           base = Path(f"outputs/eia860/{year}")
           result = attach_observed_load_to_staged_assets(
-              base / "ciso_asset_staging.nc", profile, base / "ciso_combined_load_assets.nc")
+              base / "ciso_asset_staging.nc", profile, base / "ciso_combined_load_assets.nc",
+              expected_year=year)
           assert result["snapshots"] == (8784 if year == 2024 else 8760)
           print("COMBINED_OBSERVED_LOAD_ASSETS=" + json.dumps(result, sort_keys=True))
           PY
