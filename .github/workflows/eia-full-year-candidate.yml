@@ -97,6 +97,25 @@ jobs:
                   Path("outputs/eia-ciso-year/pypsa_load_manifest.json").write_text(json.dumps(load, indent=2))
                   print("PYPSA_LOAD_MANIFEST=" + json.dumps(load, sort_keys=True))
           PY
+      - name: Install optional PyPSA for load-only network smoke test
+        if: matrix.year == 2024 || matrix.year == 2025
+        run: python -m pip install "pypsa>=0.35,<2"
+      - name: Build and round-trip PyPSA load-only network
+        if: matrix.year == 2024 || matrix.year == 2025
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from multiyear_energy_validation.pypsa_baseline import build_load_only_network
+          root = Path("outputs/eia-ciso-year")
+          manifest = build_load_only_network(root / "pypsa_load_profile.csv",
+                                             root / "pypsa_load_only.nc")
+          assert manifest["snapshots"] == (8784 if int(__import__("os").environ["YEAR"]) == 2024 else 8760)
+          (root / "pypsa_network_manifest.json").write_text(json.dumps(manifest, indent=2))
+          print("PYPSA_NETWORK_ROUNDTRIP=" + json.dumps(manifest, sort_keys=True))
+          PY
       - name: Upload private candidate and audit
         if: always()
         uses: actions/upload-artifact@v4
