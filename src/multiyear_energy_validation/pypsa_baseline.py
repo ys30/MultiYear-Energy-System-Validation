@@ -74,7 +74,7 @@ def solve_synthetic_balance_smoke_test(profile_csv, *, snapshots=24):
     if len(frame) != snapshots or list(frame.columns) != ["snapshot_utc", "CISO_load_mw"]:
         raise ValueError("unexpected or incomplete input profile")
     stamps = pd.to_datetime(frame["snapshot_utc"], utc=True, errors="raise")
-    if stamps.has_duplicates or not stamps.is_monotonic_increasing:
+    if stamps.duplicated().any() or not stamps.is_monotonic_increasing:
         raise ValueError("invalid snapshot ordering")
     if snapshots > 1 and not ((stamps.iloc[1:].reset_index(drop=True)
                                 - stamps.iloc[:-1].reset_index(drop=True))
