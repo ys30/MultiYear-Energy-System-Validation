@@ -59,3 +59,21 @@ def test_date_specific_active_units(tmp_path):
     path = tmp_path / "fleet.csv"
     write_fleet(path, [example(online_date="2025-01-01")])
     assert validate_generation_fleet(path, year=2024)["active_generators"] == 0
+
+
+def test_midyear_commissioning_is_flagged(tmp_path):
+    path = tmp_path / "fleet.csv"
+    write_fleet(path, [example(online_date="2024-10-01")])
+    result = validate_generation_fleet(path, year=2024)
+    assert result["active_generators"] == 0
+    assert result["units_with_in_year_status_changes"] == 1
+    assert result["reference_snapshot_not_annual_availability"] is True
+
+
+def test_midyear_retirement_is_flagged(tmp_path):
+    path = tmp_path / "fleet.csv"
+    write_fleet(path, [example(retirement_date="2024-09-01")])
+    result = validate_generation_fleet(path, year=2024)
+    assert result["active_generators"] == 1
+    assert result["units_with_in_year_status_changes"] == 1
+    assert result["dispatch_model_approved"] is False
