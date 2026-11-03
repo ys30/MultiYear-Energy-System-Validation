@@ -6,6 +6,7 @@ on:
       - '.github/workflows/eia860-source-intake.yml'
       - 'src/multiyear_energy_validation/eia860_source.py'
       - 'src/multiyear_energy_validation/eia860_fleet.py'
+      - 'src/multiyear_energy_validation/eia860_storage.py'
       - 'src/multiyear_energy_validation/pypsa_asset_staging.py'
       - 'src/multiyear_energy_validation/pypsa_load.py'
 jobs:
@@ -36,6 +37,18 @@ jobs:
           from multiyear_energy_validation.eia860_fleet import audit_ciso_operable
           y = int(os.environ["YEAR"])
           audit_ciso_operable(f"outputs/eia860/{y}/eia860{y}.zip", y, f"outputs/eia860/{y}")
+          PY
+      - name: Audit official battery energy and charge/discharge ratings
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import os
+          from multiyear_energy_validation.eia860_storage import audit_ciso_storage
+          year = int(os.environ["YEAR"])
+          base = f"outputs/eia860/{year}"
+          audit_ciso_storage(f"{base}/eia860{year}.zip", year,
+                             f"{base}/op_battery_candidates.csv", base)
           PY
       - name: Record empirical dispatch readiness (fail-closed)
         env:
