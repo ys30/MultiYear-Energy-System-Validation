@@ -76,6 +76,19 @@ jobs:
           boundaries = audit_utc_interval_hypotheses(rows, year=int(os.environ["YEAR"]))
           Path("outputs/eia-ciso-year/interval_hypotheses.json").write_text(json.dumps(boundaries, indent=2))
           print("INTERVAL_HYPOTHESES=" + json.dumps(boundaries, sort_keys=True))
+          if combined["raw_candidate_eligible_for_semantic_review"]:
+              from multiyear_energy_validation.eia_normalize import normalize_candidate_rows
+              from multiyear_energy_validation.coverage import audit_coverage_csv
+              normalized = Path("outputs/eia-ciso-year/normalized_utc_demand.csv")
+              normalize_candidate_rows(rows, normalized, respondent="CISO",
+                                       period_is_utc_interval_end=True,
+                                       period_frequency="hourly")
+              coverage = audit_coverage_csv(normalized, year=int(os.environ["YEAR"]),
+                                            timestamp_column="time_utc",
+                                            demand_column="demand_mw",
+                                            region_column="balancing_authority", region="CISO")
+              Path("outputs/eia-ciso-year/normalized_coverage.json").write_text(json.dumps(coverage, indent=2))
+              print("NORMALIZED_COVERAGE=" + json.dumps(coverage, sort_keys=True))
           PY
       - name: Upload private candidate and audit
         if: always()
