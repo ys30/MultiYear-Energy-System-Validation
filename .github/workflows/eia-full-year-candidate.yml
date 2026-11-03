@@ -89,6 +89,13 @@ jobs:
                                             region_column="balancing_authority", region="CISO")
               Path("outputs/eia-ciso-year/normalized_coverage.json").write_text(json.dumps(coverage, indent=2))
               print("NORMALIZED_COVERAGE=" + json.dumps(coverage, sort_keys=True))
+              if coverage["complete"]:
+                  from multiyear_energy_validation.pypsa_load import build_pypsa_load_profile
+                  load = build_pypsa_load_profile(
+                      normalized, Path("outputs/eia-ciso-year/pypsa_load_profile.csv"),
+                      year=int(os.environ["YEAR"]), region="CISO")
+                  Path("outputs/eia-ciso-year/pypsa_load_manifest.json").write_text(json.dumps(load, indent=2))
+                  print("PYPSA_LOAD_MANIFEST=" + json.dumps(load, sort_keys=True))
           PY
       - name: Upload private candidate and audit
         if: always()
