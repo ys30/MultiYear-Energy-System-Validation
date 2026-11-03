@@ -6,13 +6,6 @@ on:
       - 'src/multiyear_energy_validation/schema_audit.py'
       - '.github/workflows/eia-full-year-candidate.yml'
   workflow_dispatch:
-    inputs:
-      year:
-        description: "UTC candidate year"
-        required: true
-        type: choice
-        options: ["2021", "2022", "2023", "2024", "2025"]
-        default: "2021"
   schedule:
     - cron: '37 16 3 * *'
 
@@ -41,10 +34,9 @@ jobs:
       - name: Choose year
         id: selection
         env:
-          INPUT_YEAR: ${{ inputs.year }}
           MATRIX_YEAR: ${{ matrix.year }}
         run: |
-          echo "year=${INPUT_YEAR:-$MATRIX_YEAR}" >> "$GITHUB_OUTPUT"
+          echo "year=$MATRIX_YEAR" >> "$GITHUB_OUTPUT"
       - name: Download full-year unverified EIA candidate
         env:
           YEAR: ${{ steps.selection.outputs.year }}
