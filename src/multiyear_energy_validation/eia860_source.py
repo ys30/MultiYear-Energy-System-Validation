@@ -49,6 +49,10 @@ def intake(year, output):
                     preview.append([str(v)[:160] if v is not None else None for v in row])
                 sheets[ws.title] = {"preview_first_8_rows_first_45_columns": preview}
             layouts[member] = sheets
+            if "Generator_Y" in member or "Plant_Y" in member:
+                for ws in wb.worksheets:
+                    header = next(ws.iter_rows(min_row=2, max_row=2, values_only=True))
+                    print("EIA860_FULL_HEADER=" + json.dumps({"year": year, "workbook": member, "sheet": ws.title, "columns": [str(v) if v is not None else None for v in header]}, sort_keys=True))
             wb.close()
     (output / "workbook_layouts.json").write_text(json.dumps(layouts, indent=2))
     for book, sheets in layouts.items():
