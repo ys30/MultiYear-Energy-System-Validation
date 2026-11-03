@@ -104,11 +104,25 @@ def audit_ciso_operable(zip_path, year, output_dir):
             if status == "OP" and tech != "Batteries":
                 dispatch_candidate_mw[tech] += mw
             counts["accepted_rows"] += 1
+    # Separate asset classes for downstream PyPSA construction; these are
+    # candidates only, not evidence of hourly availability or storage duration.
+    nonbattery = [r for r in accepted if r["status_raw"] == "OP" and r["technology"] != "Batteries"]
+    batteries = [r for r in accepted if r["status_raw"] == "OP" and r["technology"] == "Batteries"]
+    if len(nonbattery) + len(batteries) != status_counts.get("OP", 0):
+        raise AssertionError("OP candidate count reconciliation failed")
+    fields = ["plant_id", "generator_id", "technology", "status_raw",
+              "nameplate_capacity_mw", "operating_month_raw", "operating_year_raw",
+              "planned_retirement_month_raw", "planned_retirement_year_raw",
+              "balancing_authority"]
+    for filename, rows in (
+        ("op_nonbattery_candidates.csv", nonbattery),
+        ("op_battery_candidates.csv", batteries),
+    ):
+        with (output / filename).open("w", newline="", encoding="utf-8") as stream:
+            writer = csv.DictWriter(stream, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(rows)
     with (output / "ciso_operable_generators.csv").open("w", newline="", encoding="utf-8") as stream:
-        fields = ["plant_id", "generator_id", "technology", "status_raw",
-                  "nameplate_capacity_mw", "operating_month_raw", "operating_year_raw",
-                  "planned_retirement_month_raw", "planned_retirement_year_raw",
-                  "balancing_authority"]
         writer = csv.DictWriter(stream, fieldnames=fields)
         writer.writeheader()
         writer.writerows(accepted)
@@ -124,6 +138,8 @@ def audit_ciso_operable(zip_path, year, output_dir):
         raise AssertionError("OP capacity not conserved across battery split")
     result = {
         "capacity_reconciliation_passed": True,
+        "op_nonbattery_candidate_count": len(nonbattery),
+        "op_battery_candidate_count": len(batteries),
         "op_battery_nameplate_mw": op_battery,
         "year": year, "scope": "EIA-860 plant BA code CISO; Operable sheet",
         "counts": dict(counts), "status_counts": dict(sorted(status_counts.items())),
