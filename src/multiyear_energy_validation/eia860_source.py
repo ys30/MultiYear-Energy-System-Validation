@@ -51,6 +51,9 @@ def intake(year, output):
             layouts[member] = sheets
             wb.close()
     (output / "workbook_layouts.json").write_text(json.dumps(layouts, indent=2))
+    for book, sheets in layouts.items():
+        for sheet, audit in sheets.items():
+            print("EIA860_SHEET_PREVIEW=" + json.dumps({"year": year, "workbook": book, "sheet": sheet, **audit}, sort_keys=True))
     inventory = {
         "year": year, "source_url": url, "sha256": hashlib.sha256(data).hexdigest(),
         "archive_bytes": len(data), "entries": entries,
