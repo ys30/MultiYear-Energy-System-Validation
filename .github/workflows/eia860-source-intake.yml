@@ -7,6 +7,7 @@ on:
       - 'src/multiyear_energy_validation/eia860_source.py'
       - 'src/multiyear_energy_validation/eia860_fleet.py'
       - 'src/multiyear_energy_validation/eia860_storage.py'
+      - 'src/multiyear_energy_validation/pypsa_storage_staging.py'
       - 'src/multiyear_energy_validation/pypsa_asset_staging.py'
       - 'src/multiyear_energy_validation/pypsa_load.py'
 jobs:
@@ -130,6 +131,20 @@ jobs:
               expected_year=year)
           assert result["snapshots"] == (8784 if year == 2024 else 8760)
           print("COMBINED_OBSERVED_LOAD_ASSETS=" + json.dumps(result, sort_keys=True))
+          PY
+      - name: Attach audited battery ratings to joint PyPSA staging manifest
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import os
+          from multiyear_energy_validation.pypsa_storage_staging import stage_verified_battery_ratings
+          year = int(os.environ["YEAR"])
+          base = f"outputs/eia860/{year}"
+          stage_verified_battery_ratings(
+              f"{base}/ciso_combined_load_assets.nc",
+              f"{base}/ciso_battery_storage_parameters.csv",
+              f"{base}/ciso_joint_with_battery_audit.nc")
           PY
       - name: Upload source audit (private workflow artifact)
         if: always()
