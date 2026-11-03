@@ -96,3 +96,14 @@ EIA's own EIA-930 About page https://www.eia.gov/electricity/930-content/about.h
 **Critical correction to earlier candidate coverage:** previous yearly queries used raw period labels `YYYY-01-01T00` through `YYYY-12-31T23`. They cover the *hour-ending label year*, NOT the complete interval-start calendar year. For a model calendar year Y, request `Y-01-01T01` through `(Y+1)-01-01T00` inclusive. Consequently the previous 2024/2025 raw-label completeness cannot by itself establish a full 2024/2025 model-year series. The first raw label of each prior query belongs to the previous model year and the next year's Jan 1 00 raw label is needed. Existing 2021-2023 source nulls and absent labels remain independently observed but must be re-audited against the corrected model-year window.
 
 Do not treat source publication's mention of aggregate imputation as permission to impute individual BA demand: EIA explicitly notes hourly individual BA data are published as received. No historical numerical result has yet been approved for PyPSA.
+
+## Verified normalized model-year coverage (2026-11-03)
+
+GitHub Actions run https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41677933697 completed successfully. Following independently documented EIA hour-ending semantics, the model-year query window was corrected and the candidate rows converted to UTC interval-start timestamps and one-hour mean MW. `audit_coverage_csv` returned:
+
+| Model year | UTC hours | Missing | Duplicates | Invalid timestamps | Invalid values | Observed energy (MWh) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2024 | 8784 | 0 | 0 | 0 | 0 | 224030258 |
+| 2025 | 8760 | 0 | 0 | 0 | 0 | 224023764 |
+
+These are **CISO observed demand input data checks**, not PyPSA model simulation results, calibration metrics, or independent demand accuracy validation. 2021–2023 remain excluded from the no-imputation baseline because 2021 has one missing label and five null values, 2022 three null values, and 2023 two null values. The pipeline performs no imputation.
