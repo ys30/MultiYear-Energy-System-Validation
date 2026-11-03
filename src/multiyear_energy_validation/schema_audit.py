@@ -168,3 +168,45 @@ def diagnose_candidate_invalid_rows(rows, *, respondent="CISO",
                 "raw_units": str(row.get("value-units")),
             })
     return {"invalid_count": len(details), "invalid_records": details}
+
+
+def audit_utc_interval_hypotheses(rows, *, year):
+    """Compare UTC start/end interpretations; do not choose one automatically.
+
+    Raw hourly API labels are UTC clock labels. Whether the period denotes
+    interval start or end must be independently established by source evidence.
+    """
+    from datetime import timezone
+    if not isinstance(year, int) or isinstance(year, bool) or year < 1900:
+        raise ValueError("invalid year")
+    start = datetime(year, 1, 1, tzinfo=timezone.utc)
+    end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    labels = []
+    malformed = []
+    for i, row in enumerate(rows):
+        try:
+            label = datetime.strptime(str(row["period"]), "%Y-%m-%dT%H")
+            labels.append(label.replace(tzinfo=timezone.utc))
+        except (KeyError, ValueError, TypeError):
+            malformed.append(i)
+    results = {}
+    for hypothesis, offset_hours in (("interval_start", 0), ("interval_end", -1)):
+        shifted = [stamp + timedelta(hours=offset_hours) for stamp in labels]
+        inside = [stamp for stamp in shifted if start <= stamp < end]
+        outside = sorted(stamp.isoformat() for stamp in shifted if not start <= stamp < end)
+        results[hypothesis] = {
+            "inside_requested_year": len(inside),
+            "outside_requested_year": len(outside),
+            "outside_sample": outside[:5],
+            "first_interval_start_utc": min(shifted).isoformat() if shifted else None,
+            "last_interval_start_utc": max(shifted).isoformat() if shifted else None,
+        }
+    return {
+        "year": year,
+        "raw_row_count": len(rows),
+        "malformed_period_rows": malformed[:20],
+        "hypotheses": results,
+        "selected_hypothesis": None,
+        "interval_semantics_verified": False,
+        "model_input_approved": False,
+    }
