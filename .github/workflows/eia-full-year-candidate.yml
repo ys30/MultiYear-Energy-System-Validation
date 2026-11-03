@@ -42,7 +42,7 @@ jobs:
           YEAR: ${{ steps.selection.outputs.year }}
         run: |
           python -m multiyear_energy_validation.download_cli \
-            --respondent CISO --start "${YEAR}-01-01T00" --end "${YEAR}-12-31T23" \
+            --respondent CISO --start "${YEAR}-01-01T01" --end "$((${YEAR}+1))-01-01T00" \
             --output-dir outputs/eia-ciso-year --max-rows 10000
       - name: Audit actual response schema
         env:
@@ -50,7 +50,7 @@ jobs:
         run: |
           python - <<'PY'
           import json
-          from multiyear_energy_validation.schema_audit import audit_candidate_file, audit_period_label_grid, candidate_year_acceptance, audit_candidate_values, candidate_combined_acceptance, diagnose_candidate_invalid_rows, audit_utc_interval_hypotheses
+          from multiyear_energy_validation.schema_audit import audit_candidate_file, audit_period_label_grid, candidate_year_acceptance, audit_candidate_values, candidate_combined_acceptance, diagnose_candidate_invalid_rows, audit_utc_interval_hypotheses, audit_model_year_hour_ending_grid
           report = audit_candidate_file(
               "outputs/eia-ciso-year/eia930_candidate_rows.json",
               "outputs/eia-ciso-year/schema_audit.json")
@@ -58,7 +58,7 @@ jobs:
           from pathlib import Path
           import os
           rows = json.loads(Path("outputs/eia-ciso-year/eia930_candidate_rows.json").read_text())
-          grid = audit_period_label_grid(rows, year=int(os.environ["YEAR"]))
+          grid = audit_model_year_hour_ending_grid(rows, year=int(os.environ["YEAR"]))
           Path("outputs/eia-ciso-year/period_label_grid.json").write_text(json.dumps(grid, indent=2))
           print("PERIOD_LABEL_GRID=" + json.dumps(grid, sort_keys=True))
           gate = candidate_year_acceptance(grid)
