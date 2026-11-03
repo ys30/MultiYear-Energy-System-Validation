@@ -9,6 +9,7 @@ on:
       - 'src/multiyear_energy_validation/eia860_storage.py'
       - 'src/multiyear_energy_validation/pypsa_storage_staging.py'
       - 'src/multiyear_energy_validation/storage_scenarios.py'
+      - 'src/multiyear_energy_validation/pypsa_storage_scenario_network.py'
       - 'src/multiyear_energy_validation/pypsa_asset_staging.py'
       - 'src/multiyear_energy_validation/pypsa_load.py'
 jobs:
@@ -167,6 +168,20 @@ jobs:
                   discharge_efficiency=efficiency,
                   initial_soc_fraction=soc,
                   scenario_name=label)
+          PY
+      - name: Build reference storage PyPSA network without optimization
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import os
+          from multiyear_energy_validation.pypsa_storage_scenario_network import build_storage_scenario_network
+          year = int(os.environ["YEAR"])
+          base = f"outputs/eia860/{year}"
+          build_storage_scenario_network(
+              f"{base}/ciso_combined_load_assets.nc",
+              f"{base}/storage_scenario_reference_assumption.csv",
+              f"{base}/ciso_reference_storage_scenario.nc")
           PY
       - name: Upload source audit (private workflow artifact)
         if: always()
