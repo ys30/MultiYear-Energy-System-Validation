@@ -47,3 +47,16 @@ Download an entire candidate BA-year with an adequate `max_rows` limit; retain t
 - UTC `hourly` response for that date returned 23 labels, omitting `2021-11-07T06`.
 - A 2021-11-06 local query bounded `00-07` to `23-07` returned 23 labels; **do not interpret this as a missing hour** without checking API boundary semantics.
 - Next validation must compare offset-converted UTC instants and values between frequency representations, including cross-day boundaries. No interpolation or full-year acceptance yet.
+
+## Five-year CISO raw-label coverage (2026-11-02)
+Source: https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41570393968 (all five matrix jobs completed successfully).
+
+| Year | Observed labels | Expected labels | Missing labels | Raw grid complete | Model input approved |
+| --- | ---: | ---: | --- | --- | --- |
+| 2021 | 8759 | 8760 | 2021-11-07T06 | no | no |
+| 2022 | 8760 | 8760 | none | yes | no |
+| 2023 | 8760 | 8760 | none | yes | no |
+| 2024 | 8784 | 8784 | none | yes | no |
+| 2025 | 8760 | 8760 | none | yes | no |
+
+Total 43,823 observed of 43,824 expected raw UTC hour labels; one missing. No duplicate or unexpected labels reported in any of the five years. **These are raw-label audits, not final certified MW demand, hourly interval-start semantics, or PyPSA-ready input.** Do not silently impute the missing hour. Prioritize source-semantic validation and normalized UTC boundary checks on 2022–2025 while investigating 2021 separately.
