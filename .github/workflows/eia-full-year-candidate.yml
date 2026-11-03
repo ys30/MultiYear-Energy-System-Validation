@@ -50,7 +50,7 @@ jobs:
         run: |
           python - <<'PY'
           import json
-          from multiyear_energy_validation.schema_audit import audit_candidate_file, audit_period_label_grid, candidate_year_acceptance, audit_candidate_values, candidate_combined_acceptance, diagnose_candidate_invalid_rows
+          from multiyear_energy_validation.schema_audit import audit_candidate_file, audit_period_label_grid, candidate_year_acceptance, audit_candidate_values, candidate_combined_acceptance, diagnose_candidate_invalid_rows, audit_utc_interval_hypotheses
           report = audit_candidate_file(
               "outputs/eia-ciso-year/eia930_candidate_rows.json",
               "outputs/eia-ciso-year/schema_audit.json")
@@ -73,6 +73,9 @@ jobs:
           diagnosis = diagnose_candidate_invalid_rows(rows)
           Path("outputs/eia-ciso-year/invalid_records.json").write_text(json.dumps(diagnosis, indent=2))
           print("INVALID_RECORD_DIAGNOSIS=" + json.dumps(diagnosis, sort_keys=True))
+          boundaries = audit_utc_interval_hypotheses(rows, year=int(os.environ["YEAR"]))
+          Path("outputs/eia-ciso-year/interval_hypotheses.json").write_text(json.dumps(boundaries, indent=2))
+          print("INTERVAL_HYPOTHESES=" + json.dumps(boundaries, sort_keys=True))
           PY
       - name: Upload private candidate and audit
         if: always()
