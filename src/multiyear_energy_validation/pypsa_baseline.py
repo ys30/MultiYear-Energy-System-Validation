@@ -55,3 +55,50 @@ def build_load_only_network(profile_csv, output_nc, *, bus="CISO", load="CISO_lo
     return {"snapshots": len(records), "bus": bus, "load": load,
             "generation_assets": 0, "optimized": False,
             "annual_observed_mwh": float(sum(demand))}
+
+
+def solve_synthetic_balance_smoke_test(profile_csv, *, snapshots=24):
+    """Synthetic feasibility test only: NOT an empirical generation model.
+
+    Use the first N observed load hours, one unlimited-costed synthetic
+    generator and one bus. Check that optimization exactly meets demand.
+    """
+    if not isinstance(snapshots, int) or isinstance(snapshots, bool) or not 1 <= snapshots <= 168:
+        raise ValueError("snapshots must be between 1 and 168")
+    try:
+        import pandas as pd
+        import pypsa
+    except ImportError as exc:
+        raise RuntimeError("Install pypsa and pandas") from exc
+    frame = pd.read_csv(profile_csv, nrows=snapshots)
+    if len(frame) != snapshots or list(frame.columns) != ["snapshot_utc", "CISO_load_mw"]:
+        raise ValueError("unexpected or incomplete input profile")
+    stamps = pd.to_datetime(frame["snapshot_utc"], utc=True, errors="raise")
+    if stamps.has_duplicates or not stamps.is_monotonic_increasing:
+        raise ValueError("invalid snapshot ordering")
+    if snapshots > 1 and not ((stamps.iloc[1:].reset_index(drop=True)
+                                - stamps.iloc[:-1].reset_index(drop=True))
+                               == pd.Timedelta(hours=1)).all():
+        raise ValueError("noncontiguous timestamps")
+    demand = pd.to_numeric(frame["CISO_load_mw"], errors="raise")
+    if not demand.map(lambda x: math.isfinite(x) and x >= 0).all():
+        raise ValueError("invalid load")
+    network = pypsa.Network()
+    network.set_snapshots(stamps.dt.tz_localize(None))
+    network.add("Bus", "CISO")
+    network.add("Load", "observed_CISO_demand", bus="CISO", p_set=demand.to_numpy())
+    # Deliberately fictitious dispatchable capacity: feasibility test only.
+    network.add("Generator", "synthetic_unlimited_supply", bus="CISO",
+                p_nom=max(float(demand.max()), 1.0) * 1.01,
+                marginal_cost=1.0)
+    status, condition = network.optimize(solver_name="highs")
+    if status != "ok" or condition != "optimal":
+        raise ValueError(f"synthetic smoke optimization failed: {status}/{condition}")
+    generation = network.generators_t.p["synthetic_unlimited_supply"].to_numpy()
+    max_error = max(abs(float(a) - float(b)) for a, b in zip(generation, demand))
+    if max_error > 1e-5:
+        raise ValueError("synthetic generator does not balance observed load")
+    return {"snapshots": snapshots, "solver_status": status,
+            "solver_condition": condition, "max_balance_error_mw": max_error,
+            "synthetic_generator": True, "empirical_generation_validated": False,
+            "research_result": False}
