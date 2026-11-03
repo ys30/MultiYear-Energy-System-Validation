@@ -92,7 +92,9 @@ def attach_observed_load_to_staged_assets(asset_nc, profile_csv, output_nc):
     except ImportError as exc:
         raise RuntimeError("Install pypsa and pandas") from exc
     network = pypsa.Network(asset_nc)
-    if len(network.loads) or len(network.snapshots):
+    # PyPSA initializes a network with one default snapshot even when no
+    # observed time series has been attached. Reject actual loads instead.
+    if len(network.loads):
         raise ValueError("expected asset-only staging network")
     if not (network.generators.p_max_pu == 0.0).all():
         raise ValueError("staged generators must be disabled")
