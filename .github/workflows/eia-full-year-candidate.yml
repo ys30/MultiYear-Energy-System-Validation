@@ -115,6 +115,10 @@ jobs:
           assert manifest["snapshots"] == (8784 if int(__import__("os").environ["YEAR"]) == 2024 else 8760)
           (root / "pypsa_network_manifest.json").write_text(json.dumps(manifest, indent=2))
           print("PYPSA_NETWORK_ROUNDTRIP=" + json.dumps(manifest, sort_keys=True))
+          from multiyear_energy_validation.pypsa_baseline import solve_synthetic_balance_smoke_test
+          synthetic = solve_synthetic_balance_smoke_test(root / "pypsa_load_profile.csv", snapshots=24)
+          (root / "synthetic_optimization_smoke.json").write_text(json.dumps(synthetic, indent=2))
+          print("SYNTHETIC_OPTIMIZATION_SMOKE=" + json.dumps(synthetic, sort_keys=True))
           PY
       - name: Upload private candidate and audit
         if: always()
