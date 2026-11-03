@@ -120,3 +120,21 @@ def audit_candidate_values(rows, *, respondent="CISO", demand_type="D",
         "all_observations_valid": len(invalid) == 0 and bool(rows),
         "interpretation": "raw_energy_value_audit_only_not_model_input_approval",
     }
+
+def candidate_combined_acceptance(grid, values):
+    """Conservative combined raw-label and value gate, never model approval."""
+    label = candidate_year_acceptance(grid)
+    values_valid = values["all_observations_valid"]
+    return {
+        "raw_candidate_eligible_for_semantic_review":
+            label["candidate_label_grid_complete"] and values_valid,
+        "model_input_approved": False,
+        "label_grid_complete": label["candidate_label_grid_complete"],
+        "all_observations_valid": values_valid,
+        "missing_labels": label["missing_labels"],
+        "invalid_observation_count": values["invalid_observation_count"],
+        "imputation_performed": False,
+        "reason": ("raw_checks_passed_semantics_unverified"
+                   if label["candidate_label_grid_complete"] and values_valid
+                   else "raw_label_or_value_checks_failed"),
+    }
