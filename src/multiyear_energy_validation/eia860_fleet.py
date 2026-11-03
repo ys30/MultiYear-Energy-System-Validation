@@ -51,12 +51,16 @@ def audit_ciso_operable(zip_path, year, output_dir):
             plants[plant] = str(row.get("Balancing Authority Code") or "").strip()
         counts = Counter()
         tech_mw = Counter()
+        status_counts = Counter()
+        rejected_examples = []
         accepted = []
         seen = set()
         for row in _records(archive, f"3_1_Generator_Y{year}.xlsx", "Operable"):
             plant = _id(row.get("Plant Code"))
             if plant not in plants:
                 counts["unmatched_plant"] += 1
+                if len(rejected_examples) < 20:
+                    rejected_examples.append({"reason": "unmatched_plant", "plant_id": plant, "generator_id": str(row.get("Generator ID") or "")})
                 continue
             if plants[plant] != "CISO":
                 continue
@@ -80,6 +84,7 @@ def audit_ciso_operable(zip_path, year, output_dir):
             if not tech or not status:
                 counts["missing_technology_or_status"] += 1
                 continue
+            status_counts[status] += 1
             accepted.append({
                 "plant_id": plant, "generator_id": gen, "technology": tech,
                 "status_raw": status, "nameplate_capacity_mw": mw,
@@ -101,7 +106,9 @@ def audit_ciso_operable(zip_path, year, output_dir):
         writer.writerows(accepted)
     result = {
         "year": year, "scope": "EIA-860 plant BA code CISO; Operable sheet",
-        "counts": dict(counts), "nameplate_mw_by_technology": dict(sorted(tech_mw.items())),
+        "counts": dict(counts), "status_counts": dict(sorted(status_counts.items())),
+        "rejected_examples": rejected_examples,
+        "nameplate_mw_by_technology": dict(sorted(tech_mw.items())),
         "total_nameplate_mw": sum(tech_mw.values()),
         "hourly_availability_verified": False, "dispatch_model_approved": False,
         "retirement_dates_are_planned_not_actual": True,
