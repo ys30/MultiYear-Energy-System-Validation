@@ -14,7 +14,8 @@ REQUIRED = (
 def validate_generation_fleet(csv_path, *, year, balancing_authority="CISO"):
     """Validate explicit fleet records; never impute missing dates or capacities.
 
-    Returns a July 1 reference snapshot plus annual commissioning/retirement flags.\n    A reference snapshot is not a full-year dispatch availability profile.
+    Returns a July 1 reference snapshot plus annual commissioning/retirement flags.
+    A reference snapshot is not a full-year dispatch availability profile.
     Rows outside the requested balancing authority are rejected rather than
     silently mapped from statewide generation.
     """
@@ -54,13 +55,18 @@ def validate_generation_fleet(csv_path, *, year, balancing_authority="CISO"):
             raise ValueError(f"retirement precedes online date at row {index}")
         if not row["source_url"].startswith(("https://", "http://")):
             raise ValueError(f"missing verifiable source URL at row {index}")
-        year_start, year_end = date(year, 1, 1), date(year + 1, 1, 1)\n        if year_start <= online < year_end or (retirement is not None and year_start <= retirement < year_end):\n            changes_during_year += 1\n        if online <= reference and (retirement is None or retirement > reference):
+        year_start, year_end = date(year, 1, 1), date(year + 1, 1, 1)
+        if year_start <= online < year_end or (retirement is not None and year_start <= retirement < year_end):
+            changes_during_year += 1
+        if online <= reference and (retirement is None or retirement > reference):
             total += capacity
             active += 1
     return {
         "model_year": year, "balancing_authority": balancing_authority,
         "reference_date": reference.isoformat(), "fleet_rows": len(rows),
         "active_generators": active, "active_nameplate_capacity_mw": total,
-        "units_with_in_year_status_changes": changes_during_year,\n        "reference_snapshot_not_annual_availability": True,\n        "hourly_availability_verified": False,
+        "units_with_in_year_status_changes": changes_during_year,
+        "reference_snapshot_not_annual_availability": True,
+        "hourly_availability_verified": False,
         "imports_exports_modeled": False, "dispatch_model_approved": False,
     }
