@@ -57,12 +57,21 @@ def compare(previous_csv, current_csv, output_json):
         return sum(r["mw"] for r in records.values() if r["status_raw"] == "OP")
     delta = op_mw(new) - op_mw(old)
     components = Counter()
+    technology_components = Counter()
+    technology_transition_counts = Counter()
     for row in changes:
         before = row["previous_nameplate_mw"] if row["previous_status"] == "OP" else 0.0
         after = row["current_nameplate_mw"] if row["current_status"] == "OP" else 0.0
         components[row["classification"]] += after - before
+        if before:
+            technology_components[row["previous_technology"]] -= before
+        if after:
+            technology_components[row["current_technology"]] += after
+        technology_transition_counts[(row["classification"], row["current_technology"] or row["previous_technology"])] += 1
     if abs(sum(components.values()) - delta) > 1e-5:
         raise AssertionError("OP capacity reconciliation failed")
+    if abs(sum(technology_components.values()) - delta) > 1e-5:
+        raise AssertionError("technology OP capacity reconciliation failed")
     report = {
         "scope": "CISO EIA-860 annual inventory; identity match is not proof of physical commissioning/retirement",
         "previous_rows": len(old), "current_rows": len(new),
@@ -71,6 +80,11 @@ def compare(previous_csv, current_csv, output_json):
         "op_current_nameplate_mw": op_mw(new),
         "op_delta_nameplate_mw": delta,
         "op_delta_by_classification_mw": dict(sorted(components.items())),
+        "op_delta_by_technology_mw": dict(sorted(technology_components.items())),
+        "transition_counts_by_classification_and_technology": [
+            {"classification": classification, "technology": technology, "count": count}
+            for (classification, technology), count in sorted(technology_transition_counts.items())
+        ],
         "changes": changes,
         "empirical_dispatch_ready": False,
     }
