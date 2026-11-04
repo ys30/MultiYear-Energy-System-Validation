@@ -43,7 +43,26 @@ def inspect_csv(payload):
             "max_mw": max(values) if values else None,
             "values_mw": values,
         }
+    # Compare temporal shape only: sources may have different load scope.
+    # EIA values are archived, verified hourly observations, not CAISO corrections.
+    eia_hours = {"12:00": 29881.0, "13:00": 11819.0, "14:00": 29886.0}
+    comparison = {}
+    for a, b in (("12:00", "13:00"), ("13:00", "14:00")):
+        ca = windows[a]["mean_mw"]
+        cb = windows[b]["mean_mw"]
+        comparison[f"{a}_to_{b}"] = {
+            "eia_change_mw": eia_hours[b] - eia_hours[a],
+            "caiso_change_mw": cb - ca if ca is not None and cb is not None else None,
+            "same_change_direction": (
+                (eia_hours[b] - eia_hours[a]) * (cb - ca) > 0
+                if ca is not None and cb is not None else None
+            ),
+        }
+    comparison["all_hours_complete"] = all(
+        windows[hour]["five_minute_samples"] == 12 for hour in eia_hours
+    )
     return {
+        "hourly_shape_comparison": comparison,
         "local_hour_windows": windows,
         "source_url": URL,
         "source": "CAISO Today's Outlook historical demand (telemetry)",
