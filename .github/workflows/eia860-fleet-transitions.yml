@@ -41,7 +41,8 @@ jobs:
           data = json.loads(Path("outputs/eia860/fleet_transitions_2024_2025.json").read_text())
           keys = ("classification_counts", "op_previous_nameplate_mw",
                   "op_current_nameplate_mw", "op_delta_nameplate_mw",
-                  "op_delta_by_classification_mw")
+                  "op_delta_by_classification_mw", "op_delta_by_technology_mw",
+                  "transition_counts_by_classification_and_technology")
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
               f.write("## CISO annual generator identity comparison\n\n")
               f.write("Inventory identity changes do not establish commissioning or retirement.\n\n")
