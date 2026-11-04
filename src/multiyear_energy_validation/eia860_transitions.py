@@ -27,6 +27,7 @@ def _read(path):
 def compare(previous_csv, current_csv, output_json):
     old, new = _read(previous_csv), _read(current_csv)
     categories = Counter()
+    operating_year_counts = Counter()
     changes = []
     for key in sorted(old.keys() | new.keys()):
         a, b = old.get(key), new.get(key)
@@ -43,6 +44,17 @@ def compare(previous_csv, current_csv, output_json):
         else:
             kind = "unchanged"
         categories[kind] += 1
+        if kind in ("new_to_ciso_inventory", "missing_from_ciso_inventory"):
+            source = b if b is not None else a
+            raw = str(source.get("operating_year_raw") or "").strip()
+            try:
+                year = int(float(raw))
+                if not 1850 <= year <= 2100 or float(raw) != year:
+                    raise ValueError(raw)
+                bucket = str(year)
+            except (ValueError, TypeError, OverflowError):
+                bucket = "missing_or_invalid"
+            operating_year_counts[(kind, source["technology"], bucket)] += 1
         if kind != "unchanged":
             changes.append({
                 "plant_id": key[0], "generator_id": key[1], "classification": kind,
@@ -50,6 +62,10 @@ def compare(previous_csv, current_csv, output_json):
                 "current_status": b["status_raw"] if b else None,
                 "previous_technology": a["technology"] if a else None,
                 "current_technology": b["technology"] if b else None,
+                "previous_operating_year_raw": a.get("operating_year_raw") if a else None,
+                "current_operating_year_raw": b.get("operating_year_raw") if b else None,
+                "previous_operating_month_raw": a.get("operating_month_raw") if a else None,
+                "current_operating_month_raw": b.get("operating_month_raw") if b else None,
                 "previous_nameplate_mw": a["mw"] if a else 0.0,
                 "current_nameplate_mw": b["mw"] if b else 0.0,
             })
@@ -98,6 +114,11 @@ def compare(previous_csv, current_csv, output_json):
              "count": status_transition_counts[(previous, current, technology)],
              "op_delta_nameplate_mw": status_transition_op_delta_mw[(previous, current, technology)]}
             for previous, current, technology in sorted(status_transition_counts)
+        ],
+        "inventory_membership_operating_year_counts": [
+            {"classification": classification, "technology": technology,
+             "reported_operating_year": year, "count": count}
+            for (classification, technology, year), count in sorted(operating_year_counts.items())
         ],
         "changes": changes,
         "empirical_dispatch_ready": False,
