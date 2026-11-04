@@ -114,3 +114,19 @@ Live EIA API response for CISO hourly `D`, `NG`, and `TI` succeeded: [CI 4187903
 For a *diagnostic*, calculate `D - NG + TI` under the candidate relationship `D = NG - TI`. The residual is **-16,228 MWh** at T21 versus **-954 MWh** at T20 and **-1,310 MWh** at T22. These are *not* corrected values and should not be interpreted as proof of a valid balance identity: verify EIA's sign convention, data coverage, revisions, and any adjustment terms. The change in demand at T20→T21 (-18,062 MWh) is much larger than net generation (-2,044 MWh) or interchange (+744 MWh). This strengthens the evidence for an internally inconsistent source observation.
 
 The CI now emits both candidate-sign residuals to prevent a sign convention from being silently assumed. Original demand remains untouched; model approval remains blocked.
+
+## Executed two-sign energy-balance diagnostic (CI 41887202196)
+
+The live EIA component workflow successfully executed the diagnostic module and emitted both candidate-sign residuals: [run 41887202196](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41887202196).
+
+| Raw EIA hour label | D - NG + TI (MWh) | D - NG - TI (MWh) |
+| --- | ---: | ---: |
+| 2025-07-31T19 | -403 | 1,641 |
+| 2025-07-31T20 | -954 | 1,164 |
+| **2025-07-31T21** | **-16,228** | **-15,598** |
+| 2025-07-31T22 | -1,310 | -484 |
+| 2025-07-31T23 | -1,999 | 165 |
+
+The anomaly is robust to these two *candidate* interchange sign conventions. Neither residual is certified as a complete balancing-authority accounting identity, and this test alone cannot isolate the cause to a particular EIA component. The independent CAISO telemetry does not exhibit the same collapse. Preserve raw EIA observations and flag the affected hour for source-quality sensitivity analysis; do not silently replace it.
+
+**Next evidence gate:** check whether EIA's current API value is unchanged in an independently dated snapshot or official historical revision; obtain a documented complete accounting relationship and assess whether an additional balancing term can explain the outlier. Do not conflate the source anomaly with R02 dispatch-model readiness.
