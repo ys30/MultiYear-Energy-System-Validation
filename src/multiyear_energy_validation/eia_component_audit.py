@@ -22,9 +22,16 @@ def fetch_component(*, api_key, kind, start="2025-07-31T19", end="2025-07-31T23"
         body = json.load(response)
     result = body.get("response", {})
     rows = result.get("data", [])
+    total = int(result.get("total", -1))
+    if total < 0 or total > 100:
+        raise ValueError("invalid or truncated component response")
+    if len(rows) != total:
+        raise ValueError("component row count does not match API total")
+    if any(row.get("type") != kind or row.get("respondent") != "CISO" for row in rows):
+        raise ValueError("component facet mismatch")
     if not isinstance(rows, list):
         raise ValueError("unexpected response")
-    return {"type": kind, "total": result.get("total"), "rows": [
+    return {"type": kind, "total": total, "rows": [
         {key: row.get(key) for key in ("period", "type", "respondent", "value", "value-units")}
         for row in rows
     ]}
