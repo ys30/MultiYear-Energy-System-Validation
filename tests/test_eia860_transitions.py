@@ -73,3 +73,15 @@ def test_status_transition_matrix_identifies_op_gain_and_loss(tmp_path):
          "technology": "Hydroelectric Pumped Storage",
          "count": 1, "op_delta_nameplate_mw": 120.0},
     ]
+
+
+def test_inventory_cohorts_reconcile_counts_and_op_mw(tmp_path):
+    old, new = tmp_path / "old.csv", tmp_path / "new.csv"
+    write(old, [row("1", "A", mw=10)])
+    write(new, [row("1", "A", mw=10), row("2", "B", mw=30),
+                row("3", "C", status="OS", mw=50)])
+    result = compare(old, new, tmp_path / "out.json")
+    cohorts = result["entrant_operating_year_cohorts"]
+    assert sum(x["count"] for x in cohorts) == 2
+    assert sum(x["op_nameplate_mw"] for x in cohorts) == 30
+    assert cohorts[0]["cohort"] == "missing_or_other"
