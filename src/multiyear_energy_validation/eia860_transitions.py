@@ -108,6 +108,15 @@ def compare(previous_csv, current_csv, output_json):
         raise AssertionError("technology OP capacity reconciliation failed")
     if abs(sum(status_transition_op_delta_mw.values()) - components["status_changed"]) > 1e-5:
         raise AssertionError("status transition OP capacity reconciliation failed")
+    entrant_cohorts = Counter()
+    for (kind, technology, year), count in operating_year_counts.items():
+        if kind != "new_to_ciso_inventory":
+            continue
+        cohort = ("reported_2025" if year == "2025" else
+                  "reported_pre_2025" if year != "missing_or_invalid" and int(year) < 2025
+                  else "missing_or_other")
+        entrant_cohorts[(technology, cohort, "count")] += count
+        entrant_cohorts[(technology, cohort, "op_mw")] += operating_year_op_mw[(kind, technology, year)]
     report = {
         "scope": "CISO EIA-860 annual inventory; identity match is not proof of physical commissioning/retirement",
         "previous_rows": len(old), "current_rows": len(new),
@@ -132,6 +141,12 @@ def compare(previous_csv, current_csv, output_json):
              "reported_operating_year": year, "count": count,
              "op_nameplate_mw": operating_year_op_mw[(classification, technology, year)]}
             for (classification, technology, year), count in sorted(operating_year_counts.items())
+        ],
+        "entrant_operating_year_cohorts": [
+            {"technology": technology, "cohort": cohort,
+             "count": int(entrant_cohorts[(technology, cohort, "count")]),
+             "op_nameplate_mw": entrant_cohorts[(technology, cohort, "op_mw")]}
+            for technology, cohort in sorted({(t, c) for t, c, _ in entrant_cohorts})
         ],
         "changes": changes,
         "empirical_dispatch_ready": False,
