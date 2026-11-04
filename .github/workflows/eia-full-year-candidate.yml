@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'src/multiyear_energy_validation/schema_audit.py'
+      - 'src/multiyear_energy_validation/timeseries.py'
+      - 'src/multiyear_energy_validation/eia930.py'
       - 'src/multiyear_energy_validation/pypsa_baseline.py'
       - 'src/multiyear_energy_validation/pypsa_load.py'
       - '.github/workflows/eia-full-year-candidate.yml'
