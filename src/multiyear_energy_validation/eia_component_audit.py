@@ -43,6 +43,8 @@ def main():
         raise RuntimeError("EIA_API_KEY required")
     report = [fetch_component(api_key=key, kind=kind) for kind in ("D", "NG", "TI")]
     print("EIA_COMPONENT_CANDIDATES=" + json.dumps(report, sort_keys=True))
+    from .eia_balance_audit import audit_balance
+    print("EIA_BALANCE_DIAGNOSTICS=" + json.dumps(audit_balance(report), sort_keys=True))
     print("EIA_COMPONENT_INTERPRETATION=unverified_sign_and_scope")
 
 
