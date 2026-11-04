@@ -33,6 +33,8 @@ def test_reconciles_new_missing_status_and_capacity(tmp_path):
     assert result["op_current_nameplate_mw"] == 170
     assert result["op_delta_nameplate_mw"] == -20
     assert result["empirical_dispatch_ready"] is False
+    assert result["op_delta_by_technology_mw"] == {"Solar Photovoltaic": -20.0}
+    assert sum(result["op_delta_by_technology_mw"].values()) == result["op_delta_nameplate_mw"]
 
 
 def test_rejects_duplicate_ids(tmp_path):
@@ -41,3 +43,13 @@ def test_rejects_duplicate_ids(tmp_path):
     write(new, [row("1", "A")])
     with pytest.raises(ValueError, match="duplicate"):
         compare(old, new, tmp_path / "out.json")
+
+def test_technology_reclassification_conserves_capacity(tmp_path):
+    old, new = tmp_path / "old.csv", tmp_path / "new.csv"
+    write(old, [row("1", "A", mw=100, tech="Solar Photovoltaic")])
+    write(new, [row("1", "A", mw=100, tech="Onshore Wind Turbine")])
+    result = compare(old, new, tmp_path / "out.json")
+    assert result["op_delta_nameplate_mw"] == 0
+    assert result["op_delta_by_technology_mw"] == {
+        "Onshore Wind Turbine": 100.0, "Solar Photovoltaic": -100.0}
+    assert result["classification_counts"]["technology_changed"] == 1
