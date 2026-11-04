@@ -82,3 +82,17 @@ The full-year EIA candidate workflow [41874265410](https://github.com/ys30/Multi
 This verifies the value was not introduced by the project's numeric normalization and the hour-ending-to-hour-start mapping is consistent with the stated contract. **It does not verify EIA's upstream measurement, revision history, or independent CAISO corroboration.** The code explicitly sets `source_is_independently_verified=false`.
 
 No source rows were audited for 2024 because the isolated-hour screening rule flagged no hours. R02 remains blocked for empirical dispatch.
+
+## Independent CAISO telemetry cross-check (verified CI 41875210484)
+
+The official CAISO Today's Outlook historical 5-minute demand CSV for **2025-07-31** was fetched in the independent workflow [41875210484](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41875210484). For the **13:00–14:00 PDT** hour corresponding to EIA's **2025-07-31 20:00–21:00 UTC**, all twelve five-minute observations are present.
+
+| PDT hour | CAISO 5-minute mean MW | Min MW | Max MW | Samples |
+| --- | ---: | ---: | ---: | ---: |
+| 12:00–13:00 | 24,143.75 | 23,580 | 24,690 | 12 |
+| **13:00–14:00** | **25,604.1667** | **24,852** | **26,399** | **12** |
+| 14:00–15:00 | 27,590.9167 | 26,511 | 28,660 | 12 |
+
+The independent CAISO telemetry rises smoothly across these three hours, showing **no matching one-hour collapse** to the EIA-930 11,819 MW reading. The CAISO target-hour mean is **13,785.1667 MW higher** than the EIA observation, but the two series can have different measurement scope and definitions; this numerical difference is **not** itself an error estimate. The raw EIA API row was confirmed to contain 11,819 MWh, so the discrepancy is upstream of this project's normalization.
+
+**Evidence classification:** externally corroborated *shape inconsistency*, not a confirmed EIA upstream error or corrected value. Preserve the original EIA row; keep the neighbor-interpolation sensitivity explicitly hypothetical. Check CAISO telemetry's geographic scope, EIA-930 demand definition and published revision history before any authoritative correction or model decision.
