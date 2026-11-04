@@ -59,10 +59,16 @@ def compare(previous_csv, current_csv, output_json):
     components = Counter()
     technology_components = Counter()
     technology_transition_counts = Counter()
+    status_transition_counts = Counter()
+    status_transition_op_delta_mw = Counter()
     for row in changes:
         before = row["previous_nameplate_mw"] if row["previous_status"] == "OP" else 0.0
         after = row["current_nameplate_mw"] if row["current_status"] == "OP" else 0.0
         components[row["classification"]] += after - before
+        if row["classification"] == "status_changed":
+            transition = (row["previous_status"], row["current_status"], row["current_technology"])
+            status_transition_counts[transition] += 1
+            status_transition_op_delta_mw[transition] += after - before
         if before:
             technology_components[row["previous_technology"]] -= before
         if after:
@@ -72,6 +78,8 @@ def compare(previous_csv, current_csv, output_json):
         raise AssertionError("OP capacity reconciliation failed")
     if abs(sum(technology_components.values()) - delta) > 1e-5:
         raise AssertionError("technology OP capacity reconciliation failed")
+    if abs(sum(status_transition_op_delta_mw.values()) - components["status_changed"]) > 1e-5:
+        raise AssertionError("status transition OP capacity reconciliation failed")
     report = {
         "scope": "CISO EIA-860 annual inventory; identity match is not proof of physical commissioning/retirement",
         "previous_rows": len(old), "current_rows": len(new),
@@ -84,6 +92,12 @@ def compare(previous_csv, current_csv, output_json):
         "transition_counts_by_classification_and_technology": [
             {"classification": classification, "technology": technology, "count": count}
             for (classification, technology), count in sorted(technology_transition_counts.items())
+        ],
+        "status_transitions_by_technology": [
+            {"previous_status": previous, "current_status": current, "technology": technology,
+             "count": status_transition_counts[(previous, current, technology)],
+             "op_delta_nameplate_mw": status_transition_op_delta_mw[(previous, current, technology)]}
+            for previous, current, technology in sorted(status_transition_counts)
         ],
         "changes": changes,
         "empirical_dispatch_ready": False,
