@@ -125,6 +125,16 @@ jobs:
           (root / "r02a_hourly_load_quality.json").write_text(
               json.dumps(report, indent=2) + "\n", encoding="utf-8")
           print("R02A_HOURLY_LOAD_QUALITY=" + json.dumps(report, sort_keys=True))
+          from multiyear_energy_validation.ramp_source_audit import audit_raw_hour
+          raw_rows = json.loads((root / "eia930_candidate_rows.json").read_text())
+          audits = [
+              audit_raw_hour(raw_rows, hour_start_utc=flag["timestamp_utc"],
+                             observed_mw=flag["observed_mw"])
+              for flag in report["isolated_single_hour_flags"]
+          ]
+          (root / "r02a_raw_source_audit.json").write_text(
+              json.dumps(audits, indent=2) + "\n", encoding="utf-8")
+          print("R02A_RAW_SOURCE_AUDIT=" + json.dumps(audits, sort_keys=True))
           PY
       - name: Install optional PyPSA for load-only network smoke test
         if: matrix.year == 2024 || matrix.year == 2025
