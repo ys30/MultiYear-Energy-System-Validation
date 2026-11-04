@@ -52,3 +52,14 @@ The drop from 19:00 to 20:00 was **−18,062 MW**; rebound from 20:00 to 21:00 w
 The comparable 2024 maximum ramp was **+4,136 MW** from 2024-09-09 15:00 UTC (31,870 MW) to 16:00 UTC (36,006 MW), amid an increasing multi-hour trajectory. Both 2024 and 2025 full-year jobs and research contract tests succeeded at [run 41864319914](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41864319914) and [run 41864320019](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41864320019).
 
 **Next checks:** inspect the original EIA API response for period 2025-07-31T21 (hour-ending label), validate the raw 11,819 MWh value and any later EIA revisions, and compare against a separate CAISO demand publication. Preserve original observations and provenance. A sensitivity experiment can compare unchanged observed load to an explicitly labeled, *non-authoritative* neighbor-interpolated scenario; do not silently replace the input or claim a calibrated dispatch outcome.
+
+## Automated isolated-hour screening (verified)
+
+Successful full-year run [41868714187](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41868714187) and test run [41868750287](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41868750287) confirm:
+
+- **2024: 0** hours flagged by the current isolated-hour screening rule.
+- **2025: 1** hour flagged, **2025-07-31T20:00:00+00:00**, observed **11,819 MW**, preceding **29,881 MW**, following **29,886 MW**, neighbor mean **29,883.5 MW**, deviation **−18,064.5 MW (−60.45%)**.
+- Screening rule: deviation from neighbor mean >=5,000 MW and >=25%, and neighbor disagreement <=max(1,000 MW, 5% of neighbor mean). This is a heuristic, **not a validated statistical error classifier**. Other outliers may exist.
+- The original observation is preserved unchanged in the normalized data and annual totals. No imputation, removal, or empirical dispatch simulation is authorized by this flag.
+
+**Remaining:** inspect raw provider record and revision history, corroborate against independent CAISO series, and quantify transparent sensitivity (annual energy and peak ramp) under an explicitly hypothetical interpolation. R02 empirical dispatch gate remains closed.
