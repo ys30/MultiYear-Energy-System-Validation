@@ -43,6 +43,13 @@ def validate_utc_hourly(records, year: int):
         return sorted_values[low] * (1 - fraction) + sorted_values[min(low + 1, hours - 1)] * fraction
     daily_energy = [math.fsum(ordered[i:i + 24]) for i in range(0, hours, 24)]
     hourly_ramps = [abs(b - a) for a, b in zip(ordered, ordered[1:])]
+    largest_ramp_index = max(range(len(hourly_ramps)), key=hourly_ramps.__getitem__)
+    ramp_start = start + timedelta(hours=largest_ramp_index)
+    ramp_end = ramp_start + timedelta(hours=1)
+    ramp_window = [
+        {"timestamp_utc": (start + timedelta(hours=i)).isoformat(), "demand_mw": ordered[i]}
+        for i in range(max(0, largest_ramp_index - 3), min(hours, largest_ramp_index + 5))
+    ]
     return {
         "year": year, "hours": hours, "annual_mwh": total,
         "peak_mw": sorted_values[-1], "min_mw": sorted_values[0],
@@ -52,6 +59,12 @@ def validate_utc_hourly(records, year: int):
         "peak_timestamp_utc": (start + timedelta(hours=ordered.index(sorted_values[-1]))).isoformat(),
         "min_timestamp_utc": (start + timedelta(hours=ordered.index(sorted_values[0]))).isoformat(),
         "max_absolute_hourly_ramp_mw": max(hourly_ramps),
+        "max_ramp_from_utc": ramp_start.isoformat(),
+        "max_ramp_to_utc": ramp_end.isoformat(),
+        "max_ramp_from_mw": ordered[largest_ramp_index],
+        "max_ramp_to_mw": ordered[largest_ramp_index + 1],
+        "max_ramp_signed_mw": ordered[largest_ramp_index + 1] - ordered[largest_ramp_index],
+        "max_ramp_context": ramp_window,
         "min_daily_energy_mwh": min(daily_energy),
         "max_daily_energy_mwh": max(daily_energy),
         "utc_interval_semantics": "hour-start, 1-hour duration",
