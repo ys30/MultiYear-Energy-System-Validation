@@ -123,7 +123,7 @@ jobs:
           report["data_scope"] = "EIA-930 normalized observed CISO demand"
           report["empirical_dispatch_ready"] = False
           (root / "r02a_hourly_load_quality.json").write_text(
-              json.dumps(report, indent=2) + "\\n", encoding="utf-8")
+              json.dumps(report, indent=2) + "\n", encoding="utf-8")
           print("R02A_HOURLY_LOAD_QUALITY=" + json.dumps(report, sort_keys=True))
           PY
       - name: Install optional PyPSA for load-only network smoke test
