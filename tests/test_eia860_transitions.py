@@ -33,6 +33,7 @@ def test_reconciles_new_missing_status_and_capacity(tmp_path):
     assert result["op_current_nameplate_mw"] == 170
     assert result["op_delta_nameplate_mw"] == -20
     assert result["empirical_dispatch_ready"] is False
+    assert sum(x["op_nameplate_mw"] for x in result["inventory_membership_operating_year_counts"] if x["classification"] == "new_to_ciso_inventory") == 30
     assert result["op_delta_by_technology_mw"] == {"Solar Photovoltaic": -20.0}
     assert sum(result["op_delta_by_technology_mw"].values()) == result["op_delta_nameplate_mw"]
 
