@@ -63,3 +63,14 @@ Successful full-year run [41868714187](https://github.com/ys30/MultiYear-Energy-
 - The original observation is preserved unchanged in the normalized data and annual totals. No imputation, removal, or empirical dispatch simulation is authorized by this flag.
 
 **Remaining:** inspect raw provider record and revision history, corroborate against independent CAISO series, and quantify transparent sensitivity (annual energy and peak ramp) under an explicitly hypothetical interpolation. R02 empirical dispatch gate remains closed.
+
+## Verified counterfactual sensitivity (CI run 41872654672)
+
+The real-data full-year workflow completed successfully at [41872654672](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41872654672); unit tests passed at [41872676571](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41872676571).
+
+| Year | Flagged hours | Observed annual MWh | Hypothetical annual MWh | Difference MWh | Observed maximum hourly ramp MW | Hypothetical maximum hourly ramp MW |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2024 | 0 | 224,030,258 | 224,030,258 | 0 | 4,136 | 4,136 |
+| 2025 | 1 | 224,023,764 | 224,041,828.5 | +18,064.5 (+0.00806%) | 18,067 | 4,815 |
+
+**Interpretation:** A single isolated observed hour dominates the 2025 maximum absolute hourly ramp. Replacing it *only for diagnostic sensitivity* changes the ramp maximum by −13,252 MW (−73.35%) while leaving annual energy nearly unchanged. The scenario is **not a verified EIA revision or a recommended correction**. Raw observations remain intact, and any operational flexibility inference must explicitly disclose the anomalous hour and show both scenarios. Independent raw-record provenance and CAISO corroboration are outstanding. R02 empirical dispatch readiness remains blocked.
