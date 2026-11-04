@@ -66,7 +66,26 @@ def validate_utc_hourly(records, year: int):
                 "neighbor_mean_mw": baseline,
                 "deviation_from_neighbor_mean_mw": current - baseline,
             })
+    # Diagnostic counterfactual only; raw hourly observations remain unchanged.
+    counterfactual = ordered.copy()
+    for flag in isolated_flags:
+        i = int((datetime.fromisoformat(flag["timestamp_utc"]) - start).total_seconds() // 3600)
+        counterfactual[i] = flag["neighbor_mean_mw"]
+    counterfactual_ramps = [
+        abs(b - a) for a, b in zip(counterfactual, counterfactual[1:])
+    ]
+    sensitivity = {
+        "method": "replace only flagged isolated hours with mean of immediate neighbors; diagnostic only",
+        "replaced_hours": len(isolated_flags),
+        "annual_mwh_observed": total,
+        "annual_mwh_hypothetical": math.fsum(counterfactual),
+        "annual_mwh_difference": math.fsum(counterfactual) - total,
+        "max_absolute_hourly_ramp_mw_observed": max(hourly_ramps),
+        "max_absolute_hourly_ramp_mw_hypothetical": max(counterfactual_ramps),
+        "not_an_authoritative_correction": True,
+    }
     return {
+        "isolated_hour_sensitivity": sensitivity,
         "isolated_single_hour_flags": isolated_flags,
         "isolated_single_hour_flag_count": len(isolated_flags),
         "year": year, "hours": hours, "annual_mwh": total,
