@@ -81,3 +81,22 @@ def test_r02a_sustained_step_is_not_isolated():
         rows[i] = (rows[i][0], 11819.0)
     result = validate_utc_hourly(rows, 2025)
     assert result["isolated_single_hour_flag_count"] == 0
+
+
+def test_r02a_hypothetical_interpolation_is_non_destructive():
+    rows = sample(2025, 30000.0)
+    rows[100] = (rows[100][0], 11819.0)
+    result = validate_utc_hourly(rows, 2025)
+    sensitivity = result["isolated_hour_sensitivity"]
+    assert sensitivity["replaced_hours"] == 1
+    assert sensitivity["annual_mwh_difference"] == 18181.0
+    assert sensitivity["max_absolute_hourly_ramp_mw_hypothetical"] == 0.0
+    assert result["min_mw"] == 11819.0
+    assert rows[100][1] == 11819.0
+
+
+def test_r02a_no_flag_means_zero_counterfactual_effect():
+    result = validate_utc_hourly(sample(2024, 30000.0), 2024)
+    sensitivity = result["isolated_hour_sensitivity"]
+    assert sensitivity["replaced_hours"] == 0
+    assert sensitivity["annual_mwh_difference"] == 0.0
