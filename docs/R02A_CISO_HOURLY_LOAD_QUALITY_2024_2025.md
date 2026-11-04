@@ -106,3 +106,11 @@ The independent CAISO telemetry rises smoothly across these three hours, showing
 **Interpretation:** The 2025-07-31 13:00–14:00 PDT EIA one-hour trough is not supported by the independent CAISO telemetry shape. However, these published definitions prevent treating the 13,785.17 MW pointwise gap as a direct measurement error or using CAISO telemetry as an authoritative substitute. The raw EIA candidate was obtained from a live API, not a versioned 2025 historical snapshot; this single retrieval cannot establish whether EIA ever revised that hour.
 
 **Evidence gates before correction:** (1) obtain a dated/versioned EIA historical record or explicit provider confirmation; (2) check CAISO OASIS demand and scope for the same UTC hour; (3) examine EIA CISO net generation and total interchange for the energy-balance identity and any companion anomaly; (4) preserve original data, exact retrieval timestamp, and separately named sensitivity scenario. R02 empirical dispatch remains blocked independently of this issue.
+
+## EIA component-level anomaly corroboration (CI 41879038944)
+
+Live EIA API response for CISO hourly `D`, `NG`, and `TI` succeeded: [CI 41879038944](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41879038944). The raw hour-ending label `2025-07-31T21` has D=11,819 MWh, NG=27,732 MWh, and TI=-315 MWh. Adjacent labels are `T20`: D=29,881, NG=29,776, TI=-1,059; `T22`: D=29,886, NG=30,783, TI=-413.
+
+For a *diagnostic*, calculate `D - NG + TI` under the candidate relationship `D = NG - TI`. The residual is **-16,228 MWh** at T21 versus **-954 MWh** at T20 and **-1,310 MWh** at T22. These are *not* corrected values and should not be interpreted as proof of a valid balance identity: verify EIA's sign convention, data coverage, revisions, and any adjustment terms. The change in demand at T20→T21 (-18,062 MWh) is much larger than net generation (-2,044 MWh) or interchange (+744 MWh). This strengthens the evidence for an internally inconsistent source observation.
+
+The CI now emits both candidate-sign residuals to prevent a sign convention from being silently assumed. Original demand remains untouched; model approval remains blocked.
