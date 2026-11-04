@@ -55,5 +55,5 @@ def test_r02a_spike_and_zero_diagnostics():
     assert result["min_mw"] == 0.0
     assert result["peak_timestamp_utc"] == "2025-01-01T01:00:00+00:00"
     assert result["max_absolute_hourly_ramp_mw"] == 100.0
-    assert result["min_daily_energy_mwh"] == 320.0
+    assert result["min_daily_energy_mwh"] == 240.0
     assert result["max_daily_energy_mwh"] == 320.0
