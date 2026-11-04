@@ -117,6 +117,20 @@ def compare(previous_csv, current_csv, output_json):
                   else "missing_or_other")
         entrant_cohorts[(technology, cohort, "count")] += count
         entrant_cohorts[(technology, cohort, "op_mw")] += operating_year_op_mw[(kind, technology, year)]
+    pumped_storage_status_records = [
+        {"plant_id": row["plant_id"], "generator_id": row["generator_id"],
+         "previous_status": row["previous_status"], "current_status": row["current_status"],
+         "previous_operating_year_raw": row["previous_operating_year_raw"],
+         "current_operating_year_raw": row["current_operating_year_raw"],
+         "previous_operating_month_raw": row["previous_operating_month_raw"],
+         "current_operating_month_raw": row["current_operating_month_raw"],
+         "op_delta_nameplate_mw": (
+             (row["current_nameplate_mw"] if row["current_status"] == "OP" else 0)
+             - (row["previous_nameplate_mw"] if row["previous_status"] == "OP" else 0))
+        }
+        for row in changes if row["classification"] == "status_changed"
+        and row["current_technology"] == "Hydroelectric Pumped Storage"
+    ]
     report = {
         "scope": "CISO EIA-860 annual inventory; identity match is not proof of physical commissioning/retirement",
         "previous_rows": len(old), "current_rows": len(new),
