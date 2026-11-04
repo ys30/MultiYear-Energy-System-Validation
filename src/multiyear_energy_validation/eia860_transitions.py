@@ -28,6 +28,7 @@ def compare(previous_csv, current_csv, output_json):
     old, new = _read(previous_csv), _read(current_csv)
     categories = Counter()
     operating_year_counts = Counter()
+    operating_year_op_mw = Counter()
     changes = []
     for key in sorted(old.keys() | new.keys()):
         a, b = old.get(key), new.get(key)
@@ -55,6 +56,8 @@ def compare(previous_csv, current_csv, output_json):
             except (ValueError, TypeError, OverflowError):
                 bucket = "missing_or_invalid"
             operating_year_counts[(kind, source["technology"], bucket)] += 1
+            if source["status_raw"] == "OP":
+                operating_year_op_mw[(kind, source["technology"], bucket)] += source["mw"]
         if kind != "unchanged":
             changes.append({
                 "plant_id": key[0], "generator_id": key[1], "classification": kind,
@@ -90,6 +93,15 @@ def compare(previous_csv, current_csv, output_json):
         if after:
             technology_components[row["current_technology"]] += after
         technology_transition_counts[(row["classification"], row["current_technology"] or row["previous_technology"])] += 1
+    for classification in ("new_to_ciso_inventory", "missing_from_ciso_inventory"):
+        expected = sum(row["current_nameplate_mw"] if row["current_status"] == "OP" else 0.0
+                       for row in changes if row["classification"] == classification) if classification == "new_to_ciso_inventory" else sum(
+                           row["previous_nameplate_mw"] if row["previous_status"] == "OP" else 0.0
+                           for row in changes if row["classification"] == classification)
+        observed = sum(value for (kind, _, _), value in operating_year_op_mw.items()
+                       if kind == classification)
+        if abs(expected - observed) > 1e-5:
+            raise AssertionError("inventory operating-year OP MW reconciliation failed")
     if abs(sum(components.values()) - delta) > 1e-5:
         raise AssertionError("OP capacity reconciliation failed")
     if abs(sum(technology_components.values()) - delta) > 1e-5:
@@ -117,7 +129,8 @@ def compare(previous_csv, current_csv, output_json):
         ],
         "inventory_membership_operating_year_counts": [
             {"classification": classification, "technology": technology,
-             "reported_operating_year": year, "count": count}
+             "reported_operating_year": year, "count": count,
+             "op_nameplate_mw": operating_year_op_mw[(classification, technology, year)]}
             for (classification, technology, year), count in sorted(operating_year_counts.items())
         ],
         "changes": changes,
