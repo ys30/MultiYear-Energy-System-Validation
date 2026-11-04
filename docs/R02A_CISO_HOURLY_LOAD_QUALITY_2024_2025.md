@@ -74,3 +74,11 @@ The real-data full-year workflow completed successfully at [41872654672](https:/
 | 2025 | 1 | 224,023,764 | 224,041,828.5 | +18,064.5 (+0.00806%) | 18,067 | 4,815 |
 
 **Interpretation:** A single isolated observed hour dominates the 2025 maximum absolute hourly ramp. Replacing it *only for diagnostic sensitivity* changes the ramp maximum by −13,252 MW (−73.35%) while leaving annual energy nearly unchanged. The scenario is **not a verified EIA revision or a recommended correction**. Raw observations remain intact, and any operational flexibility inference must explicitly disclose the anomalous hour and show both scenarios. Independent raw-record provenance and CAISO corroboration are outstanding. R02 empirical dispatch readiness remains blocked.
+
+## EIA API raw-row provenance (verified in CI 41874265410)
+
+The full-year EIA candidate workflow [41874265410](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/41874265410) succeeded. For the isolated hour **2025-07-31T20:00:00+00:00** (normalized hour start), the original downloaded EIA-930 CISO demand response has exactly **one** matching row with raw hour-ending period **2025-07-31T21**, raw value **\"11819\"**, and raw units **megawatthours**. The normalized value is **11,819 MW**, exactly matching the original one-hour MWh reading. The independent raw-row check is archived in the workflow artifact `r02a_raw_source_audit.json`.
+
+This verifies the value was not introduced by the project's numeric normalization and the hour-ending-to-hour-start mapping is consistent with the stated contract. **It does not verify EIA's upstream measurement, revision history, or independent CAISO corroboration.** The code explicitly sets `source_is_independently_verified=false`.
+
+No source rows were audited for 2024 because the isolated-hour screening rule flagged no hours. R02 remains blocked for empirical dispatch.
