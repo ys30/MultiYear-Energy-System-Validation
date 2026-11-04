@@ -33,5 +33,27 @@ def validate_utc_hourly(records, year: int):
     for i in range(hours):
         if start + timedelta(hours=i) not in values:
             raise ValueError("missing hourly timestamp")
-    total = math.fsum(values.values())
-    return {"year": year, "hours": hours, "annual_mwh": total, "peak_mw": max(values.values()), "min_mw": min(values.values())}
+    ordered = [values[start + timedelta(hours=i)] for i in range(hours)]
+    total = math.fsum(ordered)
+    sorted_values = sorted(ordered)
+    def percentile(p):
+        pos = (hours - 1) * p
+        low = int(pos)
+        fraction = pos - low
+        return sorted_values[low] * (1 - fraction) + sorted_values[min(low + 1, hours - 1)] * fraction
+    daily_energy = [math.fsum(ordered[i:i + 24]) for i in range(0, hours, 24)]
+    hourly_ramps = [abs(b - a) for a, b in zip(ordered, ordered[1:])]
+    return {
+        "year": year, "hours": hours, "annual_mwh": total,
+        "peak_mw": sorted_values[-1], "min_mw": sorted_values[0],
+        "mean_mw": total / hours, "median_mw": percentile(0.5),
+        "p01_mw": percentile(0.01), "p99_mw": percentile(0.99),
+        "zero_load_hours": sum(v == 0 for v in ordered),
+        "peak_timestamp_utc": (start + timedelta(hours=ordered.index(sorted_values[-1]))).isoformat(),
+        "min_timestamp_utc": (start + timedelta(hours=ordered.index(sorted_values[0]))).isoformat(),
+        "max_absolute_hourly_ramp_mw": max(hourly_ramps),
+        "min_daily_energy_mwh": min(daily_energy),
+        "max_daily_energy_mwh": max(daily_energy),
+        "utc_interval_semantics": "hour-start, 1-hour duration",
+        "coverage_complete": True,
+    }
