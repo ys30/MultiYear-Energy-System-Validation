@@ -148,6 +148,7 @@ def compare(previous_csv, current_csv, output_json):
              "op_nameplate_mw": entrant_cohorts[(technology, cohort, "op_mw")]}
             for technology, cohort in sorted({(t, c) for t, c, _ in entrant_cohorts})
         ],
+        "pumped_storage_status_records": pumped_storage_status_records,
         "changes": changes,
         "empirical_dispatch_ready": False,
     }
