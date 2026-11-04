@@ -50,7 +50,25 @@ def validate_utc_hourly(records, year: int):
         {"timestamp_utc": (start + timedelta(hours=i)).isoformat(), "demand_mw": ordered[i]}
         for i in range(max(0, largest_ramp_index - 3), min(hours, largest_ramp_index + 5))
     ]
+    isolated_flags = []
+    for i in range(1, hours - 1):
+        left, current, right = ordered[i - 1:i + 2]
+        baseline = (left + right) / 2
+        deviation = abs(current - baseline)
+        if (baseline > 0 and deviation >= 5000
+                and deviation / baseline >= 0.25
+                and abs(right - left) <= max(1000, 0.05 * baseline)):
+            isolated_flags.append({
+                "timestamp_utc": (start + timedelta(hours=i)).isoformat(),
+                "observed_mw": current,
+                "previous_mw": left,
+                "next_mw": right,
+                "neighbor_mean_mw": baseline,
+                "deviation_from_neighbor_mean_mw": current - baseline,
+            })
     return {
+        "isolated_single_hour_flags": isolated_flags,
+        "isolated_single_hour_flag_count": len(isolated_flags),
         "year": year, "hours": hours, "annual_mwh": total,
         "peak_mw": sorted_values[-1], "min_mw": sorted_values[0],
         "mean_mw": total / hours, "median_mw": percentile(0.5),
