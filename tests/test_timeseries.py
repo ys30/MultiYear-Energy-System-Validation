@@ -33,3 +33,27 @@ def test_naive_time():
     rows[0] = (rows[0][0].replace(tzinfo=None), 2)
     with pytest.raises(ValueError, match="UTC"):
         validate_utc_hourly(rows, 2021)
+
+@pytest.mark.parametrize("year,hours", [(2024, 8784), (2025, 8760)])
+def test_r02a_constant_profile_diagnostics(year, hours):
+    result = validate_utc_hourly(sample(year, 2.0), year)
+    assert result["coverage_complete"] is True
+    assert result["mean_mw"] == result["median_mw"] == 2.0
+    assert result["p01_mw"] == result["p99_mw"] == 2.0
+    assert result["zero_load_hours"] == 0
+    assert result["max_absolute_hourly_ramp_mw"] == 0.0
+    assert result["min_daily_energy_mwh"] == result["max_daily_energy_mwh"] == 48.0
+    assert result["peak_timestamp_utc"] == f"{year}-01-01T00:00:00+00:00"
+
+def test_r02a_spike_and_zero_diagnostics():
+    rows = sample(2025, 10.0)
+    rows[0] = (rows[0][0], 0.0)
+    rows[1] = (rows[1][0], 100.0)
+    result = validate_utc_hourly(rows, 2025)
+    assert result["zero_load_hours"] == 1
+    assert result["peak_mw"] == 100.0
+    assert result["min_mw"] == 0.0
+    assert result["peak_timestamp_utc"] == "2025-01-01T01:00:00+00:00"
+    assert result["max_absolute_hourly_ramp_mw"] == 100.0
+    assert result["min_daily_energy_mwh"] == 320.0
+    assert result["max_daily_energy_mwh"] == 320.0
