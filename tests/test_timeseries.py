@@ -61,3 +61,23 @@ def test_r02a_spike_and_zero_diagnostics():
     assert result["max_ramp_to_utc"] == "2025-01-01T01:00:00+00:00"
     assert result["max_ramp_signed_mw"] == 100.0
     assert [x["demand_mw"] for x in result["max_ramp_context"][:3]] == [0.0, 100.0, 10.0]
+
+
+def test_r02a_isolated_trough_flag_preserves_observation():
+    rows = sample(2025, 30000.0)
+    rows[100] = (rows[100][0], 11819.0)
+    result = validate_utc_hourly(rows, 2025)
+    assert result["isolated_single_hour_flag_count"] == 1
+    flag = result["isolated_single_hour_flags"][0]
+    assert flag["timestamp_utc"] == rows[100][0].isoformat()
+    assert flag["observed_mw"] == 11819.0
+    assert flag["neighbor_mean_mw"] == 30000.0
+    assert rows[100][1] == 11819.0
+
+
+def test_r02a_sustained_step_is_not_isolated():
+    rows = sample(2025, 30000.0)
+    for i in range(100, 120):
+        rows[i] = (rows[i][0], 11819.0)
+    result = validate_utc_hourly(rows, 2025)
+    assert result["isolated_single_hour_flag_count"] == 0
