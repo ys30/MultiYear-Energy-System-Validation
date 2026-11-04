@@ -53,3 +53,22 @@ def test_technology_reclassification_conserves_capacity(tmp_path):
     assert result["op_delta_by_technology_mw"] == {
         "Onshore Wind Turbine": 100.0, "Solar Photovoltaic": -100.0}
     assert result["classification_counts"]["technology_changed"] == 1
+
+
+def test_status_transition_matrix_identifies_op_gain_and_loss(tmp_path):
+    old, new = tmp_path / "old.csv", tmp_path / "new.csv"
+    write(old, [row("1", "A", status="OS", mw=120, tech="Hydroelectric Pumped Storage"),
+                row("1", "B", status="OP", mw=40, tech="Batteries")])
+    write(new, [row("1", "A", status="OP", mw=120, tech="Hydroelectric Pumped Storage"),
+                row("1", "B", status="SB", mw=40, tech="Batteries")])
+    result = compare(old, new, tmp_path / "out.json")
+    assert result["op_delta_nameplate_mw"] == 80
+    assert result["op_delta_by_classification_mw"]["status_changed"] == 80
+    transitions = result["status_transitions_by_technology"]
+    assert transitions == [
+        {"previous_status": "OP", "current_status": "SB", "technology": "Batteries",
+         "count": 1, "op_delta_nameplate_mw": -40.0},
+        {"previous_status": "OS", "current_status": "OP",
+         "technology": "Hydroelectric Pumped Storage",
+         "count": 1, "op_delta_nameplate_mw": 120.0},
+    ]
