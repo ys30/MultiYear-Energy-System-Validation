@@ -45,7 +45,8 @@ jobs:
                   "transition_counts_by_classification_and_technology",
                   "status_transitions_by_technology",
                   "inventory_membership_operating_year_counts",
-                  "entrant_operating_year_cohorts")
+                  "entrant_operating_year_cohorts",
+                  "pumped_storage_status_records")
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
               f.write("## CISO annual generator identity comparison\n\n")
               f.write("Inventory identity changes do not establish commissioning or retirement.\n\n")
