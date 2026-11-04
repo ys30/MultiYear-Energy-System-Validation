@@ -131,6 +131,25 @@ def compare(previous_csv, current_csv, output_json):
         for row in changes if row["classification"] == "status_changed"
         and row["current_technology"] == "Hydroelectric Pumped Storage"
     ]
+    status_change_unit_records = [
+        {"plant_id": row["plant_id"], "generator_id": row["generator_id"],
+         "technology": row["current_technology"],
+         "previous_status": row["previous_status"], "current_status": row["current_status"],
+         "previous_operating_year_raw": row["previous_operating_year_raw"],
+         "current_operating_year_raw": row["current_operating_year_raw"],
+         "previous_operating_month_raw": row["previous_operating_month_raw"],
+         "current_operating_month_raw": row["current_operating_month_raw"],
+         "op_delta_nameplate_mw": (
+             (row["current_nameplate_mw"] if row["current_status"] == "OP" else 0)
+             - (row["previous_nameplate_mw"] if row["previous_status"] == "OP" else 0))
+        }
+        for row in changes if row["classification"] == "status_changed"
+    ]
+    if len(status_change_unit_records) != categories["status_changed"]:
+        raise AssertionError("status-change unit record count reconciliation failed")
+    if abs(sum(r["op_delta_nameplate_mw"] for r in status_change_unit_records)
+           - components["status_changed"]) > 1e-5:
+        raise AssertionError("status-change unit record MW reconciliation failed")
     report = {
         "scope": "CISO EIA-860 annual inventory; identity match is not proof of physical commissioning/retirement",
         "previous_rows": len(old), "current_rows": len(new),
@@ -163,6 +182,7 @@ def compare(previous_csv, current_csv, output_json):
             for technology, cohort in sorted({(t, c) for t, c, _ in entrant_cohorts})
         ],
         "pumped_storage_status_records": pumped_storage_status_records,
+        "status_change_unit_records": status_change_unit_records,
         "changes": changes,
         "empirical_dispatch_ready": False,
     }
