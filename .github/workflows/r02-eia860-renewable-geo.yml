@@ -8,6 +8,7 @@ on:
       - 'src/multiyear_energy_validation/renewable_weather_site_selection.py'
       - 'src/multiyear_energy_validation/renewable_capacity_coverage_curve.py'
       - 'src/multiyear_energy_validation/renewable_spatial_sample.py'
+      - 'src/multiyear_energy_validation/renewable_sampling_comparison.py'
       - '.github/workflows/r02-eia860-renewable-geo.yml'
 permissions:
   contents: read
@@ -86,6 +87,18 @@ jobs:
           base = f"outputs/eia860/{y}"
           spatial_sample_design(f"{base}/ciso_renewable_geocoded_{y}.csv",
                                 f"{base}/ciso_spatial_sample_{y}.json", 50, 1.0)
+          PY
+      - name: Compare equal-budget capacity-first versus spatial-stratified sampling
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import os
+          from multiyear_energy_validation.renewable_sampling_comparison import compare_sampling
+          y = int(os.environ["YEAR"])
+          base = f"outputs/eia860/{y}"
+          compare_sampling(f"{base}/ciso_renewable_geocoded_{y}.csv",
+                           f"{base}/ciso_sampling_comparison_{y}.json", 50, 1.0)
           PY
       - uses: actions/upload-artifact@v4
         with:
