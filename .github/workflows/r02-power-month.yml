@@ -1,0 +1,26 @@
+name: R02 NASA POWER full-month weather pilot
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/multiyear_energy_validation/power_month_pilot.py'
+      - '.github/workflows/r02-power-month.yml'
+permissions:
+  contents: read
+jobs:
+  month:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fetch and audit full July 2025 weather for three points
+        run: PYTHONPATH=src python -m multiyear_energy_validation.power_month_pilot
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r02-nasa-power-three-site-july-2025
+          path: artifacts/r02_weather_month/
+          if-no-files-found: error
+          retention-days: 30
