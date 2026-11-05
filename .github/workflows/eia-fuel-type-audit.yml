@@ -1,0 +1,24 @@
+name: EIA CISO fuel-type candidate audit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/multiyear_energy_validation/eia_fuel_audit.py'
+      - '.github/workflows/eia-fuel-type-audit.yml'
+permissions:
+  contents: read
+jobs:
+  fuel-candidates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check API credential
+        run: test -n "$EIA_API_KEY"
+      - name: Inspect fuel-type candidate schema and rows
+        run: PYTHONPATH=src python -m multiyear_energy_validation.eia_fuel_audit
