@@ -1,0 +1,29 @@
+name: R02 CISO normalized EIA fuel artifacts
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/multiyear_energy_validation/eia_fuel_export.py'
+      - '.github/workflows/r02-eia-fuel-export.yml'
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+      R02_EXPORT_DIR: artifacts/r02_eia_fuel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: test -n "$EIA_API_KEY"
+      - run: PYTHONPATH=src python -m multiyear_energy_validation.eia_fuel_export
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r02-ciso-eia-fuel-2024-2025
+          path: artifacts/r02_eia_fuel/
+          if-no-files-found: error
+          retention-days: 30
