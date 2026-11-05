@@ -7,6 +7,7 @@ on:
       - 'src/multiyear_energy_validation/renewable_site_summary.py'
       - 'src/multiyear_energy_validation/renewable_weather_site_selection.py'
       - 'src/multiyear_energy_validation/renewable_capacity_coverage_curve.py'
+      - 'src/multiyear_energy_validation/renewable_spatial_sample.py'
       - '.github/workflows/r02-eia860-renewable-geo.yml'
 permissions:
   contents: read
@@ -73,6 +74,18 @@ jobs:
           base = f"outputs/eia860/{y}"
           capacity_coverage_curve(f"{base}/ciso_renewable_geocoded_{y}.csv",
                                   f"{base}/ciso_renewable_coverage_curve_{y}.json")
+          PY
+      - name: Compare geographic cell and capacity coverage at 50 sites per technology
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import os
+          from multiyear_energy_validation.renewable_spatial_sample import spatial_sample_design
+          y = int(os.environ["YEAR"])
+          base = f"outputs/eia860/{y}"
+          spatial_sample_design(f"{base}/ciso_renewable_geocoded_{y}.csv",
+                                f"{base}/ciso_spatial_sample_{y}.json", 50, 1.0)
           PY
       - uses: actions/upload-artifact@v4
         with:
