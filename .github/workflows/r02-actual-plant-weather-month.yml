@@ -1,0 +1,34 @@
+name: R02 actual CISO plant July weather
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/multiyear_energy_validation/actual_plant_weather_month.py'
+      - '.github/workflows/r02-actual-plant-weather-month.yml'
+permissions:
+  contents: read
+jobs:
+  actual-plants-month:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e . "openpyxl>=3.1,<4"
+      - name: Official 2025 EIA-860 and geocoded CISO renewable plants
+        run: |
+          python -m multiyear_energy_validation.eia860_source --year 2025 --output outputs/eia860/2025
+          python - <<'PY'
+          from multiyear_energy_validation.eia860_renewable_geo import extract_ciso_renewable_locations
+          extract_ciso_renewable_locations("outputs/eia860/2025/eia8602025.zip", 2025, "outputs/eia860/2025")
+          PY
+      - name: Full July weather at actual solar and wind plants
+        run: python -m multiyear_energy_validation.actual_plant_weather_month
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r02-real-ciso-plant-july-weather
+          path: outputs/actual_plant_weather_month_2025/
+          if-no-files-found: error
+          retention-days: 30
