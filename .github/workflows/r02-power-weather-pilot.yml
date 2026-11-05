@@ -1,0 +1,26 @@
+name: R02 NASA POWER hourly weather pilot
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/multiyear_energy_validation/power_weather_pilot.py'
+      - '.github/workflows/r02-power-weather-pilot.yml'
+permissions:
+  contents: read
+jobs:
+  weather-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fetch and audit bounded NASA POWER sample
+        run: PYTHONPATH=src python -m multiyear_energy_validation.power_weather_pilot
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r02-nasa-power-hourly-pilot
+          path: artifacts/r02_weather/
+          if-no-files-found: error
+          retention-days: 30
