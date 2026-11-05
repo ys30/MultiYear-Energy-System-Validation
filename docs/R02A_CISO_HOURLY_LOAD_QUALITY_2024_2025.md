@@ -142,3 +142,19 @@ Implemented in `src/multiyear_energy_validation/load_quality_gate.py` with regre
 - **Evidence:** CAISO run 41875210484, EIA component run 41879038944, EIA residual run 41887202196. This is a data-quality determination, **not** a claim of validated power-system dispatch.
 
 For the manuscript, distinguish *screened observed-load baseline* from *scenario sensitivity*. Do not label an interpolated hourly value as measured or externally verified.
+
+## Cross-endpoint EIA fuel-generation discrepancy (fuel audit CI 41960929998)
+
+EIA `electricity/rto/fuel-type-data` returned 40 records across five hours and eight fuel types for CISO. Summing reported fuel-type generation and comparing with the separately retrieved `electricity/rto/region-data` net generation yields:
+
+| EIA raw hour | Fuel-type sum (MWh) | Region NG (MWh) | Fuel minus region (MWh) |
+| --- | ---: | ---: | ---: |
+| T19 | 29,677 | 29,677 | 0 |
+| T20 | 29,775 | 29,776 | -1 |
+| **T21** | **30,003** | **27,732** | **+2,271** |
+| T22 | 30,783 | 30,783 | 0 |
+| T23 | 31,642 | 31,641 | +1 |
+
+At T21 the discrepancy **numerically equals the reported nuclear generation (2,271 MWh)**. This is a diagnostic coincidence, not proof of an omitted nuclear component. It requires investigation of endpoint aggregation, historical revisions, provider record versions and fuel classifications. The `OTH` fuel category is negative throughout this window; do not clamp or drop it.
+
+**Consequences:** EIA source anomaly now includes both demand-vs-component inconsistency and a cross-endpoint net-generation discrepancy in the same hour. Do not choose the larger sum as corrected net generation, and do not use the fuel-type observations as renewable *availability* without independent resource/curtailment validation. Preserve the raw observations and source URLs.
