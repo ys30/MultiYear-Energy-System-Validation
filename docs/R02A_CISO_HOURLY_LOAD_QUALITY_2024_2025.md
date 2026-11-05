@@ -130,3 +130,15 @@ The live EIA component workflow successfully executed the diagnostic module and 
 The anomaly is robust to these two *candidate* interchange sign conventions. Neither residual is certified as a complete balancing-authority accounting identity, and this test alone cannot isolate the cause to a particular EIA component. The independent CAISO telemetry does not exhibit the same collapse. Preserve raw EIA observations and flag the affected hour for source-quality sensitivity analysis; do not silently replace it.
 
 **Next evidence gate:** check whether EIA's current API value is unchanged in an independently dated snapshot or official historical revision; obtain a documented complete accounting relationship and assess whether an additional balancing term can explain the outlier. Do not conflate the source anomaly with R02 dispatch-model readiness.
+
+## R02a anomaly decision and R02 dispatch gate
+
+Implemented in `src/multiyear_energy_validation/load_quality_gate.py` with regression tests.
+
+- **Original source track:** retain EIA `2025-07-31T21` demand 11,819 MWh and the normalized hour-start `2025-07-31T20:00:00+00:00`; flag as independently inconsistent with CAISO telemetry shape and EIA component-balance diagnostics.
+- **Sensitivity-only track:** optional neighbor-interpolation counterfactual 29,883.5 MWh, explicitly labeled *not a provider correction*.
+- **Empirical approval:** flagged hour remains unapproved until the provider discrepancy is resolved or a predeclared analysis-specific exclusion policy is justified and evaluated. Scenario substitution alone cannot clear the gate.
+- **R02 model readiness:** separate hard requirements for renewable availability, thermal costs, storage parameters and interchange boundaries. R02 empirical dispatch stays blocked even if the load anomaly is resolved.
+- **Evidence:** CAISO run 41875210484, EIA component run 41879038944, EIA residual run 41887202196. This is a data-quality determination, **not** a claim of validated power-system dispatch.
+
+For the manuscript, distinguish *screened observed-load baseline* from *scenario sensitivity*. Do not label an interpolated hourly value as measured or externally verified.
