@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'src/multiyear_energy_validation/actual_plant_weather_month.py'
+      - 'src/multiyear_energy_validation/actual_plant_weather_heterogeneity.py'
       - '.github/workflows/r02-actual-plant-weather-month.yml'
 permissions:
   contents: read
@@ -26,6 +27,8 @@ jobs:
           PY
       - name: Full July weather at actual solar and wind plants
         run: python -m multiyear_energy_validation.actual_plant_weather_month
+      - name: Quantify hourly between-plant weather differences
+        run: python -m multiyear_energy_validation.actual_plant_weather_heterogeneity
       - uses: actions/upload-artifact@v4
         with:
           name: r02-real-ciso-plant-july-weather
