@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'src/multiyear_energy_validation/spatial_weather_pilot.py'
+      - 'src/multiyear_energy_validation/spatial_weather_pairwise.py'
       - '.github/workflows/r02-six-site-spatial-weather.yml'
 permissions:
   contents: read
@@ -26,6 +27,8 @@ jobs:
           PY
       - name: Retrieve and validate six-site July NASA POWER weather
         run: python -m multiyear_energy_validation.spatial_weather_pilot
+      - name: Evaluate all six within-technology site pairs
+        run: python -m multiyear_energy_validation.spatial_weather_pairwise
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-spatial-weather-2025
