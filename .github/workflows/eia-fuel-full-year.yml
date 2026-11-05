@@ -1,0 +1,23 @@
+name: EIA CISO fuel-type full-year coverage
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/multiyear_energy_validation/eia_fuel_year_audit.py'
+      - '.github/workflows/eia-fuel-full-year.yml'
+permissions:
+  contents: read
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: test -n "$EIA_API_KEY"
+      - name: Inspect 2024 and 2025 hourly fuel coverage
+        run: PYTHONPATH=src python -m multiyear_energy_validation.eia_fuel_year_audit
