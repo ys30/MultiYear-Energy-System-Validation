@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'src/multiyear_energy_validation/eia860_renewable_geo.py'
+      - 'src/multiyear_energy_validation/renewable_site_summary.py'
       - '.github/workflows/r02-eia860-renewable-geo.yml'
 permissions:
   contents: read
@@ -34,6 +35,18 @@ jobs:
           from multiyear_energy_validation.eia860_renewable_geo import extract_ciso_renewable_locations
           year = int(os.environ["YEAR"])
           extract_ciso_renewable_locations(f"outputs/eia860/{year}/eia860{year}.zip", year, f"outputs/eia860/{year}")
+          PY
+      - name: Summarize renewable plant weather sites
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import os
+          from multiyear_energy_validation.renewable_site_summary import summarize_geocoded
+          y = int(os.environ["YEAR"])
+          base = f"outputs/eia860/{y}"
+          summarize_geocoded(f"{base}/ciso_renewable_geocoded_{y}.csv",
+                             f"{base}/ciso_renewable_technology_{y}.json")
           PY
       - uses: actions/upload-artifact@v4
         with:
