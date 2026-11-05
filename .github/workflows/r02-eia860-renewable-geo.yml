@@ -1,0 +1,45 @@
+name: R02 EIA-860 CISO renewable geolocation
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/multiyear_energy_validation/eia860_renewable_geo.py'
+      - '.github/workflows/r02-eia860-renewable-geo.yml'
+permissions:
+  contents: read
+jobs:
+  geocode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        year: [2024, 2025]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e . "openpyxl>=3.1,<4"
+      - name: Download official annual EIA-860 workbook
+        env:
+          YEAR: ${{ matrix.year }}
+        run: python -m multiyear_energy_validation.eia860_source --year "$YEAR" --output "outputs/eia860/$YEAR"
+      - name: Extract CISO operational solar and wind coordinates
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import os
+          from multiyear_energy_validation.eia860_renewable_geo import extract_ciso_renewable_locations
+          year = int(os.environ["YEAR"])
+          extract_ciso_renewable_locations(f"outputs/eia860/{year}/eia860{year}.zip", year, f"outputs/eia860/{year}")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r02-ciso-renewable-geo-${{ matrix.year }}
+          path: |
+            outputs/eia860/${{ matrix.year }}/ciso_renewable_geocoded_*.csv
+            outputs/eia860/${{ matrix.year }}/ciso_renewable_geocoded_*.manifest.json
+          if-no-files-found: error
+          retention-days: 30
