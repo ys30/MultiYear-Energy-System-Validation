@@ -6,6 +6,7 @@ on:
       - 'src/multiyear_energy_validation/actual_plant_weather_month.py'
       - 'src/multiyear_energy_validation/actual_plant_weather_heterogeneity.py'
       - 'src/multiyear_energy_validation/solar_daylight_sensitivity.py'
+      - 'src/multiyear_energy_validation/solar_diurnal_anomaly.py'
       - '.github/workflows/r02-actual-plant-weather-month.yml'
 permissions:
   contents: read
@@ -32,6 +33,8 @@ jobs:
         run: python -m multiyear_energy_validation.actual_plant_weather_heterogeneity
       - name: Check solar correlation after excluding night hours
         run: python -m multiyear_energy_validation.solar_daylight_sensitivity
+      - name: Remove site-specific mean diurnal cycle and compare solar anomalies
+        run: python -m multiyear_energy_validation.solar_diurnal_anomaly
       - uses: actions/upload-artifact@v4
         with:
           name: r02-real-ciso-plant-july-weather
