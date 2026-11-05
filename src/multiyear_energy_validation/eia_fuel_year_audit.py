@@ -58,8 +58,21 @@ def audit_year(rows, year):
         by_hour[period][fuel] = value
     types = sorted({k for values in by_hour.values() for k in values})
     missing_fuel_counts = Counter(tuple(sorted(set(types) - set(v))) for v in by_hour.values())
+    start = datetime(year, 1, 1)
+    expected = {(start + timedelta(hours=i)).strftime("%Y-%m-%dT%H")
+                for i in range(expected_hours)}
+    missing_periods = sorted(expected - set(by_hour))
+    unexpected_periods = sorted(set(by_hour) - expected)
+    fuel_periods = {fuel: sorted(p for p, v in by_hour.items() if fuel in v)
+                    for fuel in types}
     return {
         "year": year,
+        "missing_periods": missing_periods,
+        "unexpected_periods": unexpected_periods,
+        "fuel_first_last_and_hours": {fuel: {"first": periods[0], "last": periods[-1],
+                                             "hours": len(periods)}
+                                     for fuel, periods in fuel_periods.items()},
+        "coverage_pass": not missing_periods and not unexpected_periods and not invalid,
         "row_count": len(rows),
         "observed_hours": len(by_hour),
         "expected_hours": expected_hours,
