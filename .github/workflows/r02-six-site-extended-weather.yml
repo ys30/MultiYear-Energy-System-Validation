@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'src/multiyear_energy_validation/extended_physical_weather.py'
+      - 'src/multiyear_energy_validation/merge_physical_weather.py'
       - '.github/workflows/r02-six-site-extended-weather.yml'
 permissions:
   contents: read
@@ -28,9 +29,13 @@ jobs:
         run: python -m multiyear_energy_validation.spatial_weather_pilot
       - name: Acquire DNI DHI temperature and surface pressure
         run: python -m multiyear_energy_validation.extended_physical_weather
+      - name: Strictly merge base and extended meteorological inputs
+        run: python -m multiyear_energy_validation.merge_physical_weather
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-extended-weather-2025
-          path: outputs/spatial_weather_extended_2025/
+          path: |
+            outputs/spatial_weather_extended_2025/
+            outputs/spatial_weather_merged_2025/
           if-no-files-found: error
           retention-days: 30
