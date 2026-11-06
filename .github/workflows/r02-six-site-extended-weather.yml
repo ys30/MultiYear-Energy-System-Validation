@@ -1,0 +1,36 @@
+name: R02 six-site extended physical weather
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/multiyear_energy_validation/extended_physical_weather.py'
+      - '.github/workflows/r02-six-site-extended-weather.yml'
+permissions:
+  contents: read
+jobs:
+  extended-weather:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e . "openpyxl>=3.1,<4"
+      - name: Official 2025 EIA-860 renewable plant coordinates
+        run: |
+          python -m multiyear_energy_validation.eia860_source --year 2025 --output outputs/eia860/2025
+          python - <<'PY'
+          from multiyear_energy_validation.eia860_renewable_geo import extract_ciso_renewable_locations
+          extract_ciso_renewable_locations("outputs/eia860/2025/eia8602025.zip", 2025, "outputs/eia860/2025")
+          PY
+      - name: Recreate six-site stratified selection and base weather
+        run: python -m multiyear_energy_validation.spatial_weather_pilot
+      - name: Acquire DNI DHI temperature and surface pressure
+        run: python -m multiyear_energy_validation.extended_physical_weather
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r02-six-site-extended-weather-2025
+          path: outputs/spatial_weather_extended_2025/
+          if-no-files-found: error
+          retention-days: 30
