@@ -5,6 +5,8 @@ on:
     paths:
       - 'src/multiyear_energy_validation/extended_physical_weather.py'
       - 'src/multiyear_energy_validation/merge_physical_weather.py'
+      - 'src/multiyear_energy_validation/air_density_diagnostic.py'
+      - 'tests/test_air_density_diagnostic.py'
       - '.github/workflows/r02-six-site-extended-weather.yml'
 permissions:
   contents: read
@@ -31,6 +33,12 @@ jobs:
         run: python -m multiyear_energy_validation.extended_physical_weather
       - name: Strictly merge base and extended meteorological inputs
         run: python -m multiyear_energy_validation.merge_physical_weather
+      - name: Calculate dry-air density at each plant
+        run: python -m multiyear_energy_validation.air_density_diagnostic
+      - name: Test physical air-density calculations
+        run: |
+          python -m pip install pytest
+          python -m pytest -q tests/test_air_density_diagnostic.py
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-extended-weather-2025
