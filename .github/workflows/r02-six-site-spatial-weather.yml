@@ -5,6 +5,8 @@ on:
     paths:
       - 'src/multiyear_energy_validation/spatial_weather_pilot.py'
       - 'src/multiyear_energy_validation/spatial_weather_pairwise.py'
+      - 'src/multiyear_energy_validation/physical_conversion_readiness.py'
+      - 'tests/test_physical_conversion_readiness.py'
       - '.github/workflows/r02-six-site-spatial-weather.yml'
 permissions:
   contents: read
@@ -29,6 +31,12 @@ jobs:
         run: python -m multiyear_energy_validation.spatial_weather_pilot
       - name: Evaluate all six within-technology site pairs
         run: python -m multiyear_energy_validation.spatial_weather_pairwise
+      - name: Audit missing physical weather and plant inputs
+        run: python -m multiyear_energy_validation.physical_conversion_readiness
+      - name: Test physical conversion fail-closed requirements
+        run: |
+          python -m pip install pytest
+          python -m pytest -q tests/test_physical_conversion_readiness.py
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-spatial-weather-2025
