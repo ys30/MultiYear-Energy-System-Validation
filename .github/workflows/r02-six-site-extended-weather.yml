@@ -9,6 +9,8 @@ on:
       - 'src/multiyear_energy_validation/six_site_generator_audit.py'
       - 'src/multiyear_energy_validation/plant_parameter_registry.py'
       - 'tests/test_plant_parameter_registry.py'
+      - 'src/multiyear_energy_validation/parameter_evidence_gate.py'
+      - 'tests/test_parameter_evidence_gate.py'
       - 'tests/test_air_density_diagnostic.py'
       - '.github/workflows/r02-six-site-extended-weather.yml'
 permissions:
@@ -48,6 +50,10 @@ jobs:
         run: python -m multiyear_energy_validation.plant_parameter_registry
       - name: Verify parameter registry provenance safeguards
         run: python -m pytest -q tests/test_plant_parameter_registry.py
+      - name: Generate plant-specific equipment evidence collection template
+        run: python -m multiyear_energy_validation.parameter_evidence_gate
+      - name: Test provenance evidence promotion safeguards
+        run: python -m pytest -q tests/test_parameter_evidence_gate.py
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-extended-weather-2025
