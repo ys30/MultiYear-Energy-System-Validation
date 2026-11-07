@@ -57,7 +57,22 @@ def extract_july(archive_path, cohort_path, output_path):
                     next(it)
                 headers = next(it)
                 plant_idx = _find_column(headers, "plant id")
-                july_idx = _find_column(headers, "net generation", "july")
+                # EIA-923 has grouped two-level headers: row 5 is the measure
+                # group, row 6 is the month label. Resolve the month within
+                # the rightmost preceding Net Generation group.
+                groups = list(ws.iter_rows(min_row=5, max_row=5, values_only=True))[0]
+                netgen_starts = [i for i, value in enumerate(groups)
+                                 if "net generation" in _normalize(value)]
+                if not netgen_starts:
+                    raise ValueError(f"missing net generation group in {sheet_name}: {groups}")
+                start = netgen_starts[-1]
+                july_candidates = [i for i in range(start, len(headers))
+                                   if "july" in _normalize(headers[i])]
+                if len(july_candidates) != 1:
+                    raise ValueError(f"ambiguous July column in {sheet_name}: "
+                                     f"start={start}, candidates={july_candidates}, "
+                                     f"headers={headers}")
+                july_idx = july_candidates[0]
                 name_idx = _find_column(headers, "plant name")
                 fuel_idx = (_find_column(headers, "reported", "fuel type code")
                             if sheet_name != "Page 4 Generator Data" else None)
