@@ -16,6 +16,8 @@ on:
       - 'src/multiyear_energy_validation/eia923_monthly_screen.py'
       - 'src/multiyear_energy_validation/eia923_official_source.py'
       - 'src/multiyear_energy_validation/eia923_july_extract.py'
+      - 'src/multiyear_energy_validation/eia923_capacity_factor_audit.py'
+      - 'tests/test_eia923_capacity_factor_audit.py'
       - 'tests/test_eia923_monthly_screen.py'
       - 'tests/test_parameter_evidence_gate.py'
       - 'tests/test_air_density_diagnostic.py'
@@ -75,6 +77,10 @@ jobs:
         run: python -m multiyear_energy_validation.eia923_official_source
       - name: Extract five-site July 2025 EIA-923 observed generation
         run: python -m multiyear_energy_validation.eia923_july_extract
+      - name: Audit observed July generation against EIA-860 nameplate
+        run: python -m multiyear_energy_validation.eia923_capacity_factor_audit
+      - name: Test capacity factor and generation attribution guards
+        run: python -m pytest -q tests/test_eia923_capacity_factor_audit.py
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-extended-weather-2025
