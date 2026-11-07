@@ -13,6 +13,8 @@ on:
       - 'src/multiyear_energy_validation/pilot_commissioning_screen.py'
       - 'src/multiyear_energy_validation/july2025_validation_cohort.py'
       - 'tests/test_july2025_validation_cohort.py'
+      - 'src/multiyear_energy_validation/eia923_monthly_screen.py'
+      - 'tests/test_eia923_monthly_screen.py'
       - 'tests/test_parameter_evidence_gate.py'
       - 'tests/test_air_density_diagnostic.py'
       - '.github/workflows/r02-six-site-extended-weather.yml'
@@ -63,6 +65,10 @@ jobs:
         run: python -m multiyear_energy_validation.july2025_validation_cohort
       - name: Test commissioning cohort exclusions
         run: python -m pytest -q tests/test_july2025_validation_cohort.py
+      - name: Screen independently sourced EIA-923 monthly generation if reviewed data exists
+        run: python -m multiyear_energy_validation.eia923_monthly_screen
+      - name: Test monthly generation and availability separation
+        run: python -m pytest -q tests/test_eia923_monthly_screen.py
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-extended-weather-2025
