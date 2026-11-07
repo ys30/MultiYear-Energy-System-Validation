@@ -11,6 +11,8 @@ on:
       - 'tests/test_plant_parameter_registry.py'
       - 'src/multiyear_energy_validation/parameter_evidence_gate.py'
       - 'src/multiyear_energy_validation/pilot_commissioning_screen.py'
+      - 'src/multiyear_energy_validation/july2025_validation_cohort.py'
+      - 'tests/test_july2025_validation_cohort.py'
       - 'tests/test_parameter_evidence_gate.py'
       - 'tests/test_air_density_diagnostic.py'
       - '.github/workflows/r02-six-site-extended-weather.yml'
@@ -57,6 +59,10 @@ jobs:
         run: python -m pytest -q tests/test_parameter_evidence_gate.py
       - name: Screen generator commissioning dates against July 2025
         run: python -m multiyear_energy_validation.pilot_commissioning_screen
+      - name: Construct commissioning-screened July 2025 cohort
+        run: python -m multiyear_energy_validation.july2025_validation_cohort
+      - name: Test commissioning cohort exclusions
+        run: python -m pytest -q tests/test_july2025_validation_cohort.py
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-extended-weather-2025
