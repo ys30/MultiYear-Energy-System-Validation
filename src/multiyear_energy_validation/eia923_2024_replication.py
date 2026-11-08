@@ -6,15 +6,18 @@ import json
 from pathlib import Path
 from urllib.request import Request,urlopen
 from shutil import copyfileobj
+from zipfile import is_zipfile
 from .eia923_monthly_context import audit_annual_months
 
-URL_2024="https://www.eia.gov/electricity/data/eia923/xls/f923_2024.zip"
+URL_2024="https://www.eia.gov/electricity/data/eia923/archive/xls/f923_2024.zip"
 
 def main():
     archive=Path("outputs/eia923/2024/f923_2024.zip")
     archive.parent.mkdir(parents=True,exist_ok=True)
     with urlopen(Request(URL_2024,headers={"User-Agent":"Research validation (public EIA data)"}),timeout=120) as response,archive.open("wb") as stream:
         copyfileobj(response,stream)
+    if not is_zipfile(archive):
+        raise ValueError(f"Official EIA-923 2024 response is not a ZIP: {URL_2024}")
     output="outputs/spatial_weather_merged_2025/eia923_five_site_monthly_context_2024.json"
     result=audit_annual_months(archive,output,year=2024)
     wind=[s for s in result["sites"] if s["fuel_code"]=="WND"]
