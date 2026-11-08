@@ -26,6 +26,8 @@ on:
       - 'src/multiyear_energy_validation/eia923_seasonal_contrasts.py'
       - 'tests/test_eia923_seasonal_contrasts.py'
       - 'src/multiyear_energy_validation/july_wind_weather_generation_context.py'
+      - 'src/multiyear_energy_validation/july_wind_ranking_discordance.py'
+      - 'tests/test_july_wind_ranking_discordance.py'
       - 'tests/test_eia923_monthly_screen.py'
       - 'tests/test_parameter_evidence_gate.py'
       - 'tests/test_air_density_diagnostic.py'
@@ -105,6 +107,10 @@ jobs:
         run: python -m pytest -q tests/test_eia923_seasonal_contrasts.py
       - name: Compare July wind weather diagnostics with observed net generation
         run: python -m multiyear_energy_validation.july_wind_weather_generation_context
+      - name: Audit July wind speed versus observed CF ranking discordance
+        run: python -m multiyear_energy_validation.july_wind_ranking_discordance
+      - name: Test July wind ranking and interpretation guards
+        run: python -m pytest -q tests/test_july_wind_ranking_discordance.py
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-extended-weather-2025
