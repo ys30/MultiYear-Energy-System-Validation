@@ -23,7 +23,8 @@ def audit_annual_months(archive_path, output_path):
     with ZipFile(archive_path) as archive:
         matches=[n for n in archive.namelist() if n.lower().endswith(".xlsx") and "Schedules_2_3_4_5" in n]
         if len(matches)!=1: raise ValueError("ambiguous official schedules workbook")
-        with archive.open(matches[0]) as f:
+        workbook_name=matches[0]
+        with archive.open(workbook_name) as f:
             book=load_workbook(BytesIO(f.read()),read_only=True,data_only=True)
         try:
             ws=book["Page 1 Generation and Fuel Data"]
@@ -68,7 +69,7 @@ def audit_annual_months(archive_path, output_path):
                                "reported_nonnegative_months":len(nonnegative),
                                "monthly_capacity_factors_not_calculated":True})
         finally: book.close()
-    output={"source_url":URL,"source_workbook":matches[0] if False else "EIA923_Schedules_2_3_4_5_M_12_2025_Final.xlsx",
+    output={"source_url":URL,"source_workbook":workbook_name,
             "year":2025,"sites":report,
             "year_end_capacity_not_assumed_constant_across_months":True,
             "monthly_generation_is_not_hourly_availability":True,
