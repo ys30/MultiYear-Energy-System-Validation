@@ -23,6 +23,7 @@ on:
       - 'src/multiyear_energy_validation/five_site_vintage_shares.py'
       - 'src/multiyear_energy_validation/eia923_monthly_context.py'
       - 'src/multiyear_energy_validation/eia923_2024_replication.py'
+      - 'src/multiyear_energy_validation/eia860_2024_wind_capacity.py'
       - 'src/multiyear_energy_validation/eia923_monthly_shape_comparison.py'
       - 'src/multiyear_energy_validation/eia923_seasonal_contrasts.py'
       - 'tests/test_eia923_seasonal_contrasts.py'
@@ -129,6 +130,10 @@ jobs:
         run: python -m multiyear_energy_validation.annual_wind_first_difference
       - name: Independently extract official 2024 EIA-923 monthly wind generation
         run: python -m multiyear_energy_validation.eia923_2024_replication
+      - name: Retrieve official 2024 EIA-860 capacity records
+        run: python -m multiyear_energy_validation.eia860_source --year 2024 --output outputs/eia860/2024
+      - name: Audit 2024 wind generator vintages and nameplate
+        run: python -m multiyear_energy_validation.eia860_2024_wind_capacity
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-extended-weather-2025
