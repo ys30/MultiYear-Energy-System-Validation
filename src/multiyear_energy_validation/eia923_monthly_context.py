@@ -19,7 +19,8 @@ MONTHS=("january","february","march","april","may","june","july",
 FUELS={"57373":"SUN","57695":"SUN","57484":"WND","57514":"WND","7526":"WND"}
 
 
-def audit_annual_months(archive_path, output_path):
+def audit_annual_months(archive_path, output_path, year=2025):
+    if year not in (2024, 2025): raise ValueError('unsupported validation year')
     with ZipFile(archive_path) as archive:
         matches=[n for n in archive.namelist() if n.lower().endswith(".xlsx") and "Schedules_2_3_4_5" in n]
         if len(matches)!=1: raise ValueError("ambiguous official schedules workbook")
@@ -69,14 +70,14 @@ def audit_annual_months(archive_path, output_path):
                                "reported_nonnegative_months":len(nonnegative),
                                "monthly_capacity_factors_not_calculated":True})
         finally: book.close()
-    output={"source_url":URL,"source_workbook":workbook_name,
-            "year":2025,"sites":report,
+    output={"source_url":f"https://www.eia.gov/electricity/data/eia923/xls/f923_{year}.zip","source_workbook":workbook_name,
+            "year":year,"sites":report,
             "year_end_capacity_not_assumed_constant_across_months":True,
             "monthly_generation_is_not_hourly_availability":True,
             "empirical_dispatch_approved":False}
     out=Path(output_path);out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(output,indent=2,sort_keys=True)+"\n",encoding="utf-8")
-    print("EIA923_FIVE_SITE_MONTHLY_CONTEXT="+json.dumps({"sites":report,"empirical_dispatch_approved":False},sort_keys=True))
+    print(f"EIA923_FIVE_SITE_MONTHLY_CONTEXT_{year}="+json.dumps({"sites":report,"empirical_dispatch_approved":False},sort_keys=True))
     return output
 
 
