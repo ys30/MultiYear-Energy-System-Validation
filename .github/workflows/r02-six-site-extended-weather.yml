@@ -29,6 +29,8 @@ on:
       - 'src/multiyear_energy_validation/july_wind_ranking_discordance.py'
       - 'tests/test_july_wind_ranking_discordance.py'
       - 'src/multiyear_energy_validation/annual_wind_weather_generation.py'
+      - 'src/multiyear_energy_validation/annual_wind_monthly_alignment.py'
+      - 'tests/test_annual_wind_monthly_alignment.py'
       - 'tests/test_eia923_monthly_screen.py'
       - 'tests/test_parameter_evidence_gate.py'
       - 'tests/test_air_density_diagnostic.py'
@@ -114,6 +116,10 @@ jobs:
         run: python -m pytest -q tests/test_july_wind_ranking_discordance.py
       - name: Align annual 2025 NASA POWER wind weather to observed monthly generation
         run: python -m multiyear_energy_validation.annual_wind_weather_generation
+      - name: Audit within-site monthly wind-generation alignment
+        run: python -m multiyear_energy_validation.annual_wind_monthly_alignment
+      - name: Test month-length normalization and correlation safeguards
+        run: python -m pytest -q tests/test_annual_wind_monthly_alignment.py
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-extended-weather-2025
