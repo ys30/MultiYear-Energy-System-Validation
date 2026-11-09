@@ -29,6 +29,7 @@ on:
       - 'tests/test_wind_2024_2025_comparison.py'
       - 'src/multiyear_energy_validation/wind_leave_one_month_out.py'
       - 'src/multiyear_energy_validation/wind_matched_month_contrasts.py'
+      - 'tests/test_wind_matched_month_contrasts.py'
       - 'tests/test_wind_leave_one_month_out.py'
       - 'src/multiyear_energy_validation/eia923_monthly_shape_comparison.py'
       - 'src/multiyear_energy_validation/eia923_seasonal_contrasts.py'
@@ -143,7 +144,7 @@ jobs:
       - name: Independent-year 2024 wind resource and generation replication
         run: python -m multiyear_energy_validation.annual_wind_2024_replication
       - name: Test leap-year fidelity and cross-year comparison safeguards
-        run: python -m pytest -q tests/test_wind_2024_2025_comparison.py tests/test_wind_leave_one_month_out.py
+        run: python -m pytest -q tests/test_wind_2024_2025_comparison.py tests/test_wind_leave_one_month_out.py tests/test_wind_matched_month_contrasts.py
       - name: Compare 2024 and 2025 wind resource-generation association
         run: python -m multiyear_energy_validation.wind_2024_2025_comparison
       - name: Sensitivity to exclusion of any single month in 2024 and 2025
