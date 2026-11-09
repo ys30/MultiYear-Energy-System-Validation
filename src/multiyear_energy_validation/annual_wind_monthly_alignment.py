@@ -4,6 +4,7 @@ Twelve monthly points per plant are not independent causal evidence.
 """
 import json
 import math
+import calendar
 from pathlib import Path
 
 MONTHS=("january","february","march","april","may","june","july","august","september","october","november","december")
@@ -26,7 +27,8 @@ def summarize(report):
         gen=[monthly[m]["observed_net_generation_mwh"] for m in MONTHS]
         if any(x is None or not math.isfinite(x) for x in ws+ws3+gen):
             raise ValueError("missing or invalid weather/generation")
-        days=[31,28,31,30,31,30,31,31,30,31,30,31]
+        year=int(report.get('year',2025))
+        days=[calendar.monthrange(year,m)[1] for m in range(1,13)]
         daily=[v/d for v,d in zip(gen,days)]
         results.append({"plant_id":site["plant_id"],
                         "monthly_mean_ws10m_vs_monthly_generation_pearson":pearson(ws,gen),
