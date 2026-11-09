@@ -4,6 +4,7 @@ Differences reduce common smooth seasonality but do not remove confounding.
 No weather-to-power model or causal interpretation is approved.
 """
 import json
+import calendar
 from pathlib import Path
 from .annual_wind_monthly_alignment import MONTHS, pearson
 
@@ -18,7 +19,9 @@ def first_difference_audit(report):
             raise ValueError("incomplete annual monthly coverage")
         ws=[float(monthly[m]["ws10m_mean_ms"]) for m in MONTHS]
         ws3=[float(monthly[m]["ws10m_mean_cubed_ms3"]) for m in MONTHS]
-        generation=[float(monthly[m]["observed_net_generation_mwh"])/d for m,d in zip(MONTHS,DAYS)]
+        year=int(report.get('year',2025))
+        days=[calendar.monthrange(year,m)[1] for m in range(1,13)]
+        generation=[float(monthly[m]["observed_net_generation_mwh"])/d for m,d in zip(MONTHS,days)]
         def diff(x): return [b-a for a,b in zip(x,x[1:])]
         results.append({
             "plant_id":str(site["plant_id"]),
@@ -26,7 +29,7 @@ def first_difference_audit(report):
             "delta_mean_ws10m_vs_delta_daily_generation_pearson":pearson(diff(ws),diff(generation)),
             "delta_mean_ws10m_cubed_vs_delta_daily_generation_pearson":pearson(diff(ws3),diff(generation)),
         })
-    return {"sites":results,"source":"NASA POWER WS10M 2025 / EIA-923 Page 1 2025",
+    return {"sites":results,"source":f"NASA POWER WS10M {report.get('year',2025)} / EIA-923 Page 1 {report.get('year',2025)}",
             "month_count":12,"first_difference_pairs":11,
             "first_differences_do_not_remove_all_seasonal_confounding":True,
             "not_an_out_of_sample_forecast":True,
