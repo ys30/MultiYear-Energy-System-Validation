@@ -10,16 +10,9 @@ def main():
     report=audit_annual_wind("outputs/spatial_weather_pilot_2025/manifest.json",
         root/"eia923_five_site_monthly_context_2024.json",
         root/"annual_wind_weather_generation_2024.json",year=2024)
-    # 2024 leap year: existing diagnostics assume February 28 days.
-    # Use the 2024 daily average net generation in an equivalent 28-day February
-    # monthly total so the established 2025 diagnostics normalize correctly.
-    normalized=json.loads(json.dumps(report))
-    for site in normalized["sites"]:
-        feb=site["months"]["february"]
-        feb["observed_net_generation_mwh"]*=28/29
-    level=summarize(normalized)
-    diff=first_difference_audit(normalized)
-    output={"year":2024,"2024_february_leap_day_adjustment":True,
+    level=summarize(report)
+    diff=first_difference_audit(report)
+    output={"year":2024,"2024_february_29_days_normalized_directly":True,
         "weather_hours_per_site":8784,"level":level,"first_difference":diff,
         "2024_monthly_capacity_factor_approved":False,
         "empirical_dispatch_approved":False}
