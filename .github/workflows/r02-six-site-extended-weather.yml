@@ -30,6 +30,7 @@ on:
       - 'src/multiyear_energy_validation/wind_leave_one_month_out.py'
       - 'src/multiyear_energy_validation/wind_matched_month_contrasts.py'
       - 'tests/test_wind_matched_month_contrasts.py'
+      - 'src/multiyear_energy_validation/wind_three_panel_figure.py'
       - 'tests/test_wind_leave_one_month_out.py'
       - 'src/multiyear_energy_validation/eia923_monthly_shape_comparison.py'
       - 'src/multiyear_energy_validation/eia923_seasonal_contrasts.py'
@@ -151,6 +152,8 @@ jobs:
         run: python -m multiyear_energy_validation.wind_leave_one_month_out
       - name: Compare same-calendar-month interannual wind and generation contrasts
         run: python -m multiyear_energy_validation.wind_matched_month_contrasts
+      - name: Render publication-oriented three-panel wind association figure
+        run: python -m multiyear_energy_validation.wind_three_panel_figure
       - uses: actions/upload-artifact@v4
         with:
           name: r02-six-site-extended-weather-2025
