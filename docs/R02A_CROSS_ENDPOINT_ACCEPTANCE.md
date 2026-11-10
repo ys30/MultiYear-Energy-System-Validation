@@ -33,7 +33,7 @@ Full verification details: `docs/R02A_SAME_RUN_RAW_EVIDENCE_2026-11-10.md`. Trac
 
 ## Evidence retention
 
-The GitHub artifact expires **2026-11-24**. The audit report is committed, but the complete raw artifact must be retained in approved durable **private** storage before expiration. Never commit credentials or secret-bearing query URLs.
+The GitHub artifact expires **2026-11-24**. The three original files are now independently confirmed present in the private repository under `evidence/r02a/2026-11-10/` (`region_raw.json`, `fuel_raw.json`, `cross_endpoint_audit.json`). The preserved audit report contains the expected same-run five-hour differences and the original SHA256 manifest. This confirms durable version-controlled availability; the separate raw-byte hash verification was performed on the downloaded Actions artifact. Never commit credentials or secret-bearing query URLs.
 
 ## Status of acceptance items
 
@@ -41,5 +41,5 @@ The GitHub artifact expires **2026-11-24**. The audit report is committed, but t
 2. Raw response files and their SHA256 values: **verified**.
 3. Five-hour completeness, signed categories, and discrepancy: **verified**.
 4. Source revision / official endpoint semantic explanation: **open**.
-5. Durable private raw evidence retention: **open**.
+5. Durable private raw evidence retention: **verified present in private GitHub repository**.
 6. Empirical dispatch approval: **blocked**, independently of the source audit's technical success.
