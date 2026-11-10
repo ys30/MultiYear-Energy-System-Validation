@@ -31,11 +31,11 @@ Batteries plus solar contributed **+5,711.6 MW**, approximately **82.83%** of th
 
 | Reported operating-year cohort | Records | OP nameplate (MW) |
 |---|---:|---:|
-| 2025 | 129 | 6,201.2 |
-| Before 2025 | 28 | 138.1 |
+| 2025 | 128 | 6,201.2 |
+| Before 2025 | 29 | 138.1 |
 | **Total new-to-inventory** | **157** | **6,339.3** |
 
-The 2025 reported-operating-year cohort represents **97.82%** of the OP MW newly present in the annual CISO inventory. This supports prioritizing commissioning-date verification for the large cohort but **does not establish independent commissioning, ownership, or BA assignment**.
+**Record-count correction:** Direct inspection of the archived per-generator transitions (artifact 13295023796) confirms 128/29 records rather than the previously documented 129/28; the capacity split is unchanged.\n\nThe 2025 reported-operating-year cohort represents **97.82%** of the OP MW newly present in the annual CISO inventory. This supports prioritizing commissioning-date verification for the large cohort but **does not establish independent commissioning, ownership, or BA assignment**.
 
 **Critical counterexample:** The +1,053.0 MW pumped-storage technology change was caused by three generator records transitioning **OA→OP** in the annual inventory. This is not evidence of 1,053 MW of newly built pumped storage. Similarly, new-to-inventory batteries (4,388.7 MW) exceed the net battery increase (+3,862.2 MW); gross new inventory and net change must not be conflated.
 
@@ -53,7 +53,7 @@ EIA-860 OP nameplate is an annual record, not hourly available generation. The s
 - [Operating-year cohorts](EIA860_CISO_OPERATING_YEAR_COHORTS_2024_2025.md) — CI run 41772668659.
 - [Status transitions](EIA860_CISO_STATUS_TRANSITIONS_2024_2025.md) — CI run 41772065717.
 - **Priority 1:** verify the three pumped-storage records' original operating month/year, plant BA code and 2024/2025 status definitions.
-- **Priority 2:** examine 28 historical-operating-year records newly present in 2025 for BA reassignment versus delayed reporting.
+- **Priority 2:** examine 29 historical-operating-year records newly present in 2025 for BA reassignment versus delayed reporting.
 - **Priority 3:** retrieve battery energy capacity and storage duration, distinguish MW from MWh.
 - **Priority 4:** independently establish hourly availability, interchange and boundary before any empirical optimization.
 
