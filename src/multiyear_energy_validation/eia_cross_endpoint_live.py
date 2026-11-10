@@ -64,13 +64,14 @@ def main(argv=None):
     for rows, name in ((region, "region"), (fuel, "fuel")):
         if any(str(r.get("value-units", "")).lower() != "megawatthours" for r in rows):
             raise ValueError(f"Unexpected {name} energy units")
-    # Do not publish raw responses in logs; archive privately with retention controls.
-    (out / "region_raw.json").write_bytes(region_raw)
-    (out / "fuel_raw.json").write_bytes(fuel_raw)
     result = reconcile_fuel_and_region(region, fuel, fuel_key="fueltype")
     expected = [f"2025-07-31T{hour:02d}" for hour in range(19, 24)]
     if [row["period"] for row in result] != expected:
         raise ValueError("Five-hour period coverage incomplete")
+    # Only archive a complete, validated pair; failed runs do not leave partial source artifacts.
+    # Do not publish raw responses in logs; archive privately with retention controls.
+    (out / "region_raw.json").write_bytes(region_raw)
+    (out / "fuel_raw.json").write_bytes(fuel_raw)
     report = {
         "retrieved_at_utc": retrieved_at,
         "source": {
