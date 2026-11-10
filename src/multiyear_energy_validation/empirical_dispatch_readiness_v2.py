@@ -49,11 +49,11 @@ def assess_v2(registry, evidence=None, scope=None):
         if not isinstance(applicable,bool):
             raise ValueError("applicability must be boolean for "+name)
         if not applicable:
+            if state!="not_applicable":
+                raise ValueError("explicit not_applicable state required for "+name)
             justification=scope.get(name+"_justification") or {}
             if not all(justification.get(k) not in (None,"") for k in ("rationale","reviewer")):
                 raise ValueError("nonapplicability requires rationale and reviewer: "+name)
-            if state!="not_applicable":
-                raise ValueError("explicit not_applicable state required for "+name)
             decision,reason="not_applicable","declared model scope excludes this requirement"
         else:
             if state=="not_applicable":
