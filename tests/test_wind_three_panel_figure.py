@@ -20,7 +20,7 @@ def fixtures():
 def test_svg_has_three_panels_and_all_plants():
     svg=svg_chart(*fixtures())
     assert svg.startswith('<svg xmlns="http://www.w3.org/2000/svg"')
-    for title in ("Annual monthly association","Leave-one-month-out sensitivity",
+    for title in ("Annual monthly association","Leave-one-month-out ranges",
                   "Matched-month year contrasts"):
         assert title in svg
     for pid in IDS:
@@ -42,5 +42,11 @@ def test_svg_is_well_formed_and_year_styles_distinct():
     circles=[e for e in root.iter() if e.tag.endswith("circle")]
     assert any(e.attrib.get("fill")=="white" for e in circles)
     assert any(e.attrib.get("fill")=="#3265a8" for e in circles)
-    assert "2024 (open circles" in svg
-    assert "2025 (filled circles" in svg
+    assert "2024 (open dots" in svg
+    assert "2025 (filled dots" in svg
+
+
+def test_leave_one_out_ranges_are_not_labeled_confidence_intervals():
+    svg=svg_chart(*fixtures())
+    assert 'NOT confidence intervals' in svg
+    assert svg.count('r="5"')==6
