@@ -1,5 +1,6 @@
 """Tests for the archived three-panel wind association figure."""
 import pytest
+import xml.etree.ElementTree as ET
 from multiyear_energy_validation.wind_three_panel_figure import svg_chart
 
 IDS=("57484","57514","7526")
@@ -32,3 +33,14 @@ def test_missing_plant_rejected():
     comparison["sites"].pop()
     with pytest.raises((KeyError,ValueError)):
         svg_chart(comparison,loo,matched)
+
+
+def test_svg_is_well_formed_and_year_styles_distinct():
+    svg=svg_chart(*fixtures())
+    root=ET.fromstring(svg)
+    assert root.tag.endswith("svg")
+    circles=[e for e in root.iter() if e.tag.endswith("circle")]
+    assert any(e.attrib.get("fill")=="white" for e in circles)
+    assert any(e.attrib.get("fill")=="#3265a8" for e in circles)
+    assert "2024 (open circles" in svg
+    assert "2025 (filled circles" in svg
