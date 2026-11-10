@@ -30,7 +30,8 @@ def svg_chart(comp,loo,matched):
         key="monthly_mean_ws10m_vs_daily_normalized_generation_pearson"
         for year,dx in ((2024,-13),(2025,13)):
             r=cm[pid][key][str(year)]
-            chunks.append(f'<circle cx="{x+dx}" cy="{420-260*r:.2f}" r="7" fill="{color if year==2025 else 'white'}" stroke="{color}" stroke-width="2"/>')
+            fill = color if year == 2025 else "white"
+            chunks.append(f'<circle cx="{x+dx}" cy="{420-260*r:.2f}" r="7" fill="{fill}" stroke="{color}" stroke-width="2"/>')
         chunks.append(f'<text x="{x}" y="443" class="tick" text-anchor="middle">{pid}</text>')
         # Panel B: ranges for each year
         x=400+90+i*84
@@ -38,7 +39,9 @@ def svg_chart(comp,loo,matched):
             s=lm[(pid,year)]
             lo=420-260*s["leave_one_month_out_min_r"]
             hi=420-260*s["leave_one_month_out_max_r"]
-            chunks.append(f'<line x1="{x+dx}" y1="{lo:.2f}" x2="{x+dx}" y2="{hi:.2f}" stroke="{color}" stroke-width="{6 if year==2025 else 3}" stroke-dasharray="{'none' if year==2025 else '3,3'}" stroke-linecap="round"/>')
+            width = 6 if year == 2025 else 3
+            dash = "none" if year == 2025 else "3,3"
+            chunks.append(f'<line x1="{x+dx}" y1="{lo:.2f}" x2="{x+dx}" y2="{hi:.2f}" stroke="{color}" stroke-width="{width}" stroke-dasharray="{dash}" stroke-linecap="round"/>')
         chunks.append(f'<text x="{x}" y="443" class="tick" text-anchor="middle">{pid}</text>')
         # Panel C: same-month year contrast
         x=770+90+i*84;r=mm[pid]
