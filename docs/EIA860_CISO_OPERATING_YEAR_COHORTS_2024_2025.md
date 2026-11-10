@@ -9,9 +9,9 @@
 | Batteries | 58 | 4,318.0 | 5 | 70.7 |
 | Solar Photovoltaic | 57 | 1,826.8 | 14 | 33.2 |
 | Other technologies | 14 | 56.4 | 9 | 34.2 |
-| **Total** | **129** | **6,201.2** | **28** | **138.1** |
+| **Total** | **128** | **6,201.2** | **29** | **138.1** |
 
-The cohorts reconcile to **157 records** and **6,339.3 MW** of OP capacity newly present in the CISO annual inventory. The 2025 reported operating-year cohort accounts for approximately **97.8%** of this OP capacity.
+**Correction (2026-11-10):** Direct reinspection of all 157 `new_to_ciso_inventory` records in Actions artifact 13295023796 found **128** records reporting operating year 2025 and **29** reporting a pre-2025 year. Earlier narrative counts of 129/28 were erroneous; OP capacity totals 6,201.2/138.1 MW were correct. The five petroleum-liquid standby units and one biomass out-of-service unit in the pre-2025 cohort contribute 0 OP MW.\n\nThe cohorts reconcile to **157 records** and **6,339.3 MW** of OP capacity newly present in the CISO annual inventory. The 2025 reported operating-year cohort accounts for approximately **97.8%** of this OP capacity.
 
 **Interpretation:** A reported operating year of 2025 is supporting evidence, not independent confirmation of commissioning or CISO BA assignment. These are generator records and nameplate MW, not projects, delivered energy, storage duration, or verified hourly capacity.
 
