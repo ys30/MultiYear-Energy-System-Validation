@@ -55,7 +55,7 @@ def svg_chart(comp,loo,matched):
         chunks.append(f'<line x1="{x-7}" y1="{420-260*hi:.2f}" x2="{x+7}" y2="{420-260*hi:.2f}" stroke="#1d2730" stroke-width="2"/>')
         chunks.append(f'<line x1="{x}" y1="{420-260*lo:.2f}" x2="{x}" y2="{420-260*hi:.2f}" stroke="#1d2730" stroke-width="2"/>')
         chunks.append(f'<text x="{x}" y="443" class="tick" text-anchor="middle">{pid}</text>')
-        chunks.append(f'<text x="{x}" y="{408-260*r:.2f}" class="tick" text-anchor="middle">{r:.3f}</text>')
+        chunks.append(f'<text x="{x}" y="{420-260*hi-12:.2f}" class="tick" text-anchor="middle">{r:.3f}</text>')
     chunks+=['<circle cx="43" cy="465" r="6" fill="white" stroke="#3265a8" stroke-width="2"/>',
              '<text x="55" y="469" class="tick">2024 (open dots / dashed ranges)</text>',
              '<circle cx="405" cy="465" r="6" fill="#3265a8" stroke="#3265a8" stroke-width="2"/>',
