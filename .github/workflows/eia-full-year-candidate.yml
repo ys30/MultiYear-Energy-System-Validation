@@ -116,7 +116,7 @@ jobs:
           report=json.loads((root/"normalized_coverage.json").read_text())
           result=audit_single_year(report,int(os.environ["YEAR"]))
           (root/"paper_demand_coverage.json").write_text(
-              json.dumps(result,indent=2,sort_keys=True)+"\\n",encoding="utf-8")
+              json.dumps(result,indent=2,sort_keys=True)+"\n",encoding="utf-8")
           print("PAPER_DEMAND_COVERAGE="+json.dumps(result,sort_keys=True))
           PY
       - name: R02a audited hourly load diagnostics
