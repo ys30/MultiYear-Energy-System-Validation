@@ -1,0 +1,158 @@
+{
+  "empirical_dispatch_approved": false,
+  "interpretation": "Unverified cross-endpoint diagnostic; no correction or availability inference",
+  "retrieved_at_utc": "2026-11-10T23:11:08.218508+00:00",
+  "rows": [
+    {
+      "empirical_dispatch_approved": false,
+      "fuel_categories": [
+        "COL",
+        "NG",
+        "NUC",
+        "OIL",
+        "OTH",
+        "SUN",
+        "WAT",
+        "WND"
+      ],
+      "fuel_minus_region_mwh": "0",
+      "fuel_sum_mwh": "29677",
+      "fuel_values_mwh": {
+        "COL": "0",
+        "NG": "14294",
+        "NUC": "2270",
+        "OIL": "20",
+        "OTH": "-6332",
+        "SUN": "18224",
+        "WAT": "583",
+        "WND": "618"
+      },
+      "period": "2025-07-31T19",
+      "region_ng_mwh": "29677",
+      "source_corrected": false
+    },
+    {
+      "empirical_dispatch_approved": false,
+      "fuel_categories": [
+        "COL",
+        "NG",
+        "NUC",
+        "OIL",
+        "OTH",
+        "SUN",
+        "WAT",
+        "WND"
+      ],
+      "fuel_minus_region_mwh": "-1",
+      "fuel_sum_mwh": "29775",
+      "fuel_values_mwh": {
+        "COL": "0",
+        "NG": "13879",
+        "NUC": "2271",
+        "OIL": "19",
+        "OTH": "-5870",
+        "SUN": "18531",
+        "WAT": "451",
+        "WND": "494"
+      },
+      "period": "2025-07-31T20",
+      "region_ng_mwh": "29776",
+      "source_corrected": false
+    },
+    {
+      "empirical_dispatch_approved": false,
+      "fuel_categories": [
+        "COL",
+        "NG",
+        "NUC",
+        "OIL",
+        "OTH",
+        "SUN",
+        "WAT",
+        "WND"
+      ],
+      "fuel_minus_region_mwh": "2271",
+      "fuel_sum_mwh": "30003",
+      "fuel_values_mwh": {
+        "COL": "0",
+        "NG": "13318",
+        "NUC": "2271",
+        "OIL": "20",
+        "OTH": "-5087",
+        "SUN": "18570",
+        "WAT": "420",
+        "WND": "491"
+      },
+      "period": "2025-07-31T21",
+      "region_ng_mwh": "27732",
+      "source_corrected": false
+    },
+    {
+      "empirical_dispatch_approved": false,
+      "fuel_categories": [
+        "COL",
+        "NG",
+        "NUC",
+        "OIL",
+        "OTH",
+        "SUN",
+        "WAT",
+        "WND"
+      ],
+      "fuel_minus_region_mwh": "0",
+      "fuel_sum_mwh": "30783",
+      "fuel_values_mwh": {
+        "COL": "0",
+        "NG": "11904",
+        "NUC": "2273",
+        "OIL": "20",
+        "OTH": "-3415",
+        "SUN": "18471",
+        "WAT": "889",
+        "WND": "641"
+      },
+      "period": "2025-07-31T22",
+      "region_ng_mwh": "30783",
+      "source_corrected": false
+    },
+    {
+      "empirical_dispatch_approved": false,
+      "fuel_categories": [
+        "COL",
+        "NG",
+        "NUC",
+        "OIL",
+        "OTH",
+        "SUN",
+        "WAT",
+        "WND"
+      ],
+      "fuel_minus_region_mwh": "1",
+      "fuel_sum_mwh": "31642",
+      "fuel_values_mwh": {
+        "COL": "0",
+        "NG": "11041",
+        "NUC": "2274",
+        "OIL": "20",
+        "OTH": "-2057",
+        "SUN": "18323",
+        "WAT": "1097",
+        "WND": "944"
+      },
+      "period": "2025-07-31T23",
+      "region_ng_mwh": "31641",
+      "source_corrected": false
+    }
+  ],
+  "source": {
+    "fuel": {
+      "sha256": "5c8caa1f447659cc6e1f31a7224b304bf803ffc18c1804afc4baabbac731ae23",
+      "url_without_credentials": "https://api.eia.gov/v2/electricity/rto/fuel-type-data/data/?frequency=hourly&data%5B0%5D=value&facets%5Brespondent%5D%5B%5D=CISO&start=2025-07-31T19&end=2025-07-31T23&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=100"
+    },
+    "region": {
+      "sha256": "43371a5c947ac30bdd224991acb3fde7376fd358606bf1f24e32afa29a416899",
+      "url_without_credentials": "https://api.eia.gov/v2/electricity/rto/region-data/data/?frequency=hourly&data%5B0%5D=value&facets%5Brespondent%5D%5B%5D=CISO&start=2025-07-31T19&end=2025-07-31T23&sort%5B0%5D%5Bcolumn%5D=period&sort%5B0%5D%5Bdirection%5D=asc&offset=0&length=100&facets%5Btype%5D%5B%5D=NG"
+    }
+  },
+  "source_corrected": false
+}
