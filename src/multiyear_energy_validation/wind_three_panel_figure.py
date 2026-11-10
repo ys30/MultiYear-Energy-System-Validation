@@ -10,6 +10,7 @@ def svg_chart(comp,loo,matched):
     cm={s["plant_id"]:s["metrics"] for s in comp["sites"]}
     lm={(s["plant_id"],s["year"]):s for s in loo["sites"]}
     mm={s["plant_id"]:s["matched_month_year_difference_pearson_r"] for s in matched["sites"]}
+    mm_range={s["plant_id"]:(s["matched_month_leave_one_out_min_r"],s["matched_month_leave_one_out_max_r"]) for s in matched["sites"]}
     chunks=['<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="540" viewBox="0 0 1120 540">',
       '<rect width="1120" height="540" fill="white"/>',
       '<style>text{font-family:Arial,sans-serif;fill:#273344}.title{font-size:19px;font-weight:bold}.sub{font-size:13px}.tick{font-size:12px}</style>',
@@ -49,13 +50,17 @@ def svg_chart(comp,loo,matched):
         # Panel C: same-month year contrast
         x=770+90+i*84;r=mm[pid]
         chunks.append(f'<rect x="{x-15}" y="{420-260*r:.2f}" width="30" height="{260*r:.2f}" fill="{color}" opacity=".82"/>')
+        lo,hi=mm_range[pid]
+        chunks.append(f'<line x1="{x-7}" y1="{420-260*lo:.2f}" x2="{x+7}" y2="{420-260*lo:.2f}" stroke="#1d2730" stroke-width="2"/>')
+        chunks.append(f'<line x1="{x-7}" y1="{420-260*hi:.2f}" x2="{x+7}" y2="{420-260*hi:.2f}" stroke="#1d2730" stroke-width="2"/>')
+        chunks.append(f'<line x1="{x}" y1="{420-260*lo:.2f}" x2="{x}" y2="{420-260*hi:.2f}" stroke="#1d2730" stroke-width="2"/>')
         chunks.append(f'<text x="{x}" y="443" class="tick" text-anchor="middle">{pid}</text>')
         chunks.append(f'<text x="{x}" y="{408-260*r:.2f}" class="tick" text-anchor="middle">{r:.3f}</text>')
     chunks+=['<circle cx="43" cy="465" r="6" fill="white" stroke="#3265a8" stroke-width="2"/>',
              '<text x="55" y="469" class="tick">2024 (open dots / dashed ranges)</text>',
              '<circle cx="405" cy="465" r="6" fill="#3265a8" stroke="#3265a8" stroke-width="2"/>',
              '<text x="417" y="469" class="tick">2025 (filled dots / solid ranges)</text>',
-             '<text x="35" y="485" class="sub">Colors identify plants. In B, dots show full-sample r; ranges are sensitivity, NOT confidence intervals.</text>',
+             '<text x="35" y="485" class="sub">Colors identify plants. B and C ranges are leave-one-out sensitivity, NOT confidence intervals.</text>',
              '<text x="35" y="503" class="sub">Descriptive associations only; 12 months/year, 11-month leave-one-out subsets. Not causal or out-of-sample prediction.</text>',
              '<text x="35" y="522" class="sub">10 m wind is not turbine hub-height wind; curtailment, maintenance and capacity changes remain uncontrolled.</text>',
              '</svg>']
