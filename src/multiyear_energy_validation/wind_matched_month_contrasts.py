@@ -32,7 +32,16 @@ def audit(reports):
             delta_wind.append(dw);delta_generation.append(dg)
             rows.append({"month":m,"delta_ws10m_2025_minus_2024_ms":round(dw,6),
                 "delta_daily_generation_2025_minus_2024_mwh_per_day":round(dg,6)})
-        results.append({"plant_id":pid,"matched_month_year_difference_pearson_r":
+        leave_one_out=[{"excluded_month":m,
+            "pearson_r":pearson(delta_wind[:i]+delta_wind[i+1:],
+                               delta_generation[:i]+delta_generation[i+1:])}
+            for i,m in enumerate(MONTHS)]
+        leave_values=[entry["pearson_r"] for entry in leave_one_out]
+        results.append({"plant_id":pid,
+            "matched_month_leave_one_out_min_r":min(leave_values),
+            "matched_month_leave_one_out_max_r":max(leave_values),
+            "matched_month_leave_one_out":leave_one_out,
+            "matched_month_year_difference_pearson_r":
             pearson(delta_wind,delta_generation),"matched_calendar_months":12,
             "monthly_contrasts":rows})
     return {"years":[2024,2025],"sites":results,
@@ -49,7 +58,9 @@ def main():
     (root/"wind_2024_2025_matched_month_contrasts.json").write_text(
         json.dumps(result,indent=2,sort_keys=True)+"\n",encoding="utf-8")
     print("WIND_MATCHED_MONTH_CONTRASTS="+json.dumps({
-        "sites":[{"plant_id":s["plant_id"],"r":s["matched_month_year_difference_pearson_r"]}
+        "sites":[{"plant_id":s["plant_id"],"r":s["matched_month_year_difference_pearson_r"],
+                  "leave_one_out_min_r":s["matched_month_leave_one_out_min_r"],
+                  "leave_one_out_max_r":s["matched_month_leave_one_out_max_r"]}
                  for s in result["sites"]],"only_two_years":True},sort_keys=True))
 
 if __name__=="__main__":main()
