@@ -26,6 +26,9 @@ def test_same_month_interannual_contrasts_and_leap_year():
     for s in out["sites"]:
         assert s["matched_month_year_difference_pearson_r"]==1
         assert len(s["monthly_contrasts"])==12
+        assert len(s["matched_month_leave_one_out"])==12
+        assert s["matched_month_leave_one_out_min_r"]==pytest.approx(1)
+        assert s["matched_month_leave_one_out_max_r"]==pytest.approx(1)
         assert s["monthly_contrasts"][1]["month"]=="february"
         assert s["monthly_contrasts"][1]["delta_daily_generation_2025_minus_2024_mwh_per_day"]==0.8
     assert out["only_two_years"]
