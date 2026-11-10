@@ -16,13 +16,28 @@ Three descriptive diagnostics were applied: (i) within-year Pearson correlations
 | 57514 | 0.981182 | 0.899374 | 0.971263–0.988995 | 0.872632–0.930080 | 0.813280 |
 | 7526 | 0.976504 | 0.980682 | 0.971836–0.984308 | 0.975966–0.989623 | 0.796318 |
 
+
+### Matched-month leave-one-out robustness (new verified diagnostic)
+
+For each plant, the 12 matched-calendar-month year-over-year contrasts were recomputed 12 times after excluding one calendar month (11 contrasts per re-estimation). These are **sensitivity ranges, not confidence intervals**.
+
+| Plant | Full matched-month interannual r | Leave-one-month-out minimum r | Maximum r |
+|:--|--:|--:|--:|
+| 57484 | 0.796281 | 0.737020 | 0.857708 |
+| 57514 | 0.813280 | 0.751134 | 0.846581 |
+| 7526 | 0.796318 | 0.675153 | 0.862247 |
+
+The positive associations persist under all single-month omissions, but Plant 7526 has the broadest sensitivity interval. These estimates derive from the successful R02 CI run **42752870880**; they are descriptive and based on only two years.
+
+**Additional manuscript Results sentence:** *Across the three plants, correlations based on matched-calendar-month interannual contrasts remained positive after omitting any one calendar month (r ranges: 0.737–0.858, 0.751–0.847, and 0.675–0.862 for Plants 57484, 57514, and 7526, respectively). The broader range for Plant 7526 indicates greater sensitivity to the choice of included months; these leave-one-out ranges should not be interpreted as confidence intervals.*
+
 ### Proposed Results text
 
 *Monthly wind-resource–generation associations varied substantially among the three plants. The Pearson correlation between monthly mean 10-m wind speed and observed daily-normalized monthly generation was 0.587 in 2024 and 0.330 in 2025 for Plant 57484, compared with 0.981 and 0.899 for Plant 57514 and 0.977 and 0.981 for Plant 7526. Leave-one-month-out sensitivity analyses showed that the high correlations for Plant 7526 persisted regardless of which month was omitted (r = 0.972–0.984 in 2024; r = 0.976–0.990 in 2025). However, matched-calendar-month interannual contrasts yielded more similar correlations across plants (r = 0.796–0.813), suggesting that conclusions about between-plant heterogeneity depend on the temporal contrast being analyzed. These exploratory associations do not establish causality, operational availability, or out-of-sample predictive performance.*
 
 ### Proposed figure caption
 
-**Figure R02-W1.** Descriptive wind-resource–generation associations for three wind plants in 2024–2025. **(A)** Within-year Pearson correlations between NASA POWER monthly mean 10-m wind speed and EIA-923 observed monthly plant-fuel net generation normalized by calendar days (12 monthly observations per plant-year). **(B)** Range of Pearson correlations after removing each calendar month in turn (12 estimates per plant-year, each using 11 observations). **(C)** Pearson correlation between matched-calendar-month differences (2025 minus 2024) in wind speed and daily-normalized generation (12 month pairs per plant). Colors distinguish plant IDs. All analyses are descriptive and do not constitute a calibrated wind-power model or forecast validation.
+**Figure R02-W1.** Descriptive wind-resource–generation associations for three wind plants in 2024–2025. **(A)** Within-year Pearson correlations between NASA POWER monthly mean 10-m wind speed and EIA-923 observed monthly plant-fuel net generation normalized by calendar days (12 monthly observations per plant-year). **(B)** Range of Pearson correlations after removing each calendar month in turn (12 estimates per plant-year, each using 11 observations). **(C)** Pearson correlation between matched-calendar-month differences (2025 minus 2024) in wind speed and daily-normalized generation (12 month pairs per plant), with whiskers showing the range after leaving out one matched month (11 pairs per estimate). Whiskers in panels B and C are sensitivity ranges, not statistical confidence intervals. Colors distinguish plant IDs. All analyses are descriptive and do not constitute a calibrated wind-power model or forecast validation.
 
 ## Interpretation boundaries and open checks
 
