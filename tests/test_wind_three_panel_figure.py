@@ -13,7 +13,7 @@ def fixtures():
                    "leave_one_month_out_min_r":0.6,
                    "leave_one_month_out_max_r":0.9}
                   for pid in IDS for year in (2024,2025)]}
-    matched={"sites":[{"plant_id":pid,"matched_month_year_difference_pearson_r":0.75}
+    matched={"sites":[{"plant_id":pid,"matched_month_year_difference_pearson_r":0.75,"matched_month_leave_one_out_min_r":0.65,"matched_month_leave_one_out_max_r":0.85}
                       for pid in IDS]}
     return comparison,loo,matched
 
