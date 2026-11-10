@@ -12,7 +12,7 @@ def test_baseline_counts():
 
 def test_explicit_nonapplicability():
     name=SYSTEM_GATES[2][0]
-    result=assess_v2(registry(),{name:{"state":"not_applicable"}},{name:False})
+    result=assess_v2(registry(),{name:{"state":"not_applicable"}},{name:False,name+"_justification":{"rationale":"scope excludes storage","reviewer":"test reviewer"}})
     assert result["summary"]["decision_counts"]["not_applicable"]==1
     assert result["summary"]["decision_counts"]["block"]==len(SYSTEM_GATES)
     assert not result["summary"]["empirical_dispatch_approved"]
@@ -45,3 +45,9 @@ def test_invalid_state_rejected():
     name=SYSTEM_GATES[0][0]
     with pytest.raises(ValueError,match="invalid state"):
         assess_v2(registry(),{name:{"state":"observed"}})
+
+
+def test_nonapplicability_without_review_is_rejected():
+    name=SYSTEM_GATES[2][0]
+    with pytest.raises(ValueError,match="rationale and reviewer"):
+        assess_v2(registry(),{name:{"state":"not_applicable"}},{name:False})
