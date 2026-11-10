@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 from .eia_cross_endpoint_audit import reconcile_fuel_and_region
 
@@ -30,8 +31,15 @@ def _fetch(endpoint: str, key: str, *, kind: str | None = None):
     if kind is not None:
         params.append(("facets[type][]", kind))
     url = ROOT + endpoint + "data/?" + urlencode(params)
-    with urlopen(Request(url, headers={"User-Agent": "research-audit/1.0"}), timeout=45) as response:
-        raw = response.read()
+    try:
+        with urlopen(Request(url, headers={"User-Agent": "research-audit/1.0"}), timeout=45) as response:
+            raw = response.read()
+    except HTTPError as exc:
+        # HTTPError embeds the request URL, which includes api_key; never chain it.
+        raise RuntimeError(f"EIA {endpoint} HTTP status {exc.code}; source fetch failed") from None
+    except URLError:
+        # URLError.reason may also contain the request URL or credentials.
+        raise RuntimeError(f"EIA {endpoint} network error; source fetch failed") from None
     obj = json.loads(raw)
     payload = obj.get("response", {})
     rows = payload.get("data", [])
