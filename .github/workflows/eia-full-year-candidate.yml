@@ -6,6 +6,8 @@ on:
       - 'src/multiyear_energy_validation/schema_audit.py'
       - 'src/multiyear_energy_validation/timeseries.py'
       - 'src/multiyear_energy_validation/eia930.py'
+      - 'src/multiyear_energy_validation/paper_eia930_coverage_contract.py'
+      - 'tests/test_paper_eia930_coverage_contract.py'
       - 'src/multiyear_energy_validation/pypsa_baseline.py'
       - 'src/multiyear_energy_validation/pypsa_load.py'
       - '.github/workflows/eia-full-year-candidate.yml'
@@ -100,6 +102,22 @@ jobs:
                       year=int(os.environ["YEAR"]), region="CISO")
                   Path("outputs/eia-ciso-year/pypsa_load_manifest.json").write_text(json.dumps(load, indent=2))
                   print("PYPSA_LOAD_MANIFEST=" + json.dumps(load, sort_keys=True))
+          PY
+      - name: Export verified year-specific paper demand coverage
+        if: matrix.year == 2024 || matrix.year == 2025
+        env:
+          YEAR: ${{ matrix.year }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from multiyear_energy_validation.paper_eia930_coverage_contract import audit_single_year
+          root=Path("outputs/eia-ciso-year")
+          report=json.loads((root/"normalized_coverage.json").read_text())
+          result=audit_single_year(report,int(os.environ["YEAR"]))
+          (root/"paper_demand_coverage.json").write_text(
+              json.dumps(result,indent=2,sort_keys=True)+"\\n",encoding="utf-8")
+          print("PAPER_DEMAND_COVERAGE="+json.dumps(result,sort_keys=True))
           PY
       - name: R02a audited hourly load diagnostics
         if: matrix.year == 2024 || matrix.year == 2025
