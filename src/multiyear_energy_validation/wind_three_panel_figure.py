@@ -15,7 +15,7 @@ def svg_chart(comp,loo,matched):
       '<style>text{font-family:Arial,sans-serif;fill:#273344}.title{font-size:19px;font-weight:bold}.sub{font-size:13px}.tick{font-size:12px}</style>',
       '<text x="35" y="34" class="title">Wind resource–generation association | 2024–2025</text>',
       '<text x="35" y="55" class="sub">NASA POWER WS10M vs EIA-923 observed daily-normalized monthly generation (Pearson r)</text>']
-    panels=[(30,"A  Annual monthly association"),(400,"B  Leave-one-month-out sensitivity"),(770,"C  Matched-month year contrasts")]
+    panels=[(30,"A  Annual monthly association"),(400,"B  Leave-one-month-out ranges"),(770,"C  Matched-month year contrasts")]
     for left,title in panels:
         chunks.append(f'<text x="{left+12}" y="94" class="title">{title}</text>')
         for tick in (0,.25,.5,.75,1):
@@ -42,6 +42,9 @@ def svg_chart(comp,loo,matched):
             width = 6 if year == 2025 else 3
             dash = "none" if year == 2025 else "3,3"
             chunks.append(f'<line x1="{x+dx}" y1="{lo:.2f}" x2="{x+dx}" y2="{hi:.2f}" stroke="{color}" stroke-width="{width}" stroke-dasharray="{dash}" stroke-linecap="round"/>')
+            full = cm[pid][key][str(year)]
+            marker_fill = color if year == 2025 else "white"
+            chunks.append(f'<circle cx="{x+dx}" cy="{420-260*full:.2f}" r="5" fill="{marker_fill}" stroke="{color}" stroke-width="2"/>')
         chunks.append(f'<text x="{x}" y="443" class="tick" text-anchor="middle">{pid}</text>')
         # Panel C: same-month year contrast
         x=770+90+i*84;r=mm[pid]
@@ -49,10 +52,10 @@ def svg_chart(comp,loo,matched):
         chunks.append(f'<text x="{x}" y="443" class="tick" text-anchor="middle">{pid}</text>')
         chunks.append(f'<text x="{x}" y="{408-260*r:.2f}" class="tick" text-anchor="middle">{r:.3f}</text>')
     chunks+=['<circle cx="43" cy="465" r="6" fill="white" stroke="#3265a8" stroke-width="2"/>',
-             '<text x="55" y="469" class="tick">2024 (open circles / dashed narrow ranges)</text>',
+             '<text x="55" y="469" class="tick">2024 (open dots / dashed ranges)</text>',
              '<circle cx="405" cy="465" r="6" fill="#3265a8" stroke="#3265a8" stroke-width="2"/>',
-             '<text x="417" y="469" class="tick">2025 (filled circles / solid thick ranges)</text>',
-             '<text x="35" y="485" class="sub">Colors identify plants. A and B use adjacent 2024 (left) and 2025 (right) estimates.</text>',
+             '<text x="417" y="469" class="tick">2025 (filled dots / solid ranges)</text>',
+             '<text x="35" y="485" class="sub">Colors identify plants. In B, dots show full-sample r; ranges are sensitivity, NOT confidence intervals.</text>',
              '<text x="35" y="503" class="sub">Descriptive associations only; 12 months/year, 11-month leave-one-out subsets. Not causal or out-of-sample prediction.</text>',
              '<text x="35" y="522" class="sub">10 m wind is not turbine hub-height wind; curtailment, maintenance and capacity changes remain uncontrolled.</text>',
              '</svg>']
