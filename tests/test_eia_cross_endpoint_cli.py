@@ -45,3 +45,20 @@ def test_cli_rejects_output_overwriting_raw(tmp_path: Path):
             "--fuel-url", "https://example.org/fuel",
             "--retrieved-at", "2026-11-10T22:00:00Z",
         ])
+
+
+def test_cli_rejects_api_key_in_provenance_url(tmp_path: Path):
+    region = tmp_path / "region.json"
+    fuel = tmp_path / "fuel.json"
+    out = tmp_path / "report.json"
+    region.write_text("[]")
+    fuel.write_text("[]")
+    with pytest.raises(SystemExit):
+        main([
+            "--region-json", str(region), "--fuel-json", str(fuel),
+            "--output-json", str(out),
+            "--region-url", "https://api.eia.gov/v2/test?api_key=SECRET",
+            "--fuel-url", "https://api.eia.gov/v2/test",
+            "--retrieved-at", "2026-11-10T22:00:00Z",
+        ])
+    assert not out.exists()
