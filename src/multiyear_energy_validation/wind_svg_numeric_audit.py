@@ -14,6 +14,8 @@ NS="{http://www.w3.org/2000/svg}"
 KEY="monthly_mean_ws10m_vs_daily_normalized_generation_pearson"
 
 def near(a,b,tol=0.025):
+    if a is None or b is None:
+        return False
     return math.isclose(float(a),float(b),rel_tol=0,abs_tol=tol)
 
 def reconcile(root=ROOT):
