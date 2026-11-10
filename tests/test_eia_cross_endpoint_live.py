@@ -5,6 +5,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
+from urllib.error import HTTPError, URLError
 
 from multiyear_energy_validation import eia_cross_endpoint_live as live
 
@@ -90,3 +91,27 @@ def test_live_audit_rejects_partial_periods(monkeypatch, tmp_path: Path):
     assert not (tmp_path / "audit" / "cross_endpoint_audit.json").exists()
     assert not (tmp_path / "audit" / "region_raw.json").exists()
     assert not (tmp_path / "audit" / "fuel_raw.json").exists()
+
+
+def test_http_error_never_exposes_secret_in_exception(monkeypatch):
+    monkeypatch.setenv("EIA_API_KEY", "DO_NOT_LEAK_SECRET")
+
+    def failing_urlopen(request, timeout):
+        raise HTTPError(request.full_url, 403, "Forbidden", {}, None)
+
+    monkeypatch.setattr(live, "urlopen", failing_urlopen)
+    with pytest.raises(RuntimeError, match="HTTP status 403") as caught:
+        live._fetch("region-data/", "DO_NOT_LEAK_SECRET", kind="NG")
+    assert "DO_NOT_LEAK_SECRET" not in str(caught.value)
+    assert caught.value.__cause__ is None
+
+
+def test_network_error_never_exposes_secret_in_exception(monkeypatch):
+    def failing_urlopen(request, timeout):
+        raise URLError("network request failed: " + request.full_url)
+
+    monkeypatch.setattr(live, "urlopen", failing_urlopen)
+    with pytest.raises(RuntimeError, match="network error") as caught:
+        live._fetch("fuel-type-data/", "DO_NOT_LEAK_SECRET")
+    assert "DO_NOT_LEAK_SECRET" not in str(caught.value)
+    assert caught.value.__cause__ is None
