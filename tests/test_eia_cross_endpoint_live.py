@@ -88,3 +88,5 @@ def test_live_audit_rejects_partial_periods(monkeypatch, tmp_path: Path):
     with pytest.raises(ValueError, match="Five-hour period coverage incomplete"):
         live.main(["--output-dir", str(tmp_path / "audit")])
     assert not (tmp_path / "audit" / "cross_endpoint_audit.json").exists()
+    assert not (tmp_path / "audit" / "region_raw.json").exists()
+    assert not (tmp_path / "audit" / "fuel_raw.json").exists()
