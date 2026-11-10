@@ -32,6 +32,8 @@ on:
       - 'tests/test_wind_matched_month_contrasts.py'
       - 'src/multiyear_energy_validation/wind_three_panel_figure.py'
       - 'src/multiyear_energy_validation/wind_svg_numeric_audit.py'
+      - 'src/multiyear_energy_validation/empirical_dispatch_readiness.py'
+      - 'tests/test_empirical_dispatch_readiness.py'
       - 'tests/test_wind_three_panel_figure.py'
       - 'tests/test_wind_leave_one_month_out.py'
       - 'src/multiyear_energy_validation/eia923_monthly_shape_comparison.py'
@@ -86,6 +88,10 @@ jobs:
         run: python -m multiyear_energy_validation.plant_parameter_registry
       - name: Verify parameter registry provenance safeguards
         run: python -m pytest -q tests/test_plant_parameter_registry.py
+      - name: Audit empirical dispatch readiness without inventing hourly parameters
+        run: |
+          python -m pytest -q tests/test_empirical_dispatch_readiness.py
+          python -m multiyear_energy_validation.empirical_dispatch_readiness
       - name: Generate plant-specific equipment evidence collection template
         run: python -m multiyear_energy_validation.parameter_evidence_gate
       - name: Test provenance evidence promotion safeguards
