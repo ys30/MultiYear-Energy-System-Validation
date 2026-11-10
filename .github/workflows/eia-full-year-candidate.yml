@@ -8,6 +8,8 @@ on:
       - 'src/multiyear_energy_validation/eia930.py'
       - 'src/multiyear_energy_validation/paper_eia930_coverage_contract.py'
       - 'tests/test_paper_eia930_coverage_contract.py'
+      - 'src/multiyear_energy_validation/paper_demand_two_year.py'
+      - 'tests/test_paper_demand_two_year.py'
       - 'src/multiyear_energy_validation/pypsa_baseline.py'
       - 'src/multiyear_energy_validation/pypsa_load.py'
       - '.github/workflows/eia-full-year-candidate.yml'
@@ -184,4 +186,31 @@ jobs:
           name: eia-ciso-full-year-candidate-${{ steps.selection.outputs.year }}
           path: outputs/eia-ciso-year/
           if-no-files-found: warn
+          retention-days: 30
+
+  paper-demand-two-year:
+    needs: candidate-year
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -e . pytest
+      - run: python -m pytest -q tests/test_paper_demand_two_year.py
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: eia-ciso-full-year-candidate-202[45]
+          path: outputs/year-artifacts
+      - name: Merge independently audited demand coverage
+        run: |
+          python -m multiyear_energy_validation.paper_demand_two_year \
+            --year-2024 outputs/year-artifacts/eia-ciso-full-year-candidate-2024/paper_demand_coverage.json \
+            --year-2025 outputs/year-artifacts/eia-ciso-full-year-candidate-2025/paper_demand_coverage.json \
+            --output outputs/paper-evidence/eia930_demand_2024_2025.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paper-eia930-demand-2024-2025
+          path: outputs/paper-evidence/eia930_demand_2024_2025.json
+          if-no-files-found: error
           retention-days: 30
