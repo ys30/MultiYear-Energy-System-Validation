@@ -50,3 +50,13 @@ def test_leave_one_out_ranges_are_not_labeled_confidence_intervals():
     svg=svg_chart(*fixtures())
     assert 'NOT confidence intervals' in svg
     assert svg.count('r="5"')==6
+
+
+def test_panel_c_value_labels_clear_sensitivity_whisker():
+    root=ET.fromstring(svg_chart(*fixtures()))
+    ns="{http://www.w3.org/2000/svg}"
+    values=[node for node in root.iter(ns+"text") if node.text=="0.750"]
+    assert len(values)==3
+    # With max leave-one-out r=0.85, labels must sit above its upper cap.
+    upper_cap_y=420-260*0.85
+    assert all(float(node.attrib["y"]) < upper_cap_y for node in values)
