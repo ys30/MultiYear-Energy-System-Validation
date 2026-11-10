@@ -7,6 +7,11 @@ on:
       - '.github/workflows/r02a-live-cross-endpoint.yml'
       - 'src/multiyear_energy_validation/eia_cross_endpoint_live.py'
       - 'src/multiyear_energy_validation/eia_cross_endpoint_audit.py'
+      - 'src/multiyear_energy_validation/eia_cross_endpoint_cli.py'
+      - 'tests/test_eia_cross_endpoint_audit.py'
+      - 'tests/test_eia_cross_endpoint_cli.py'
+      - 'tests/test_eia_cross_endpoint_live.py'
+      - 'pyproject.toml'
 
 jobs:
   source-audit:
@@ -29,10 +34,10 @@ jobs:
           test -n "$EIA_API_KEY"
           python -m multiyear_energy_validation.eia_cross_endpoint_live --output-dir outputs/r02a-cross-endpoint
       - name: Archive raw responses and audit (private repo)
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: r02a-cross-endpoint-raw-audit
           path: outputs/r02a-cross-endpoint/
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14
