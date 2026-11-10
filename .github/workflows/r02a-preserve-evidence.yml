@@ -1,0 +1,56 @@
+name: Preserve verified R02a evidence in private repository
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/r02a-preserve-evidence.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  preserve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify historical same-run artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/r02a/2026-11-10
+          gh api -H "Accept: application/vnd.github+json" \
+            repos/${{ github.repository }}/actions/artifacts/13811587152/zip \
+            > /tmp/r02a-evidence.zip
+          echo "fbbdfc76e4820c6e8fc6eaa6a998c1f2e3af1b28de8ae53a243fb1423321a727  /tmp/r02a-evidence.zip" | sha256sum -c -
+          python - <<'PY'
+          import hashlib, json, pathlib, zipfile
+          out = pathlib.Path("evidence/r02a/2026-11-10")
+          with zipfile.ZipFile("/tmp/r02a-evidence.zip") as z:
+              assert set(z.namelist()) == {"region_raw.json", "fuel_raw.json", "cross_endpoint_audit.json"}
+              for name in z.namelist():
+                  data = z.read(name)
+                  assert b"api_key=" not in data.lower()
+                  (out / name).write_bytes(data)
+          report = json.loads((out / "cross_endpoint_audit.json").read_bytes())
+          for key, name in [("region", "region_raw.json"), ("fuel", "fuel_raw.json")]:
+              digest = hashlib.sha256((out / name).read_bytes()).hexdigest()
+              assert digest == report["source"][key]["sha256"]
+          assert [r["fuel_minus_region_mwh"] for r in report["rows"]] == ["0", "-1", "2271", "0", "1"]
+          assert report["empirical_dispatch_approved"] is False
+          print("R02A_PRIVATE_EVIDENCE_VERIFIED=3 files, 2 matching SHA256, expected five-hour discrepancies")
+          PY
+      - name: Commit immutable raw evidence to private repository
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add evidence/r02a/2026-11-10/
+          if git diff --cached --quiet; then
+            echo "Evidence already present; no commit required"
+          else
+            git commit -m "data(R02a): preserve SHA256-verified same-run EIA evidence privately"
+            git push
+          fi
