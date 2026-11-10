@@ -1,13 +1,32 @@
 """Build a paper-facing evidence manifest strictly from regenerated R02 outputs."""
 import json
+import math
 from pathlib import Path
 from .wind_svg_numeric_audit import reconcile, KEY
+from .empirical_dispatch_readiness import SYSTEM_GATES
 
 def build_manifest(registry, readiness, comparison, matched, svg_audit):
     sites=registry["sites"]
     if readiness["summary"]["plant_count"]!=len(sites):
         raise ValueError("plant count mismatch")
+    site_keys=[(str(s["plant_id"]),s["technology"]) for s in sites]
+    if len(site_keys)!=len(set(site_keys)):
+        raise ValueError("duplicate pilot site identity")
     slots=sum(len(s["engineering_parameters"]) for s in sites)
+    expected_plant={(str(s["plant_id"]),s["technology"],p)
+                    for s in sites for p in s["engineering_parameters"]}
+    expected_system={name for name,_,_ in SYSTEM_GATES}
+    gates=readiness.get("gates",[])
+    actual_plant=[(str(g.get("plant_id")),g.get("technology"),g["parameter"])
+                  for g in gates if g["scope"]=="plant"]
+    actual_system=[g["parameter"] for g in gates if g["scope"]=="system"]
+    if (len(actual_plant)!=len(expected_plant) or
+        set(actual_plant)!=expected_plant or
+        len(actual_system)!=len(expected_system) or
+        set(actual_system)!=expected_system):
+        raise ValueError("readiness gate identities do not match registry and system requirements")
+    if any(g["decision"]!="block" for g in gates):
+        raise ValueError("baseline includes nonblocked gate")
     if readiness["summary"]["total_gates"]!=slots+5:
         raise ValueError("gate count mismatch")
     if readiness["summary"]["decision_counts"]["block"]!=slots+5:
@@ -18,6 +37,15 @@ def build_manifest(registry, readiness, comparison, matched, svg_audit):
     pairs={str(s["plant_id"]):s for s in matched["sites"]}
     if set(comp)!=set(pairs) or len(comp)!=3:
         raise ValueError("wind cohort mismatch")
+    if any(not math.isfinite(float(value)) or abs(float(value))>1
+           for pid in comp for value in comp[pid].values()):
+        raise ValueError("invalid within-year correlation")
+    if any(not math.isfinite(float(value)) or abs(float(value))>1
+           for pid in pairs for value in (
+               pairs[pid]["matched_month_year_difference_pearson_r"],
+               pairs[pid]["matched_month_leave_one_out_min_r"],
+               pairs[pid]["matched_month_leave_one_out_max_r"])):
+        raise ValueError("invalid matched-month correlation")
     if svg_audit["numeric_checks"]!=21 or not svg_audit["reconciled"]:
         raise ValueError("figure reconciliation incomplete")
     wind=[]
