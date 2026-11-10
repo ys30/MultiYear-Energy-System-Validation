@@ -1,7 +1,7 @@
 # Figure R02-W1 — candidate freeze and acceptance record (private)
 
-**Candidate source commit:** `8e058f9a`  
-**Verified full workflow:** [R02 six-site extended physical weather #42848701491](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/42848701491) — **success**.  
+**Candidate source commit:** `b61cf714`  
+**Verified full workflow:** [R02 six-site extended physical weather #42851314978](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/42851314978) — **success**.  
 **Research Data Contracts:** passed on the same commit.  
 **Archived workflow artifact:** `r02-six-site-extended-weather-2025`, artifact ID `13779223503` (available when checked).  
 **Figure filename inside outputs:** `wind_2024_2025_three_panel.svg`.
@@ -18,8 +18,8 @@
 | Label/whisker overlap | Numeric labels positioned above Panel C sensitivity upper whiskers | Geometric regression test passed |
 | SVG syntax | XML parses and required labels are present | Automated tests passed |
 | Actual rendering at journal size | Open the artifact SVG, visually inspect at full size and reduced two-column width | **Pending manual visual inspection** |
-| Data-to-label audit | Compare all plotted values against archived JSON outputs, including extreme LOMO values | **Pending independent audit** |
-| Submission-ready freeze | Requires both pending checks above and manuscript cross-references | **Not yet approved** |
+| Data-to-label audit | Independent SVG/XML-to-JSON audit: 21 plotted-value checks for 3 plants; run #42851314978 | **Passed** |
+| Submission-ready freeze | Requires pending visual check above and manuscript cross-references | **Not yet approved** |
 
 ## Figure interpretation
 
@@ -39,4 +39,4 @@ The values above were obtained from successful R02 run #42752870880 and are repr
 
 Use the private `docs/R02_WIND_2024_2025_MANUSCRIPT_RESULTS_PRIVATE.md` for proposed Results and Figure R02-W1 caption. Keep this empirical wind-resource diagnostic separate from any uncalibrated hourly dispatch or claims of system-wide reliability.
 
-**Decision:** **candidate freeze only**; do not label the SVG journal-final until actual render inspection and independent data-label comparison have passed.
+**Decision:** **candidate freeze only**; do not label the SVG journal-final until actual render inspection and manuscript cross-references have passed.
