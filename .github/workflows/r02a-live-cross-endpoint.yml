@@ -1,0 +1,36 @@
+name: R02a live EIA cross-endpoint source audit
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/r02a-live-cross-endpoint.yml'
+      - 'src/multiyear_energy_validation/eia_cross_endpoint_live.py'
+      - 'src/multiyear_energy_validation/eia_cross_endpoint_audit.py'
+
+jobs:
+  source-audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Fetch and reconcile bounded EIA sources
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: |
+          test -n "$EIA_API_KEY"
+          python -m multiyear_energy_validation.eia_cross_endpoint_live --output-dir outputs/r02a-cross-endpoint
+      - name: Archive raw responses and audit (private repo)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r02a-cross-endpoint-raw-audit
+          path: outputs/r02a-cross-endpoint/
+          if-no-files-found: warn
+          retention-days: 14
