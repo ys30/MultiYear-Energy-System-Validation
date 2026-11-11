@@ -63,7 +63,29 @@ def audit(targets, pudl, output, release, expected_sha256=None):
     digest = sha256(pudl)
     if expected_sha256 and digest.lower() != expected_sha256.lower():
         raise ValueError("PUDL SHA256 mismatch")
-    rows = read_changes(pudl)
+    # Parquet source can contain millions of changelog rows; restrict to target keys
+    # in DuckDB before materializing. CSV fixtures retain full-source validation.
+    if Path(pudl).suffix.lower() == ".parquet":
+        import duckdb
+        con = duckdb.connect()
+        try:
+            con.execute("CREATE TEMP TABLE target_keys (plant_id_eia BIGINT, generator_id VARCHAR)")
+            con.executemany("INSERT INTO target_keys VALUES (?, ?)", keys)
+            cursor = con.execute("""
+                SELECT p.plant_id_eia, p.generator_id, p.report_date
+                FROM read_parquet(?) AS p
+                INNER JOIN target_keys AS t
+                  ON p.plant_id_eia = t.plant_id_eia
+                 AND CAST(p.generator_id AS VARCHAR) = t.generator_id
+            """, [str(pudl)])
+            rows = [dict(zip([x[0] for x in cursor.description], r))
+                    for r in cursor.fetchall()]
+        finally:
+            con.close()
+        if not rows:
+            raise ValueError("No target keys matched PUDL Parquet; verify schema and release")
+    else:
+        rows = read_changes(pudl)
     required = {"plant_id_eia", "generator_id", "report_date"}
     if not rows:
         raise ValueError("PUDL changelog is empty; refusing inconclusive match")
