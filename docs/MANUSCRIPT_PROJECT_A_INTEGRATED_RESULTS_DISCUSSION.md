@@ -1,6 +1,6 @@
 # Project A manuscript integration: observed demand and annual fleet transitions
 
-**Status:** evidence-based Results/Discussion integration draft, 2026-11-10. This document uses previously successful source-intake/transition CI artifacts plus an independently repeated reading of the original 2024/2025 EIA-860 Plant worksheets. **No new PyPSA empirical optimization.**
+**Status:** evidence-based Results/Discussion integration draft, audited 2026-11-10. The 2025 EIA-860 annual final release and both archive digests are documented separately. This document uses previously successful source-intake/transition CI artifacts plus an independently repeated reading of the original 2024/2025 EIA-860 Plant worksheets. **No new PyPSA empirical optimization.**
 
 ## Scientific framing
 
@@ -28,15 +28,15 @@ Three distinct mechanisms appear in the annual comparison: (i) newly present gen
 
 The main methodological implication is to treat source provenance, temporal precision, reporting scope, storage energy ratings, interchange and hourly availability as **separate acceptance gates** rather than inferring them from a successful annual inventory join. This is particularly important for storage, where MW power ratings do not determine MWh energy capacity or operating duration.
 
-## Tables and figure plan (freeze scope)
+## Tables and figure register (freeze scope)
 
 - **Table 1:** 2024/2025 EIA-930 hourly coverage, annual demand and source caveats.
 - **Table 2:** OP capacity bridge by mutually exclusive generator-record class.
 - **Figure 1:** technology-level net OP capacity change, with negative values retained and the denominator explicitly identified.
-- **Figure 2:** 2025 entrant records by reported operating-year cohort and Plant-sheet membership, distinguishing counts from OP MW.
+- **Figure 2:** 2025 entrant records by reported operating-year cohort, distinguishing counts from OP MW. The Plant-sheet membership crosswalk is a separate text/table diagnostic and **must not** be claimed to appear in this figure unless actually plotted.
 - **Figure 3 (optional/supplement):** localized R02a five-hour signed generation discrepancy with clear targeted-case caption.
 
-Do **not** add an empirical dispatch figure until its input gate passes. Do not treat 2025 preliminary source data as final without release-status confirmation.
+Do **not** add an empirical dispatch figure until its input gate passes. The **2025 final annual EIA-860 release has been verified**; this resolves publication status only, not operational input admissibility. See [final release and source SHA256 verification](EIA860_2025_FINAL_RELEASE_VERIFICATION.md).
 
 ## Evidence links
 
@@ -46,5 +46,6 @@ Do **not** add an empirical dispatch figure until its input gate passes. Do not 
 - [Status transitions](EIA860_CISO_STATUS_TRANSITIONS_2024_2025.md)
 - [Plant BA crosswalk](EIA860_PRE2025_ENTRANTS_PLANT_BA_CROSSWALK.md)
 - [R02a same-run evidence](R02A_SAME_RUN_RAW_EVIDENCE_2026-11-10.md)
+- [2025 EIA-860 final release and source archive SHA256](EIA860_2025_FINAL_RELEASE_VERIFICATION.md)
 
 **Approval status:** annual inventory accounting verified; physical commissioning and operational boundary unresolved; empirical_dispatch_approved=false.
