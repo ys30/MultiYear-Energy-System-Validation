@@ -74,3 +74,29 @@ jobs:
           assert result.returncode != 0, "Tampered metadata was incorrectly accepted"
           print("PASS: tampered source SHA256 rejected")
           PY
+
+  official-eia860-archive-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Download official 2024 and 2025 EIA-860 archives
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-all-errors --connect-timeout 20 \
+            --max-time 600 \
+            "https://www.eia.gov/electricity/data/eia860/archive/xls/eia8602024.zip" \
+            --output eia8602024.zip
+          curl --fail --location --retry 3 --retry-all-errors --connect-timeout 20 \
+            --max-time 600 \
+            "https://www.eia.gov/electricity/data/eia860/xls/eia8602025.zip" \
+            --output eia8602025.zip
+      - name: Verify official archive checksums and ZIP integrity
+        run: |
+          set -euo pipefail
+          printf '%s  %s\n' \
+            '0aaae04812cd4ab87a3e346bdf93848a3cc15053fd4dc2a4cf82d2aeac95f12b' eia8602024.zip \
+            '2b27929d26cc1da9ad6a530da1cac6718cd8496098ee560c4d47cfffd96d08ba' eia8602025.zip \
+            | sha256sum --check --strict
+          unzip -tq eia8602024.zip
+          unzip -tq eia8602025.zip
+          echo "PASS: official EIA-860 ZIP bytes match pinned SHA256"
