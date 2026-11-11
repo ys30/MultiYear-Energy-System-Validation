@@ -93,7 +93,7 @@ Among 157 generator records newly present in the 2025 CISO inventory, 128 report
 | 2024 | 3 | 0 | 5 | 34.7 |
 | **Total** | **23** | **1** | **5** | **138.1** |
 
-The 2023 operating-year cohort contributes 88.1 MW (63.8% of the 138.1 MW OP subtotal), while the 2024 cohort contributes 34.7 MW (25.1%). These proportions characterize reported operating-year metadata among annual-inventory entrants; they do not establish when or why each generator first entered CISO reporting.
+The 2023 operating-year cohort contributes 88.1 MW (63.8% of the 138.1 MW OP subtotal), while the 2024 cohort contributes 34.7 MW (25.1%). The capacity distribution is concentrated: the two largest OP records (50.0 MW and 30.0 MW) together contribute 80.0 MW, or 57.9% of the 138.1-MW subtotal. Within the 2023 reported-operating-year group, its two largest records (50.0 MW and 20.0 MW) contribute 70.0 of 88.1 MW (79.5%). Consequently, record counts and nameplate-capacity shares should not be interpreted interchangeably. These proportions characterize reported operating-year metadata among annual-inventory entrants; they do not establish when or why each generator first entered CISO reporting.
 
 
 Original Plant-sheet checks identify four plant IDs present with BA=CISO in both annual releases (six newly present generator records, 103.6 MW OP) and 16 plant IDs absent from the 2024 Plant worksheet but present in 2025 with BA=CISO (23 records, 34.5 MW OP). These findings distinguish two source-level pathways for first appearance without identifying their administrative or physical causes.
