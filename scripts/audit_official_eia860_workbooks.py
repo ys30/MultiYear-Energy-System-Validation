@@ -15,10 +15,10 @@ def normalize(value):
 
 def locate_header(ws, kind):
     required = ("plant code", "generator id") if kind == "generator" else ("plant code",)
-    for row in ws.iter_rows(min_row=1, max_row=min(ws.max_row, 40), values_only=True):
+    for row_number, row in enumerate(ws.iter_rows(min_row=1, max_row=min(ws.max_row, 40), values_only=True), start=1):
         labels = [normalize(v) for v in row]
         if all(any(term in label for label in labels) for term in required):
-            return labels
+            return row_number, labels
     return None
 
 def inspect_archive(path):
@@ -35,12 +35,14 @@ def inspect_archive(path):
             try:
                 record = {"file": item.filename, "kind": kind, "sheets": []}
                 for ws in wb.worksheets:
-                    labels = locate_header(ws, kind)
+                    header = locate_header(ws, kind)
+                    labels = header[1] if header else None
                     sheet = {"name": ws.title, "rows_including_headers": ws.max_row,
                              "header_detected": labels is not None}
                     if labels is not None:
                         # Record exact normalized header positions for the next
                         # full-row audit; never infer column offsets by convention.
+                        sheet["header_row_one_based"] = header[0]
                         sheet["header_columns"] = [
                             {"index_zero_based": i, "normalized_label": label}
                             for i, label in enumerate(labels) if label
