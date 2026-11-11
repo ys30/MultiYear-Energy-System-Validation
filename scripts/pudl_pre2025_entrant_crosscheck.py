@@ -65,17 +65,25 @@ def audit(targets, pudl, output, release, expected_sha256=None):
         raise ValueError("PUDL SHA256 mismatch")
     rows = read_changes(pudl)
     required = {"plant_id_eia", "generator_id", "report_date"}
-    if rows and not required.issubset(rows[0]):
+    if not rows:
+        raise ValueError("PUDL changelog is empty; refusing inconclusive match")
+    if not required.issubset(rows[0]):
         raise ValueError("PUDL changelog schema missing required columns")
     changes = defaultdict(list)
+    target_key_set = set(keys)
     seen = set()
     for row in rows:
         key = (int(row["plant_id_eia"]), str(row["generator_id"]).strip())
         date = str(row["report_date"])[:10]
+        from datetime import date as calendar_date
+        try:
+            calendar_date.fromisoformat(date)
+        except ValueError as exc:
+            raise ValueError(f"Invalid PUDL report_date: {date}") from exc
         if (key, date) in seen:
             raise ValueError(f"Duplicate changelog primary key: {key}, {date}")
         seen.add((key, date))
-        if key in set(keys):
+        if key in target_key_set:
             changes[key].append(date)
     results = []
     for row, key in zip(target_rows, keys):
