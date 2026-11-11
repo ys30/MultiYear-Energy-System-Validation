@@ -27,8 +27,8 @@ def audit(transitions, parquet, output):
     # Parquet path is passed as a bound parameter; source URL/version logged.
     rows = con.execute("""
         SELECT t.plant_id, t.generator_id,
-               MIN(p.report_date) AS first_seen,
-               MAX(p.report_date) AS last_change,
+               MIN(p.report_date) AS first_change_record,
+               MAX(p.report_date) AS last_change_record,
                COUNT(p.report_date) AS changelog_rows
         FROM targets t
         LEFT JOIN read_parquet(?) p
@@ -37,14 +37,14 @@ def audit(transitions, parquet, output):
     """, [parquet]).fetchall()
     out = {
         "source_parquet": parquet,
-        "interpretation": "PUDL monthly changelog is transformed EIA-860M, not independent field observation",
+        "interpretation": "PUDL monthly changelog records initial observed attributes and subsequent changes, not every monthly snapshot; transformed EIA-860M, not independent field observation",
         "targets": len(entrants),
         "matched": sum(r[2] is not None for r in rows),
         "unmatched": sum(r[2] is None for r in rows),
         "records": [
             {"plant_id": r[0], "generator_id": r[1],
-             "first_report_date": str(r[2]) if r[2] is not None else None,
-             "last_change_date": str(r[3]) if r[3] is not None else None,
+             "first_changelog_date": str(r[2]) if r[2] is not None else None,
+             "last_changelog_date": str(r[3]) if r[3] is not None else None,
              "changelog_rows": r[4]}
             for r in rows
         ],
