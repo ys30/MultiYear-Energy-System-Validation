@@ -130,6 +130,10 @@ jobs:
                           sheets = [e.attrib["name"] for e in root.findall(".//m:sheets/m:sheet", ns)]
                       workbooks.append({"filename": info.filename, "sheets": sheets})
               manifest["archives"][str(year)]["workbook_sheets"] = workbooks
+          for year in (2024, 2025):
+              names = [w["filename"].lower() for w in manifest["archives"][str(year)]["workbook_sheets"]]
+              assert any("plant" in n for n in names), f"{year}: Plant workbook missing"
+              assert any("generator" in n for n in names), f"{year}: Generator workbook missing"
           assert all(manifest["archives"][str(y)]["workbook_sheets"] for y in (2024, 2025)), (
               "No Excel workbooks detected in official archive")
           pathlib.Path("official-eia860-integrity-manifest.json").write_text(
