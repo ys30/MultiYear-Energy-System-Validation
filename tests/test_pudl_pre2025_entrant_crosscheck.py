@@ -76,3 +76,27 @@ def test_mutable_release_rejected(tmp_path):
         "--output", str(tmp_path / "out.json")], capture_output=True, text=True)
     assert proc.returncode != 0
     assert "immutable PUDL release" in proc.stderr
+
+
+def test_empty_pudl_source_rejected(tmp_path):
+    pudl = tmp_path / "empty.csv"
+    pudl.write_text("plant_id_eia,generator_id,report_date\n")
+    proc = subprocess.run([sys.executable, str(SCRIPT), "--targets", str(TARGETS),
+        "--pudl", str(pudl), "--release", "v2026.11.0",
+        "--output", str(tmp_path / "out.json")], capture_output=True, text=True)
+    assert proc.returncode != 0
+    assert "PUDL changelog is empty" in proc.stderr
+    assert not (tmp_path / "out.json").exists()
+
+def test_invalid_report_date_rejected(tmp_path):
+    with TARGETS.open(newline="") as f:
+        first = next(csv.DictReader(f))
+    pudl = tmp_path / "bad_date.csv"
+    pudl.write_text("plant_id_eia,generator_id,report_date\n"
+                    f"{first['plant_id_eia']},{first['generator_id']},2024-99-99\n")
+    proc = subprocess.run([sys.executable, str(SCRIPT), "--targets", str(TARGETS),
+        "--pudl", str(pudl), "--release", "v2026.11.0",
+        "--output", str(tmp_path / "out.json")], capture_output=True, text=True)
+    assert proc.returncode != 0
+    assert "Invalid PUDL report_date" in proc.stderr
+    assert not (tmp_path / "out.json").exists()
