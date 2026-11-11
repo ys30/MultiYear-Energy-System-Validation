@@ -52,3 +52,23 @@ jobs:
         run: |
           python scripts/verify_eia860_source_gates.py \
             --artifact fleet-transition-artifact.zip
+      - name: Reject tampered source metadata (negative control)
+        run: |
+          python - <<'PY'
+          import json, pathlib, subprocess, sys, zipfile
+          original = pathlib.Path("fleet-transition-artifact.zip")
+          modified = pathlib.Path("tampered-fleet-transition-artifact.zip")
+          with zipfile.ZipFile(original) as src, zipfile.ZipFile(modified, "w") as dst:
+              for name in src.namelist():
+                  payload = src.read(name)
+                  if name == "2025/source_inventory.json":
+                      obj = json.loads(payload)
+                      obj["sha256"] = "0" * 64
+                      payload = json.dumps(obj).encode()
+                  dst.writestr(name, payload)
+          result = subprocess.run(
+              [sys.executable, "scripts/verify_eia860_source_gates.py",
+               "--artifact", str(modified)], capture_output=True, text=True)
+          assert result.returncode != 0, "Tampered metadata was incorrectly accepted"
+          print("PASS: tampered source SHA256 rejected")
+          PY
