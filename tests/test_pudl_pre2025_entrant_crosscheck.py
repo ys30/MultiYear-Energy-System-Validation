@@ -100,3 +100,31 @@ def test_invalid_report_date_rejected(tmp_path):
     assert proc.returncode != 0
     assert "Invalid PUDL report_date" in proc.stderr
     assert not (tmp_path / "out.json").exists()
+
+
+def test_manuscript_table3_yearly_counts_and_capacity():
+    """Protect the source-verified annual-cohort table from silent drift."""
+    from collections import defaultdict
+    expected = {
+        2012: (0, 1, 0, 0.0),
+        2014: (2, 0, 0, 3.8),
+        2018: (1, 0, 0, 2.3),
+        2020: (1, 0, 0, 2.0),
+        2021: (5, 0, 0, 7.2),
+        2023: (11, 0, 0, 88.1),
+        2024: (3, 0, 5, 34.7),
+    }
+    actual = defaultdict(lambda: [0, 0, 0, 0.0])
+    with TARGETS.open(newline="") as f:
+        for row in csv.DictReader(f):
+            year = int(row["reported_operating_year"])
+            status = row["status_2025"]
+            assert status in ("OP", "OS", "SB")
+            actual[year][("OP", "OS", "SB").index(status)] += 1
+            actual[year][3] += float(row["op_nameplate_mw_2025"])
+    assert set(actual) == set(expected)
+    for year, values in expected.items():
+        assert actual[year][:3] == list(values[:3])
+        assert abs(actual[year][3] - values[3]) < 1e-8
+    assert sum(sum(v[:3]) for v in actual.values()) == 29
+    assert abs(sum(v[3] for v in actual.values()) - 138.1) < 1e-8
