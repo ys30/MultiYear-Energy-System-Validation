@@ -100,3 +100,27 @@ jobs:
           unzip -tq eia8602024.zip
           unzip -tq eia8602025.zip
           echo "PASS: official EIA-860 ZIP bytes match pinned SHA256"
+      - name: Record reproducible official archive manifest
+        run: |
+          python - <<'PY'
+          import hashlib, json, pathlib, zipfile
+          manifest = {"schema_version": 1, "scope": "official_archive_byte_integrity_only",
+                      "fleet_validated": False, "ba_mapping_validated": False,
+                      "empirical_dispatch_approved": False, "archives": {}}
+          for year in (2024, 2025):
+              path = pathlib.Path(f"eia860{year}.zip")
+              with zipfile.ZipFile(path) as z:
+                  members = [{"filename": i.filename, "uncompressed_bytes": i.file_size,
+                              "crc32": f"{i.CRC:08x}"} for i in z.infolist() if not i.is_dir()]
+              manifest["archives"][str(year)] = {
+                  "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                  "archive_bytes": path.stat().st_size, "members": members}
+          pathlib.Path("official-eia860-integrity-manifest.json").write_text(
+              json.dumps(manifest, indent=2) + "\\n")
+          PY
+      - name: Archive integrity manifest for future audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-a-official-eia860-integrity-manifest
+          path: official-eia860-integrity-manifest.json
+          retention-days: 90
