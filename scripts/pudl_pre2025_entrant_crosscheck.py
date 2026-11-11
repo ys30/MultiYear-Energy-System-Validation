@@ -1,65 +1,119 @@
-"""Cross-check 2025 pre-2025 entrant generator IDs against PUDL EIA-860M changelog.
+"""PUDL changelog cross-check. Supports local CSV input and optional DuckDB Parquet.
 
-Input: identity-matched fleet_transitions_2024_2025.json from verified CI artifact.
-Remote: pinned PUDL parquet release URL; do not use mutable 'nightly' for publication.
-No claim of independent EIA source: PUDL transforms EIA-860M.
+No remote download. A changelog row is NOT a monthly snapshot, nor proof of commissioning.
 """
 import argparse
+import csv
+import hashlib
 import json
+from collections import defaultdict
 from pathlib import Path
 
-def audit(transitions, parquet, output):
-    import duckdb
-    d = json.loads(Path(transitions).read_text())
-    entrants = [
-        x for x in d["changes"]
-        if x["classification"] == "new_to_ciso_inventory"
-        and x.get("current_operating_year_raw") is not None
-        and int(x["current_operating_year_raw"]) < 2025
-    ]
-    if len(entrants) != 29:
-        raise ValueError(f"Expected 29 earlier-year entrants; got {len(entrants)}")
-    con = duckdb.connect()
-    con.execute("CREATE TEMP TABLE targets (plant_id BIGINT, generator_id VARCHAR)")
-    con.executemany("INSERT INTO targets VALUES (?, ?)", [
-        (int(x["plant_id"]), str(x["generator_id"]).strip()) for x in entrants
-    ])
-    # Parquet path is passed as a bound parameter; source URL/version logged.
-    rows = con.execute("""
-        SELECT t.plant_id, t.generator_id,
-               MIN(p.report_date) AS first_change_record,
-               MAX(p.report_date) AS last_change_record,
-               COUNT(p.report_date) AS changelog_rows
-        FROM targets t
-        LEFT JOIN read_parquet(?) p
-          ON p.plant_id_eia = t.plant_id AND CAST(p.generator_id AS VARCHAR) = t.generator_id
-        GROUP BY 1,2 ORDER BY 1,2
-    """, [parquet]).fetchall()
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as src:
+        for chunk in iter(lambda: src.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+def read_targets(path):
+    with open(path, newline="") as src:
+        rows = list(csv.DictReader(src))
+    required = {"plant_id_eia", "generator_id", "reported_operating_year",
+                "status_2025", "op_nameplate_mw_2025"}
+    if not rows or not required.issubset(rows[0]):
+        raise ValueError("Target CSV schema invalid")
+    if len(rows) != 29:
+        raise ValueError(f"Expected 29 targets, got {len(rows)}")
+    keys = [(int(r["plant_id_eia"]), r["generator_id"].strip()) for r in rows]
+    if len(set(keys)) != len(keys):
+        raise ValueError("Duplicate target keys")
+    if any(int(r["reported_operating_year"]) >= 2025 for r in rows):
+        raise ValueError("Target year is not pre-2025")
+    op = sum(float(r["op_nameplate_mw_2025"]) for r in rows
+             if r["status_2025"] == "OP")
+    if abs(op - 138.1) > 0.01:
+        raise ValueError(f"Expected 138.1 MW OP, got {op}")
+    return rows, keys
+
+def read_changes(path):
+    p = Path(path)
+    if p.suffix.lower() == ".csv":
+        with open(p, newline="") as src:
+            return list(csv.DictReader(src))
+    if p.suffix.lower() == ".parquet":
+        try:
+            import duckdb
+        except ImportError as exc:
+            raise RuntimeError("Install duckdb to read local Parquet") from exc
+        con = duckdb.connect()
+        try:
+            return [dict(zip([x[0] for x in cur.description], row))
+                    for cur in [con.execute(
+                        "SELECT plant_id_eia, generator_id, report_date FROM read_parquet(?)",
+                        [str(p)])] for row in cur.fetchall()]
+        finally:
+            con.close()
+    raise ValueError("PUDL input must be local CSV or Parquet")
+
+def audit(targets, pudl, output, release, expected_sha256=None):
+    target_rows, keys = read_targets(targets)
+    if not release or release.lower() in {"latest", "nightly"}:
+        raise ValueError("Specify an immutable PUDL release version")
+    digest = sha256(pudl)
+    if expected_sha256 and digest.lower() != expected_sha256.lower():
+        raise ValueError("PUDL SHA256 mismatch")
+    rows = read_changes(pudl)
+    required = {"plant_id_eia", "generator_id", "report_date"}
+    if rows and not required.issubset(rows[0]):
+        raise ValueError("PUDL changelog schema missing required columns")
+    changes = defaultdict(list)
+    seen = set()
+    for row in rows:
+        key = (int(row["plant_id_eia"]), str(row["generator_id"]).strip())
+        date = str(row["report_date"])[:10]
+        if (key, date) in seen:
+            raise ValueError(f"Duplicate changelog primary key: {key}, {date}")
+        seen.add((key, date))
+        if key in set(keys):
+            changes[key].append(date)
+    results = []
+    for row, key in zip(target_rows, keys):
+        dates = sorted(changes[key])
+        results.append({
+            "plant_id_eia": key[0], "generator_id": key[1],
+            "reported_operating_year": int(row["reported_operating_year"]),
+            "status_2025": row["status_2025"],
+            "op_nameplate_mw_2025": float(row["op_nameplate_mw_2025"]),
+            "first_changelog_date": dates[0] if dates else None,
+            "last_changelog_date": dates[-1] if dates else None,
+            "pre2025_change_count": sum(d < "2025-01-01" for d in dates),
+            "changelog_rows": len(dates),
+            "interpretation": "matched_changelog_not_monthly_presence" if dates
+                else "no_changelog_match_not_proof_of_absence",
+        })
     out = {
-        "source_parquet": parquet,
-        "interpretation": "PUDL monthly changelog records initial observed attributes and subsequent changes, not every monthly snapshot; transformed EIA-860M, not independent field observation",
-        "targets": len(entrants),
-        "matched": sum(r[2] is not None for r in rows),
-        "unmatched": sum(r[2] is None for r in rows),
-        "records": [
-            {"plant_id": r[0], "generator_id": r[1],
-             "first_changelog_date": str(r[2]) if r[2] is not None else None,
-             "last_changelog_date": str(r[3]) if r[3] is not None else None,
-             "changelog_rows": r[4]}
-            for r in rows
-        ],
-        "causal_status": "unresolved",
-        "empirical_dispatch_approved": False,
+        "pudl_release": release, "pudl_file_sha256": digest,
+        "target_file_sha256": sha256(targets), "source_rows": len(rows),
+        "targets": len(results),
+        "matched": sum(r["changelog_rows"] > 0 for r in results),
+        "with_pre2025_changelog": sum(r["pre2025_change_count"] > 0 for r in results),
+        "unmatched": sum(r["changelog_rows"] == 0 for r in results),
+        "records": results,
+        "source_independence": "PUDL EIA-860M transforms EIA reports; not independent physical evidence",
+        "causal_status": "unresolved", "empirical_dispatch_approved": False,
     }
     Path(output).parent.mkdir(parents=True, exist_ok=True)
-    Path(output).write_text(json.dumps(out, indent=2))
-    print(json.dumps({"targets":out["targets"],"matched":out["matched"],"unmatched":out["unmatched"]}))
+    Path(output).write_text(json.dumps(out, indent=2) + "\n")
     return out
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--transitions", required=True)
-    p.add_argument("--parquet", required=True)
+    p.add_argument("--targets", required=True)
+    p.add_argument("--pudl", required=True, help="Local CSV or Parquet")
+    p.add_argument("--release", required=True)
+    p.add_argument("--sha256", default=None)
     p.add_argument("--output", required=True)
     a = p.parse_args()
-    audit(a.transitions, a.parquet, a.output)
+    print(json.dumps({k:v for k,v in audit(a.targets,a.pudl,a.output,
+          a.release,a.sha256).items() if k not in {"records"}}, indent=2))
