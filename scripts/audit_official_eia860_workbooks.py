@@ -15,7 +15,7 @@ def normalize(value):
 
 def locate_header(ws, kind):
     required = ("plant code", "generator id") if kind == "generator" else ("plant code",)
-    for row in ws.iter_rows(min_row=1, max_row=min(ws.max_row, 20), values_only=True):
+    for row in ws.iter_rows(min_row=1, max_row=min(ws.max_row, 40), values_only=True):
         labels = [normalize(v) for v in row]
         if all(any(term in label for label in labels) for term in required):
             return labels
@@ -39,6 +39,12 @@ def inspect_archive(path):
                     sheet = {"name": ws.title, "rows_including_headers": ws.max_row,
                              "header_detected": labels is not None}
                     if labels is not None:
+                        # Record exact normalized header positions for the next
+                        # full-row audit; never infer column offsets by convention.
+                        sheet["header_columns"] = [
+                            {"index_zero_based": i, "normalized_label": label}
+                            for i, label in enumerate(labels) if label
+                        ]
                         sheet["matching_columns"] = [v for v in labels if any(
                             token in v for token in ("plant code", "generator id", "balancing authority",
                                                      "nameplate capacity", "operating status", "operating year"))]
