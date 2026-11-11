@@ -48,3 +48,7 @@ jobs:
         run: |
           python scripts/verify_pudl_targets_against_artifact.py \
             --artifact fleet-transition-artifact.zip
+      - name: Verify source provenance and fail-closed dispatch gates
+        run: |
+          python scripts/verify_eia860_source_gates.py \
+            --artifact fleet-transition-artifact.zip
