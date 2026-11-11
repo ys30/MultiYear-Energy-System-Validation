@@ -80,6 +80,22 @@ Reported OP generator records number 2,645 in 2024 and 2,786 in 2025. OP namepla
 
 Among 157 generator records newly present in the 2025 CISO inventory, 128 report operating year 2025 and contribute 6,201.2 MW OP. The other 29 report an earlier operating year and contribute 138.1 MW OP (Figure 2). Within the latter 29, 23 records have OP status, one OS and five SB; non-OP records contribute zero OP MW.
 
+**Table 3.** Reported operating-year distribution of the 29 pre-2025 entrants in the 2025 CISO EIA-860 inventory. Values are source-verified against the archived annual fleet-transition artifact; OP MW excludes OS/SB records. This table describes *first appearance in the selected annual inventory*, not physical commissioning.
+
+| Reported operating year | OP records | OS records | SB records | OP nameplate (MW) |
+|---|---:|---:|---:|---:|
+| 2012 | 0 | 1 | 0 | 0.0 |
+| 2014 | 2 | 0 | 0 | 3.8 |
+| 2018 | 1 | 0 | 0 | 2.3 |
+| 2020 | 1 | 0 | 0 | 2.0 |
+| 2021 | 5 | 0 | 0 | 7.2 |
+| 2023 | 11 | 0 | 0 | 88.1 |
+| 2024 | 3 | 0 | 5 | 34.7 |
+| **Total** | **23** | **1** | **5** | **138.1** |
+
+The 2023 operating-year cohort contributes 88.1 MW (63.8% of the 138.1 MW OP subtotal), while the 2024 cohort contributes 34.7 MW (25.1%). These proportions characterize reported operating-year metadata among annual-inventory entrants; they do not establish when or why each generator first entered CISO reporting.
+
+
 Original Plant-sheet checks identify four plant IDs present with BA=CISO in both annual releases (six newly present generator records, 103.6 MW OP) and 16 plant IDs absent from the 2024 Plant worksheet but present in 2025 with BA=CISO (23 records, 34.5 MW OP). These findings distinguish two source-level pathways for first appearance without identifying their administrative or physical causes.
 
 Three 351-MW generators at Helms Pumped Storage (Plant 6100) report operating dates of June 1984 in both years and status OA→OP. The plant reports BA=CISO in both annual Plant worksheets. The associated +1,053.0 MW OP change therefore reflects an annual status transition rather than verified 2025 construction or a plant-level BA transfer.
