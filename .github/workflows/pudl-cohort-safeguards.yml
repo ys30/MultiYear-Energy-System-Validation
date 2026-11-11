@@ -1,0 +1,27 @@
+name: Project A PUDL cohort safeguards
+
+on:
+  push:
+    paths:
+      - "data/pudl/project_a_pudl_29_targets.csv"
+      - "scripts/pudl_pre2025_entrant_crosscheck.py"
+      - "scripts/verify_pudl_targets_against_artifact.py"
+      - "tests/test_pudl_pre2025_entrant_crosscheck.py"
+      - ".github/workflows/pudl-cohort-safeguards.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cohort-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test dependency
+        run: python -m pip install pytest
+      - name: Validate 29-row cohort and changelog fixtures
+        run: python -m pytest -q tests/test_pudl_pre2025_entrant_crosscheck.py
