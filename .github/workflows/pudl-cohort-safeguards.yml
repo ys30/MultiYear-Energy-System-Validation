@@ -10,6 +10,7 @@ on:
       - "tests/test_eia860_source_gates.py"
       - "scripts/verify_eia860_source_gates.py"
       - "scripts/audit_official_eia860_workbooks.py"
+      - "scripts/extract_official_eia860_ciso.py"
       - "tests/test_official_eia860_workbook_schema.py"
       - ".github/workflows/pudl-cohort-safeguards.yml"
   workflow_dispatch:
@@ -157,6 +158,18 @@ jobs:
         with:
           name: project-a-official-eia860-workbook-schema
           path: official-eia860-workbook-schema.json
+          if-no-files-found: ignore
+          retention-days: 90
+      - name: Extract original CISO Plant-BA and Generator rows
+        run: |
+          python scripts/extract_official_eia860_ciso.py --archive eia8602024.zip --year 2024 --out-dir official-extract
+          python scripts/extract_official_eia860_ciso.py --archive eia8602025.zip --year 2025 --out-dir official-extract
+      - name: Retain original-data staging extracts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-a-official-eia860-ciso-staging-extracts
+          path: official-extract/
           if-no-files-found: ignore
           retention-days: 90
       - name: Archive integrity manifest for future audit
