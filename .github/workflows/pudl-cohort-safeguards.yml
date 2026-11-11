@@ -7,6 +7,8 @@ on:
       - "scripts/pudl_pre2025_entrant_crosscheck.py"
       - "scripts/verify_pudl_targets_against_artifact.py"
       - "tests/test_pudl_pre2025_entrant_crosscheck.py"
+      - "tests/test_eia860_source_gates.py"
+      - "scripts/verify_eia860_source_gates.py"
       - ".github/workflows/pudl-cohort-safeguards.yml"
   workflow_dispatch:
 
@@ -25,7 +27,7 @@ jobs:
       - name: Install test dependency
         run: python -m pip install pytest
       - name: Validate 29-row cohort and changelog fixtures
-        run: python -m pytest -q tests/test_pudl_pre2025_entrant_crosscheck.py
+        run: python -m pytest -q tests/test_pudl_pre2025_entrant_crosscheck.py tests/test_eia860_source_gates.py
 
   archived-source-reconciliation:
     needs: cohort-tests
