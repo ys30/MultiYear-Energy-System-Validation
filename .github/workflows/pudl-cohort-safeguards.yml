@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   cohort-tests:
@@ -25,3 +26,25 @@ jobs:
         run: python -m pip install pytest
       - name: Validate 29-row cohort and changelog fixtures
         run: python -m pytest -q tests/test_pudl_pre2025_entrant_crosscheck.py
+
+  archived-source-reconciliation:
+    needs: cohort-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download archived fleet transition artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method GET \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${{ github.repository }}/actions/artifacts/13295023796/zip" \
+            > fleet-transition-artifact.zip
+          unzip -t fleet-transition-artifact.zip
+      - name: Independently reconcile cohort against source artifact
+        run: |
+          python scripts/verify_pudl_targets_against_artifact.py \
+            --artifact fleet-transition-artifact.zip
