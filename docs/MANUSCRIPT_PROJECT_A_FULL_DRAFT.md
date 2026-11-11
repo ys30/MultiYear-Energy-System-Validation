@@ -12,6 +12,8 @@ Annual generator inventories and hourly balancing-authority observations are wid
 
 Reproducible electricity-system analysis depends on combining observations reported at different spatial, temporal and institutional resolutions. Annual generator records identify plants, generators, status and nameplate capacity; hourly balancing-authority series report operational quantities. A mechanically successful join between these sources does not establish that plant-level balancing-authority assignments match an operational network boundary, that annual status is hourly availability, or that reported operating dates identify an exact commissioning hour.
 
+Open-source power-system tools such as PyPSA provide flexible multi-period simulation and optimization capabilities (Brown et al., 2018), while open-data model generators such as OSeMOSYS Global demonstrate that reproducible model construction is an established research direction (Barnes et al., 2022). Our novelty claim is therefore **not** the use of open data or the existence of a PyPSA workflow. It is the documented, identity-matched reconciliation of annual inventory changes with original plant-level BA evidence and an independent hourly cross-endpoint consistency check, with explicit limits on downstream inference.
+
 These distinctions matter when comparing adjacent years. A generator may first appear in a balancing-authority subset because of a reporting or membership change; an existing generator may change reported status without new construction; and nameplate power for storage does not identify its energy capacity or duration. Hourly observations can introduce an independent class of problems when apparently related series disagree.
 
 This study asks: (1) How does reported CISO operable nameplate change between the 2024 and 2025 annual inventories when exact generator identity and mutually exclusive transition classes are respected? (2) What do reported operating years and original Plant-sheet balancing-authority assignments reveal about newly present records? (3) Can a bounded cross-endpoint audit detect source-level inconsistency that should prevent unqualified downstream modeling claims?
@@ -104,10 +106,12 @@ An exact-identity and source-audited comparison of 2024–2025 CISO annual gener
 
 Code, test contracts and derived audit documentation are maintained in a private research repository during manuscript preparation. EIA-860 and EIA-930 are publicly distributed by the U.S. Energy Information Administration; source URLs, retrieval provenance and SHA256 digests are documented in the project audit trail. A public reproducibility release and third-party redistribution/license review remain to be completed before submission. No claim is made that private artifacts are currently publicly accessible.
 
-## References — verified primary-source links (scholarly bibliography pending)
+## References — verified foundational sources (additional related-work review pending)
 
 1. U.S. Energy Information Administration. Form EIA-860 annual generator and plant data. https://www.eia.gov/electricity/data/eia860/
 2. U.S. Energy Information Administration. EIA-930 hourly electric grid monitor data and API documentation. https://www.eia.gov/electricity/gridmonitor/ and https://www.eia.gov/opendata/
 3. U.S. Energy Information Administration. EIA-930 data description. https://www.eia.gov/electricity/930-content/about.html
+4. Brown, T., Hörsch, J., & Schlachtberger, D. (2018). PyPSA: Python for Power System Analysis. *Journal of Open Research Software*, 6(1), 4. https://doi.org/10.5334/jors.188
+5. Barnes, T., et al. (2022). OSeMOSYS Global, an open-source, open data global electricity system model generator. *Scientific Data*, 9, 623. https://doi.org/10.1038/s41597-022-01737-0
 
 **Before journal submission:** verify peer-reviewed literature and citations; confirm journal article format; review figures against original archived bytes; check data redistribution rights; obtain coauthor review. Do not present this as a completed empirical PyPSA dispatch paper.
