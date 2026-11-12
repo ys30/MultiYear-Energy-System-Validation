@@ -60,7 +60,12 @@ def decompose(directory):
                                          "delta_mw": round(delta, 5)})
     totals = {category: round(math.fsum(x["delta_mw"] for x in rows), 1)
               for category, rows in components.items()}
-    totals["net_change"] = round(sum(totals.values()), 1)
+    totals["net_change"] = round(math.fsum(totals.values()), 1)
+    direct_delta = round(
+        math.fsum(mw for status, mw in after.values() if status == "OP") -
+        math.fsum(mw for status, mw in before.values() if status == "OP"), 1)
+    if abs(totals["net_change"] - direct_delta) > 0.11:
+        raise ValueError(f"Bridge arithmetic mismatch: {totals['net_change']} vs {direct_delta}")
     checks = {k: abs(totals[k] - expected) <= 0.11 for k, expected in EXPECTED.items()}
     report = {"scope": "original_workbook_generator_identity_bridge",
               "components_mw": totals, "expected_mw": EXPECTED,
