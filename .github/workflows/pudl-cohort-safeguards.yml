@@ -178,6 +178,35 @@ jobs:
           python scripts/reconcile_official_eia860_transition_bridge.py \
             --extract-dir official-extract \
             --output official-extract/independent-transition-bridge.json
+      - name: Publish machine-readable official-data acceptance receipt
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          root = pathlib.Path("official-extract")
+          inventory = json.loads((root / "independent-op-reconciliation.json").read_text())
+          bridge = json.loads((root / "independent-transition-bridge.json").read_text())
+          assert inventory["original_workbook_op_totals_reconciled"] is True
+          assert bridge["bridge_reconciled"] is True
+          assert all(bridge["component_checks"].values())
+          assert abs(inventory["op_delta_mw"] - bridge["components_mw"]["net_change"]) <= 0.11
+          receipt = {
+              "scope": "original_eia860_ciso_op_and_capacity_bridge_only",
+              "op_totals_reconciled": True,
+              "bridge_components_reconciled": True,
+              "yearly_op": inventory["years"],
+              "capacity_bridge_mw": bridge["components_mw"],
+              "fleet_validated": False,
+              "ba_mapping_validated": False,
+              "empirical_dispatch_approved": False,
+          }
+          (root / "official-data-acceptance-receipt.json").write_text(
+              json.dumps(receipt, indent=2) + "\\n")
+          with open(__import__("os").environ["GITHUB_STEP_SUMMARY"], "a") as out:
+              out.write("## Project A original EIA-860 acceptance receipt\\n")
+              out.write("OP totals and four-way capacity bridge independently reconciled.\\n")
+              out.write("**Not** a BA-mapping, full-fleet or dispatch approval.\\n")
+          print(json.dumps(receipt, indent=2))
+          PY
       - name: Retain original-data staging extracts
         if: always()
         uses: actions/upload-artifact@v4
