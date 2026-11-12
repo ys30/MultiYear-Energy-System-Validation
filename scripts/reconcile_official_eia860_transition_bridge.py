@@ -84,7 +84,6 @@ if __name__ == "__main__":
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     report, components = decompose(args.extract_dir)
-    Path(args.output).write_text(json.dumps(report, indent=2) + "\n")
     detail_path = Path(args.output).with_name("independent-transition-bridge-rows.csv")
     with detail_path.open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=["component", "plant_id_eia", "generator_id", "delta_mw"])
@@ -93,6 +92,7 @@ if __name__ == "__main__":
             for row in rows:
                 writer.writerow({"component": category, **row})
     report["row_level_artifact"] = detail_path.name
+    Path(args.output).write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
     if not report["bridge_reconciled"]:
         raise SystemExit("Original-workbook component bridge differs from archived benchmark")
