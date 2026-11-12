@@ -57,3 +57,26 @@ def test_missing_op_nameplate_rejected(tmp_path):
     write_year(tmp_path, 2025, [("1", "a", "OP", 1)])
     with pytest.raises(ValueError, match="Missing OP nameplate"):
         bridge.decompose(tmp_path)
+
+def test_cli_exports_reconcilable_generator_rows(tmp_path):
+    import json
+    import subprocess
+    import sys
+    write_year(tmp_path, 2024, [
+        ("1", "a", "OP", 100), ("2", "b", "OP", 20),
+        ("3", "c", "OA", 30), ("4", "d", "OP", 10)])
+    write_year(tmp_path, 2025, [
+        ("1", "a", "OP", 105), ("3", "c", "OP", 30),
+        ("4", "d", "SB", 10), ("6", "f", "OP", 40)])
+    output = tmp_path / "independent-transition-bridge.json"
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--extract-dir", str(tmp_path),
+         "--output", str(output)], capture_output=True, text=True)
+    assert result.returncode != 0  # synthetic data must fail pinned benchmark
+    report = json.loads(output.read_text())
+    assert report["row_level_reconciled"] is True
+    assert report["row_level_rows"] == 5
+    with (tmp_path / report["row_level_artifact"]).open(newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    assert len(rows) == report["row_level_rows"]
+    assert sum(float(row["delta_mw"]) for row in rows) == 45.0
