@@ -12,6 +12,7 @@ on:
       - "scripts/audit_official_eia860_workbooks.py"
       - "scripts/extract_official_eia860_ciso.py"
       - "scripts/reconcile_official_eia860_op_totals.py"
+      - "scripts/reconcile_official_eia860_transition_bridge.py"
       - "tests/test_reconcile_official_eia860_op_totals.py"
       - "tests/test_official_eia860_workbook_schema.py"
       - ".github/workflows/pudl-cohort-safeguards.yml"
@@ -171,6 +172,11 @@ jobs:
           python scripts/reconcile_official_eia860_op_totals.py \
             --extract-dir official-extract \
             --output official-extract/independent-op-reconciliation.json
+      - name: Independently reconcile generator-level annual capacity bridge
+        run: |
+          python scripts/reconcile_official_eia860_transition_bridge.py \
+            --extract-dir official-extract \
+            --output official-extract/independent-transition-bridge.json
       - name: Retain original-data staging extracts
         if: always()
         uses: actions/upload-artifact@v4
