@@ -50,3 +50,10 @@ def test_negative_or_nan_capacity_rejected(tmp_path):
         write_year(tmp_path, 2025, [("1", "a", "OP", 1)])
         with pytest.raises(ValueError, match="Invalid nameplate"):
             bridge.decompose(tmp_path)
+
+def test_missing_op_nameplate_rejected(tmp_path):
+    import pytest
+    write_year(tmp_path, 2024, [("1", "a", "OP", "")])
+    write_year(tmp_path, 2025, [("1", "a", "OP", 1)])
+    with pytest.raises(ValueError, match="Missing OP nameplate"):
+        bridge.decompose(tmp_path)
