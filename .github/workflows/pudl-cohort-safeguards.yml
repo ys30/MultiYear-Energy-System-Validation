@@ -200,11 +200,11 @@ jobs:
               "empirical_dispatch_approved": False,
           }
           (root / "official-data-acceptance-receipt.json").write_text(
-              json.dumps(receipt, indent=2) + "\\n")
+              json.dumps(receipt, indent=2) + "\n")
           with open(__import__("os").environ["GITHUB_STEP_SUMMARY"], "a") as out:
-              out.write("## Project A original EIA-860 acceptance receipt\\n")
-              out.write("OP totals and four-way capacity bridge independently reconciled.\\n")
-              out.write("**Not** a BA-mapping, full-fleet or dispatch approval.\\n")
+              out.write("## Project A original EIA-860 acceptance receipt\n")
+              out.write("OP totals and four-way capacity bridge independently reconciled.\n")
+              out.write("**Not** a BA-mapping, full-fleet or dispatch approval.\n")
           print(json.dumps(receipt, indent=2))
           PY
       - name: Retain original-data staging extracts
