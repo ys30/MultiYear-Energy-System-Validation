@@ -187,12 +187,16 @@ jobs:
           bridge = json.loads((root / "independent-transition-bridge.json").read_text())
           assert inventory["original_workbook_op_totals_reconciled"] is True
           assert bridge["bridge_reconciled"] is True
+          assert bridge["row_level_reconciled"] is True
+          assert bridge["row_level_rows"] == sum(bridge["component_counts_nonzero"].values())
           assert all(bridge["component_checks"].values())
           assert abs(inventory["op_delta_mw"] - bridge["components_mw"]["net_change"]) <= 0.11
           receipt = {
               "scope": "original_eia860_ciso_op_and_capacity_bridge_only",
               "op_totals_reconciled": True,
               "bridge_components_reconciled": True,
+              "row_level_reconciled": True,
+              "row_level_rows": bridge["row_level_rows"],
               "yearly_op": inventory["years"],
               "capacity_bridge_mw": bridge["components_mw"],
               "fleet_validated": False,
