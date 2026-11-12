@@ -27,6 +27,8 @@ def load(path):
                 raise ValueError(f"Duplicate generator key: {key}")
             status = row["status"].strip().upper()
             raw = row["nameplate_mw"]
+            if status == "OP" and raw in ("", None):
+                raise ValueError(f"Missing OP nameplate for {key}")
             mw = float(raw) if raw not in ("", None) else 0.0
             if not math.isfinite(mw) or mw < 0:
                 raise ValueError(f"Invalid nameplate for {key}: {raw}")
