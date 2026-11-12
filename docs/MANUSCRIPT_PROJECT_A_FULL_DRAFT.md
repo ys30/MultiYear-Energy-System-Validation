@@ -164,3 +164,23 @@ The scope of a successful acceptance receipt remains **CISO original-workbook OP
 The +6,895.8 MW quantity is a difference in reported **OP nameplate inventory**. It is not a measure of newly constructed power plants, accredited capacity, dependable capacity, energy storage duration, or available dispatchable generation. The +1,053 MW Helms component is a reported OA-to-OP status transition for existing generators, not evidence of 2025 construction. The 29 records with reported operating years before 2025 are inventory entrants, not necessarily newly commissioned units or proven BA reassignment. The single-hour 2,271 MWh EIA-930 endpoint discrepancy identifies a consistency anomaly; a matching fuel-category value is not by itself causal attribution.
 
 **Freeze rule:** Promote any archived EIA-860 numerical result to *independently reproduced* only when the official original-workbook workflow artifacts and their checksums are available for inspection and the corresponding reconciliation receipt reports success. Until then, retain the evidence qualifier in the abstract, tables, captions, and conclusions.
+
+
+### Archived early-operating-year entrant cohort: descriptive breakdown (2026-11-12)
+
+A row-level re-tabulation of the **archived** 29-record pre-2025 operating-year cohort (not an independent EIA-860 workbook extraction or a PUDL validation) yielded the following year-specific results:
+
+| Reported operating year | Generator records | 2025 OP nameplate (MW) |
+|---|---:|---:|
+| 2012 | 1 | 0.0 |
+| 2014 | 2 | 3.8 |
+| 2018 | 1 | 2.3 |
+| 2020 | 1 | 2.0 |
+| 2021 | 5 | 7.2 |
+| 2023 | 11 | 88.1 |
+| 2024 | 8 | 34.7 |
+| **Total** | **29** | **138.1** |
+
+Twenty-three records have 2025 status OP, whereas six are non-OP (one OS and five SB). The technology-specific OP capacities are 70.7 MW batteries (five records), 33.2 MW solar PV (14 records), 30.0 MW onshore wind (one record), 2.8 MW landfill gas (two records), and 1.4 MW natural-gas internal-combustion generation (one record). The five petroleum-liquids records and one wood/wood-waste record have non-OP status and contribute zero OP capacity. Batteries, solar PV and onshore wind jointly account for 133.9 MW (96.96%) of this cohort's OP nameplate. These percentages describe the **selected historical-entrant cohort**, not all CISO capacity changes.
+
+**Evidence qualifier:** This tabulation was calculated from `project_a_29_target_reconciliation_2026-11-12.csv`, which compares archived generator rows to a locally staged target list derived from the same historical cohort. Agreement between these files does not constitute independent source confirmation. The original EIA-860 2024/2025 workbook replay and real PUDL historical matching remain pending.
