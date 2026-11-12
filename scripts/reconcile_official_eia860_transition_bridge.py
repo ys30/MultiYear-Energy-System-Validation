@@ -91,7 +91,19 @@ if __name__ == "__main__":
         for category, rows in components.items():
             for row in rows:
                 writer.writerow({"component": category, **row})
+    # Re-read exported rows to ensure the artifact is sufficient to reproduce totals.
+    with detail_path.open(newline="") as stream:
+        exported = list(csv.DictReader(stream))
+    export_totals = {
+        category: round(math.fsum(float(row["delta_mw"]) for row in exported
+                                  if row["component"] == category), 1)
+        for category in components
+    }
+    if any(export_totals[k] != totals[k] for k in components):
+        raise ValueError("Exported row-level bridge does not reconcile to components")
     report["row_level_artifact"] = detail_path.name
+    report["row_level_rows"] = len(exported)
+    report["row_level_reconciled"] = True
     Path(args.output).write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
     if not report["bridge_reconciled"]:
