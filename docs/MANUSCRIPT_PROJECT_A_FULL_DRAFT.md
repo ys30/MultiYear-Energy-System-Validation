@@ -138,3 +138,29 @@ Code, test contracts and derived audit documentation are maintained in a private
 8. National Institute of Standards and Technology. (2023). *Generator Fleet Characteristics Model*. Technical Note 2246. https://nvlpubs.nist.gov/nistpubs/TechnicalNotes/NIST.TN.2246.pdf
 
 **Before journal submission:** perform a systematic close-neighbor literature search (generator-inventory versioning and electricity-data validation); verify all citations and final journal formatting; embed and independently review the actual figures against archived bytes; check data redistribution rights; obtain coauthor review. The present primary-source and foundational references are not a complete literature review. Do not present this as a completed empirical PyPSA dispatch paper.
+
+
+## Reproducibility and acceptance status (2026-11-12 audit addendum)
+
+This section distinguishes **archived findings**, **verified execution evidence**, and **pending independent acceptance**. It is a reporting-status appendix, not a claim that new empirical analyses have been completed.
+
+| Evidence layer | Current documented status | Scientific interpretation |
+|---|---|---|
+| Archived EIA-860 CISO OP counts and capacities (2024: 2,645 / 85,634.2 MW; 2025: 2,786 / 92,530.0 MW) | Archived result; original-workbook CI acceptance not yet verified | Report as archived findings pending original-workbook replay |
+| Four-way OP inventory bridge (+6,339.3, −379.9, +862.4, +74.0 MW) | Archived result; independently coded reconciliation and row-level export; latest CI output not yet verified | Do not label independently reproduced until original-data receipts are inspected |
+| Helms OA-to-OP and pre-2025 reported operating-year cohort | Archived case evidence; pending fresh row-level original-workbook verification | Status transition and first appearance are not synonymous with commissioning |
+| EIA-930 cross-endpoint R02A audit | Verified GitHub Actions run 42921140978, job 130195976045, conclusion success; 13 tests passed; three raw audit files uploaded as artifact 13811587152 | Supports a narrowly scoped hourly endpoint-consistency finding, not empirical dispatch |
+| PUDL pre-2025 cohort matching | Cohort and fixture safeguards exist; matching against the actual version-pinned PUDL data not yet verified | No independent longitudinal confirmation claimed |
+| Empirical multi-year PyPSA dispatch | Blocked by data-admission requirements | No modeled dispatch, generation availability or dispatch-derived stress results claimed |
+
+### Original-workbook acceptance protocol
+
+The original EIA-860 ZIP archives must first pass pinned SHA-256 checks, then Plant/Generator workbook schema inspection, year-specific CISO extraction, independent OP count/MW reconciliation, four-way generator-identity bridge reconciliation, and re-aggregation of exported row-level changes. The workflow is designed to emit `official-data-acceptance-receipt.json` only after these checks pass. The presence of the workflow or source code **does not establish that the latest run succeeded**. Preserve the GitHub run ID, commit SHA, logs, manifest, reconciliation JSONs and generator-level CSV before changing this evidence status.
+
+The scope of a successful acceptance receipt remains **CISO original-workbook OP inventory and capacity-bridge reconciliation only**. It does not independently certify historical balancing-authority membership, all non-OP records, commissioning dates, hourly generation availability, or empirical dispatch readiness.
+
+### Interpretation guardrails for peer review
+
+The +6,895.8 MW quantity is a difference in reported **OP nameplate inventory**. It is not a measure of newly constructed power plants, accredited capacity, dependable capacity, energy storage duration, or available dispatchable generation. The +1,053 MW Helms component is a reported OA-to-OP status transition for existing generators, not evidence of 2025 construction. The 29 records with reported operating years before 2025 are inventory entrants, not necessarily newly commissioned units or proven BA reassignment. The single-hour 2,271 MWh EIA-930 endpoint discrepancy identifies a consistency anomaly; a matching fuel-category value is not by itself causal attribution.
+
+**Freeze rule:** Promote any archived EIA-860 numerical result to *independently reproduced* only when the official original-workbook workflow artifacts and their checksums are available for inspection and the corresponding reconciliation receipt reports success. Until then, retain the evidence qualifier in the abstract, tables, captions, and conclusions.
