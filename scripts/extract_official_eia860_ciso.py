@@ -73,11 +73,17 @@ def extract(archive_path, year, out_dir):
                                "plant_code_col":pid, "generator_id_col":gid,
                                "status_col":status, "nameplate_col":capacity})
                 for row in sheet.iter_rows(min_row=n+1, values_only=True):
-                    if len(row) <= max(pid,gid,status,capacity) or row[pid] is None or row[gid] is None:
+                    if len(row) <= pid or row[pid] is None:
                         continue
                     plant_id = str(row[pid]).strip().removesuffix(".0")
                     if ba_by_plant.get(plant_id) != "CISO":
                         continue
+                    if len(row) <= max(pid, gid, status, capacity):
+                        raise ValueError(f"Incomplete CISO generator row in {sheet.title}: plant {plant_id}")
+                    if row[gid] is None or not str(row[gid]).strip():
+                        raise ValueError(f"Missing CISO generator ID in {sheet.title}: plant {plant_id}")
+                    if row[status] is None or not str(row[status]).strip():
+                        raise ValueError(f"Missing CISO generator status in {sheet.title}: plant {plant_id}")
                     key = (plant_id, str(row[gid]).strip())
                     if key in records:
                         raise ValueError(f"Duplicate CISO generator key: {key}")
