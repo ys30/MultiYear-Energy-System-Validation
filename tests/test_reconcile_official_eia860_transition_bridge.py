@@ -80,3 +80,15 @@ def test_cli_exports_reconcilable_generator_rows(tmp_path):
         rows = list(csv.DictReader(fh))
     assert len(rows) == report["row_level_rows"]
     assert sum(float(row["delta_mw"]) for row in rows) == 45.0
+
+def test_blank_identity_and_status_rejected(tmp_path):
+    import pytest
+    for bad_row, expected in [
+        (("", "a", "OP", 10), "Missing generator identity"),
+        (("1", "", "OP", 10), "Missing generator identity"),
+        (("1", "a", "", 10), "Missing generator status"),
+    ]:
+        write_year(tmp_path, 2024, [bad_row])
+        write_year(tmp_path, 2025, [("1", "a", "OP", 11)])
+        with pytest.raises(ValueError, match=expected):
+            bridge.decompose(tmp_path)
