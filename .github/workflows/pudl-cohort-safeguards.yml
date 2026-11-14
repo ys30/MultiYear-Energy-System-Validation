@@ -182,7 +182,7 @@ jobs:
       - name: Publish machine-readable official-data acceptance receipt
         run: |
           python - <<'PY'
-          import json, pathlib
+          import hashlib, json, os, pathlib
           root = pathlib.Path("official-extract")
           inventory = json.loads((root / "independent-op-reconciliation.json").read_text())
           bridge = json.loads((root / "independent-transition-bridge.json").read_text())
@@ -200,6 +200,24 @@ jobs:
               "row_level_rows": bridge["row_level_rows"],
               "yearly_op": inventory["years"],
               "capacity_bridge_mw": bridge["components_mw"],
+              "github_repository": os.environ.get("GITHUB_REPOSITORY"),
+              "github_run_id": os.environ.get("GITHUB_RUN_ID"),
+              "github_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+              "github_commit_sha": os.environ.get("GITHUB_SHA"),
+              "input_archive_sha256": {
+                  str(year): hashlib.sha256(pathlib.Path(f"eia860{year}.zip").read_bytes()).hexdigest()
+                  for year in (2024, 2025)
+              },
+              "output_file_sha256": {
+                  name: hashlib.sha256((root / name).read_bytes()).hexdigest()
+                  for name in (
+                      "eia860_ciso_generators_2024.csv",
+                      "eia860_ciso_generators_2025.csv",
+                      "independent-op-reconciliation.json",
+                      "independent-transition-bridge.json",
+                      "independent-transition-bridge-rows.csv",
+                  )
+              },
               "fleet_validated": False,
               "ba_mapping_validated": False,
               "empirical_dispatch_approved": False,
