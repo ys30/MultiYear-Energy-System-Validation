@@ -16,6 +16,8 @@ on:
       - "tests/test_reconcile_official_eia860_op_totals.py"
       - "tests/test_reconcile_official_eia860_transition_bridge.py"
       - "tests/test_extract_official_eia860_ciso_missing_rows.py"
+      - "scripts/verify_official_eia860_helms.py"
+      - "tests/test_verify_official_eia860_helms.py"
       - "tests/test_official_eia860_workbook_schema.py"
       - ".github/workflows/pudl-cohort-safeguards.yml"
   workflow_dispatch:
@@ -35,7 +37,7 @@ jobs:
       - name: Install test dependency
         run: python -m pip install pytest openpyxl
       - name: Validate 29-row cohort and changelog fixtures
-        run: python -m pytest -q tests/test_pudl_pre2025_entrant_crosscheck.py tests/test_eia860_source_gates.py tests/test_official_eia860_workbook_schema.py tests/test_reconcile_official_eia860_op_totals.py tests/test_reconcile_official_eia860_transition_bridge.py tests/test_extract_official_eia860_ciso_missing_rows.py
+        run: python -m pytest -q tests/test_pudl_pre2025_entrant_crosscheck.py tests/test_eia860_source_gates.py tests/test_official_eia860_workbook_schema.py tests/test_reconcile_official_eia860_op_totals.py tests/test_reconcile_official_eia860_transition_bridge.py tests/test_extract_official_eia860_ciso_missing_rows.py tests/test_verify_official_eia860_helms.py
 
   archived-source-reconciliation:
     needs: cohort-tests
@@ -179,6 +181,11 @@ jobs:
           python scripts/reconcile_official_eia860_transition_bridge.py \
             --extract-dir official-extract \
             --output official-extract/independent-transition-bridge.json
+      - name: Independently verify Helms status transition from original workbooks
+        run: |
+          python scripts/verify_official_eia860_helms.py \
+            --extract-dir official-extract \
+            --output official-extract/independent-helms-transition.json
       - name: Publish machine-readable official-data acceptance receipt
         run: |
           python - <<'PY'
@@ -186,6 +193,9 @@ jobs:
           root = pathlib.Path("official-extract")
           inventory = json.loads((root / "independent-op-reconciliation.json").read_text())
           bridge = json.loads((root / "independent-transition-bridge.json").read_text())
+          helms = json.loads((root / "independent-helms-transition.json").read_text())
+          assert helms["helms_transition_reconciled"] is True
+          assert abs(helms["helms_op_delta_mw"] - 1053.0) < 0.01
           assert inventory["original_workbook_op_totals_reconciled"] is True
           assert bridge["bridge_reconciled"] is True
           assert bridge["row_level_reconciled"] is True
@@ -200,6 +210,7 @@ jobs:
               "row_level_rows": bridge["row_level_rows"],
               "yearly_op": inventory["years"],
               "capacity_bridge_mw": bridge["components_mw"],
+              "helms_oa_to_op_mw": helms["helms_op_delta_mw"],
               "github_repository": os.environ.get("GITHUB_REPOSITORY"),
               "github_run_id": os.environ.get("GITHUB_RUN_ID"),
               "github_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
@@ -216,6 +227,7 @@ jobs:
                       "independent-op-reconciliation.json",
                       "independent-transition-bridge.json",
                       "independent-transition-bridge-rows.csv",
+                      "independent-helms-transition.json",
                   )
               },
               "fleet_validated": False,
