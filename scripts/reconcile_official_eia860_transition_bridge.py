@@ -63,6 +63,10 @@ def decompose(directory):
         if delta:
             components[category].append({"plant_id_eia": key[0],
                                          "generator_id": key[1],
+                                         "status_2024": old[0] if old else "",
+                                         "status_2025": new[0] if new else "",
+                                         "op_mw_2024": old_mw,
+                                         "op_mw_2025": new_mw,
                                          "delta_mw": round(delta, 5)})
     totals = {category: round(math.fsum(x["delta_mw"] for x in rows), 1)
               for category, rows in components.items()}
@@ -90,7 +94,7 @@ if __name__ == "__main__":
     report, components = decompose(args.extract_dir)
     detail_path = Path(args.output).with_name("independent-transition-bridge-rows.csv")
     with detail_path.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=["component", "plant_id_eia", "generator_id", "delta_mw"])
+        writer = csv.DictWriter(stream, fieldnames=["component", "plant_id_eia", "generator_id", "status_2024", "status_2025", "op_mw_2024", "op_mw_2025", "delta_mw"])
         writer.writeheader()
         for category, rows in components.items():
             for row in rows:
@@ -103,6 +107,8 @@ if __name__ == "__main__":
                                   if row["component"] == category), 1)
         for category in components
     }
+    if any(abs(float(row["op_mw_2025"]) - float(row["op_mw_2024"]) - float(row["delta_mw"])) > 1e-4 for row in exported):
+        raise ValueError("Exported generator rows do not reconcile before/after OP MW")
     if any(export_totals[k] != totals[k] for k in components):
         raise ValueError("Exported row-level bridge does not reconcile to components")
     report["row_level_artifact"] = detail_path.name
