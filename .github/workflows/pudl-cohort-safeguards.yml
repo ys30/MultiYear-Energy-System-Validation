@@ -14,7 +14,8 @@ on:
       - "scripts/reconcile_official_eia860_op_totals.py"
       - "scripts/reconcile_official_eia860_transition_bridge.py"
       - "tests/test_reconcile_official_eia860_op_totals.py"
-      - "tests/test_reconcile_official_eia860_transition_bridge.py tests/test_extract_official_eia860_ciso_missing_rows.py"
+      - "tests/test_reconcile_official_eia860_transition_bridge.py"
+      - "tests/test_extract_official_eia860_ciso_missing_rows.py"
       - "tests/test_official_eia860_workbook_schema.py"
       - ".github/workflows/pudl-cohort-safeguards.yml"
   workflow_dispatch:
