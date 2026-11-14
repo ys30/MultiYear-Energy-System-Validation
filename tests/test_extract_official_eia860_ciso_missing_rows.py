@@ -39,3 +39,23 @@ def test_ciso_missing_fields_fail_closed(tmp_path, generator_id, status, match):
     with pytest.raises(ValueError, match=match):
         extractor.extract(archive, 2025, tmp_path / "out")
     assert not (tmp_path / "out" / "eia860_ciso_generators_2025.csv").exists()
+
+
+def test_valid_ciso_row_extracted_and_other_ba_excluded(tmp_path):
+    import csv
+    archive = tmp_path / "eia8602025.zip"
+    with zipfile.ZipFile(archive, "w") as z:
+        z.writestr("2___Plant_Y2025.xlsx", workbook_bytes(
+            ["Plant Code", "Balancing Authority Code"],
+            [[6100, "CISO"], [6200, "OTHER"]]))
+        z.writestr("3_1_Generator_Y2025.xlsx", workbook_bytes(
+            ["Plant Code", "Generator ID", "Status", "Nameplate Capacity (MW)"],
+            [[6100, "G1", "OP", 351], [6200, None, None, 100]]))
+    report = extractor.extract(archive, 2025, tmp_path / "out")
+    assert report["ciso_generator_rows"] == 1
+    with (tmp_path / "out" / "eia860_ciso_generators_2025.csv").open(newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    assert len(rows) == 1
+    assert rows[0]["plant_id_eia"] == "6100"
+    assert rows[0]["generator_id"] == "G1"
+    assert rows[0]["nameplate_mw"] == "351"
