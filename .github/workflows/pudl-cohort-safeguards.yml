@@ -17,6 +17,7 @@ on:
       - "tests/test_reconcile_official_eia860_transition_bridge.py"
       - "tests/test_extract_official_eia860_ciso_missing_rows.py"
       - "scripts/verify_official_eia860_helms.py"
+      - "scripts/verify_official_eia860_29_entrants.py"
       - "tests/test_verify_official_eia860_helms.py"
       - "tests/test_official_eia860_workbook_schema.py"
       - ".github/workflows/pudl-cohort-safeguards.yml"
@@ -186,6 +187,11 @@ jobs:
           python scripts/verify_official_eia860_helms.py \
             --extract-dir official-extract \
             --output official-extract/independent-helms-transition.json
+      - name: Cross-check archived 29 entrants against official CISO extracts
+        run: |
+          python scripts/verify_official_eia860_29_entrants.py \
+            --extract-dir official-extract \
+            --output official-extract/independent-29-entrant-crosscheck.json
       - name: Publish machine-readable official-data acceptance receipt
         run: |
           python - <<'PY'
@@ -194,6 +200,10 @@ jobs:
           inventory = json.loads((root / "independent-op-reconciliation.json").read_text())
           bridge = json.loads((root / "independent-transition-bridge.json").read_text())
           helms = json.loads((root / "independent-helms-transition.json").read_text())
+          entrants = json.loads((root / "independent-29-entrant-crosscheck.json").read_text())
+          assert entrants["official_extracts_crosschecked"] is True
+          assert entrants["record_count"] == 29
+          assert abs(entrants["op_capacity_mw"] - 138.1) < 0.01
           assert helms["helms_transition_reconciled"] is True
           assert abs(helms["helms_op_delta_mw"] - 1053.0) < 0.01
           import csv
@@ -222,6 +232,8 @@ jobs:
               "capacity_bridge_mw": bridge["components_mw"],
               "helms_oa_to_op_mw": helms["helms_op_delta_mw"],
               "helms_bridge_rows_crosschecked": True,
+              "archived_29_entrant_official_keys_status_capacity_crosschecked": True,
+              "operating_year_independently_verified": False,
               "github_repository": os.environ.get("GITHUB_REPOSITORY"),
               "github_run_id": os.environ.get("GITHUB_RUN_ID"),
               "github_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
@@ -239,6 +251,7 @@ jobs:
                       "independent-transition-bridge.json",
                       "independent-transition-bridge-rows.csv",
                       "independent-helms-transition.json",
+                      "independent-29-entrant-crosscheck.json",
                   )
               },
               "fleet_validated": False,
