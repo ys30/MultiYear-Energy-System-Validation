@@ -196,6 +196,16 @@ jobs:
           helms = json.loads((root / "independent-helms-transition.json").read_text())
           assert helms["helms_transition_reconciled"] is True
           assert abs(helms["helms_op_delta_mw"] - 1053.0) < 0.01
+          import csv
+          with (root / "independent-transition-bridge-rows.csv").open(newline="") as stream:
+              bridge_rows = list(csv.DictReader(stream))
+          helms_rows = [row for row in bridge_rows
+                        if row["plant_id_eia"] == "6100" and row["generator_id"] in {"1", "2", "3"}]
+          assert len(helms_rows) == 3, "Helms units missing or duplicated in four-way bridge"
+          assert all(row["component"] == "status_transitions" for row in helms_rows)
+          assert all(row["status_2024"] == "OA" and row["status_2025"] == "OP" for row in helms_rows)
+          assert all(abs(float(row["delta_mw"]) - 351.0) < 0.01 for row in helms_rows)
+          assert abs(sum(float(row["delta_mw"]) for row in helms_rows) - helms["helms_op_delta_mw"]) < 0.01
           assert inventory["original_workbook_op_totals_reconciled"] is True
           assert bridge["bridge_reconciled"] is True
           assert bridge["row_level_reconciled"] is True
@@ -211,6 +221,7 @@ jobs:
               "yearly_op": inventory["years"],
               "capacity_bridge_mw": bridge["components_mw"],
               "helms_oa_to_op_mw": helms["helms_op_delta_mw"],
+              "helms_bridge_rows_crosschecked": True,
               "github_repository": os.environ.get("GITHUB_REPOSITORY"),
               "github_run_id": os.environ.get("GITHUB_RUN_ID"),
               "github_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
