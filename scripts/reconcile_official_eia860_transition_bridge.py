@@ -23,9 +23,13 @@ def load(path):
     with open(path, newline="") as f:
         for row in csv.DictReader(f):
             key = (row["plant_id_eia"].strip(), row["generator_id"].strip())
+            if not all(key):
+                raise ValueError(f"Missing generator identity: {key}")
             if key in result:
                 raise ValueError(f"Duplicate generator key: {key}")
             status = row["status"].strip().upper()
+            if not status:
+                raise ValueError(f"Missing generator status for {key}")
             raw = row["nameplate_mw"]
             if status == "OP" and raw in ("", None):
                 raise ValueError(f"Missing OP nameplate for {key}")
