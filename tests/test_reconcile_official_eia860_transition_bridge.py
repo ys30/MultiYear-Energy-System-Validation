@@ -80,6 +80,9 @@ def test_cli_exports_reconcilable_generator_rows(tmp_path):
         rows = list(csv.DictReader(fh))
     assert len(rows) == report["row_level_rows"]
     assert sum(float(row["delta_mw"]) for row in rows) == 45.0
+    assert all(abs(float(row["op_mw_2025"]) - float(row["op_mw_2024"]) - float(row["delta_mw"])) < 1e-6 for row in rows)
+    transitions = [row for row in rows if row["component"] == "status_transitions"]
+    assert {(row["status_2024"], row["status_2025"], float(row["delta_mw"])) for row in transitions} == {("OA", "OP", 30.0), ("OP", "SB", -10.0)}
 
 def test_blank_identity_and_status_rejected(tmp_path):
     import pytest
