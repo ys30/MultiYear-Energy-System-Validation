@@ -174,26 +174,35 @@ jobs:
           python scripts/extract_official_eia860_ciso.py --archive eia8602024.zip --year 2024 --out-dir official-extract
           python scripts/extract_official_eia860_ciso.py --archive eia8602025.zip --year 2025 --out-dir official-extract
       - name: Independently reconcile original-workbook OP inventory
+        id: official_check_1
+        continue-on-error: true
         run: |
           python scripts/reconcile_official_eia860_op_totals.py \
             --extract-dir official-extract \
             --output official-extract/independent-op-reconciliation.json
       - name: Independently reconcile generator-level annual capacity bridge
+        id: official_check_2
+        continue-on-error: true
         run: |
           python scripts/reconcile_official_eia860_transition_bridge.py \
             --extract-dir official-extract \
             --output official-extract/independent-transition-bridge.json
       - name: Independently verify Helms status transition from original workbooks
+        id: official_check_3
+        continue-on-error: true
         run: |
           python scripts/verify_official_eia860_helms.py \
             --extract-dir official-extract \
             --output official-extract/independent-helms-transition.json
       - name: Cross-check archived 29 entrants against official CISO extracts
+        id: official_check_4
+        continue-on-error: true
         run: |
           python scripts/verify_official_eia860_29_entrants.py \
             --extract-dir official-extract \
             --output official-extract/independent-29-entrant-crosscheck.json
       - name: Publish machine-readable official-data acceptance receipt
+        if: ${{ steps.official_check_1.outcome == 'success' && steps.official_check_2.outcome == 'success' && steps.official_check_3.outcome == 'success' && steps.official_check_4.outcome == 'success' }}
         run: |
           python - <<'PY'
           import hashlib, json, os, pathlib
@@ -277,6 +286,25 @@ jobs:
           path: official-extract/
           if-no-files-found: ignore
           retention-days: 90
+      - name: Enforce fail-closed official-data acceptance after retaining all diagnostics
+        if: always()
+        env:
+          OP_RESULT: ${{ steps.official_check_1.outcome }}
+          BRIDGE_RESULT: ${{ steps.official_check_2.outcome }}
+          HELMS_RESULT: ${{ steps.official_check_3.outcome }}
+          ENTRANTS_RESULT: ${{ steps.official_check_4.outcome }}
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, sys
+          names = ("OP_RESULT", "BRIDGE_RESULT", "HELMS_RESULT", "ENTRANTS_RESULT")
+          outcomes = {name: os.environ.get(name, "unknown") for name in names}
+          receipt = pathlib.Path("official-extract/official-data-acceptance-receipt.json")
+          accepted = all(value == "success" for value in outcomes.values()) and receipt.exists()
+          print(json.dumps({"checks": outcomes, "receipt_exists": receipt.exists(),
+                            "official_data_accepted": accepted}, indent=2))
+          if not accepted:
+              sys.exit("Official EIA-860 acceptance failed; available diagnostics retained")
+          PY
       - name: Archive integrity manifest for future audit
         uses: actions/upload-artifact@v4
         with:
