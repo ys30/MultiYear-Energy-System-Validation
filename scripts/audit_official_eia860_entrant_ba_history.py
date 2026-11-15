@@ -119,6 +119,19 @@ def audit(archive_2024, archive_2025, targets=TARGETS, earlier_archives=None):
             raise ValueError(f"Conflicting BA history classification within plant {plant}")
         plants[plant] = classification
     plant_counts = {c: sum(value == c for value in plants.values()) for c in categories}
+    historical_transition_summary = {}
+    for year, plant_history in historical.items():
+        cross = {}
+        for plant, entry in plant_history.items():
+            earlier_state = ("absent" if not entry["in_plant_sheet"] else
+                             "CISO" if entry["reported_ba"] == "CISO" else
+                             "blank" if not entry["reported_ba"] else "other_BA")
+            current_state = plants[plant]
+            label = f"{earlier_state}__to__{current_state}"
+            cross[label] = cross.get(label, 0) + 1
+        if sum(cross.values()) != len(plants):
+            raise ValueError("Historical transition cross-tab does not reconcile")
+        historical_transition_summary[year] = dict(sorted(cross.items()))
     historical_summary = {}
     for year, plant_history in historical.items():
         counts = {
@@ -143,6 +156,7 @@ def audit(archive_2024, archive_2025, targets=TARGETS, earlier_archives=None):
             "unique_plant_classification_counts": plant_counts,
             "earlier_plant_sheet_history": historical,
             "earlier_plant_sheet_summary": historical_summary,
+            "earlier_to_2024_plant_classification": historical_transition_summary,
             "earlier_history_years_checked": sorted(historical),
             "historical_ba_reporting_audited": True,
             "physical_ba_transfer_verified": False,
