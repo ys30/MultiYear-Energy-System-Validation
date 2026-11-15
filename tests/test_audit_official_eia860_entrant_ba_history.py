@@ -93,3 +93,25 @@ def test_historical_archive_sha256_gate(tmp_path):
         validate_earlier_archive_hashes({2023: archive}, {})
     with pytest.raises(ValueError, match="precede 2024"):
         validate_earlier_archive_hashes({2024: archive}, {2024: digest})
+
+def test_earlier_summary_counts_unique_plants_not_generators(tmp_path):
+    before, after, old = (tmp_path / x for x in ("2024.zip", "2025.zip", "2023.zip"))
+    make_archive(before, [(100, "CISO")])
+    make_archive(after, [(100, "CISO"), (200, "CISO")])
+    make_archive(old, [(100, "OTHER")])
+    targets = tmp_path / "targets.csv"
+    with targets.open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=["plant_id_eia", "generator_id", "reported_operating_year"])
+        writer.writeheader()
+        for i in range(29):
+            writer.writerow({"plant_id_eia": 100 if i < 20 else 200,
+                             "generator_id": str(i), "reported_operating_year": 2023})
+    result = audit(before, after, targets, {2023: old})
+    assert result["unique_plant_count"] == 2
+    assert result["earlier_plant_sheet_summary"]["2023"] == {
+        "unique_plants_present": 1,
+        "unique_plants_absent_from_plant_sheet": 1,
+        "unique_plants_reported_ciso": 0,
+        "unique_plants_reported_other_ba": 1,
+        "unique_plants_reported_blank_ba": 0,
+    }
