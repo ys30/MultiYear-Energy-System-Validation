@@ -33,6 +33,9 @@ def test_changelog_semantics_and_checksum(tmp_path):
         "--output", str(out)], check=True)
     result = json.loads(out.read_text())
     assert result["targets"] == 29
+    assert result["data_is_fixture"] is True
+    assert result["pudl_matched"] is False
+    assert result["all_targets_pudl_matched"] is False
     assert result["matched"] == 1
     assert result["with_pre2025_changelog"] == 1
     assert result["unmatched"] == 28
@@ -128,3 +131,15 @@ def test_manuscript_table3_yearly_counts_and_capacity():
         assert abs(actual[year][3] - values[3]) < 1e-8
     assert sum(sum(v[:3]) for v in actual.values()) == 29
     assert abs(sum(v[3] for v in actual.values()) - 138.1) < 1e-8
+
+def test_real_pudl_source_requires_pinned_digest(tmp_path):
+    with TARGETS.open(newline="") as f:
+        first = next(csv.DictReader(f))
+    pudl = tmp_path / "real_unpinned.csv"
+    pudl.write_text("plant_id_eia,generator_id,report_date\\n"
+                    f"{first['plant_id_eia']},{first['generator_id']},2024-09-01\\n")
+    proc = subprocess.run([sys.executable, str(SCRIPT), "--targets", str(TARGETS),
+        "--pudl", str(pudl), "--release", "v2026.11.0",
+        "--output", str(tmp_path / "out.json")], capture_output=True, text=True)
+    assert proc.returncode != 0
+    assert "requires a pinned --sha256" in proc.stderr
