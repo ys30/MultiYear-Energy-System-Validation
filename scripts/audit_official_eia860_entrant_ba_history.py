@@ -49,7 +49,22 @@ def plant_ba(archive_path):
             wb.close()
 
 
-def audit(archive_2024, archive_2025, targets=TARGETS):
+def earlier_year_presence(archives_by_year, plant_ids):
+    """Report annual Plant-sheet presence; missing annual records are not proof of absence."""
+    history = {}
+    for year, archive in sorted(archives_by_year.items()):
+        if year >= 2024:
+            raise ValueError("Earlier-year archives must precede 2024")
+        reported = plant_ba(archive)
+        history[str(year)] = {
+            plant: {"in_plant_sheet": plant in reported,
+                    "reported_ba": reported.get(plant, "")}
+            for plant in sorted(plant_ids)
+        }
+    return history
+
+
+def audit(archive_2024, archive_2025, targets=TARGETS, earlier_archives=None):
     with open(targets, newline="") as stream:
         rows = list(csv.DictReader(stream))
     if len(rows) != 29:
@@ -75,6 +90,7 @@ def audit(archive_2024, archive_2025, targets=TARGETS):
                          "plant_ba_2024": ba24 or "", "plant_ba_2025": ba25,
                          "plant_in_2024_sheet": ba24 is not None,
                          "classification": classification})
+    historical = earlier_year_presence(earlier_archives or {}, {r["plant_id_eia"] for r in evidence})
     categories = sorted({r["classification"] for r in evidence})
     plants = {}
     for row in evidence:
@@ -91,6 +107,8 @@ def audit(archive_2024, archive_2025, targets=TARGETS):
             "classification_counts": {c: sum(r["classification"] == c for r in evidence)
                                       for c in categories},
             "unique_plant_classification_counts": plant_counts,
+            "earlier_plant_sheet_history": historical,
+            "earlier_history_years_checked": sorted(historical),
             "historical_ba_reporting_audited": True,
             "physical_ba_transfer_verified": False,
             "pudl_matched": False, "ba_mapping_validated": False,
@@ -102,9 +120,17 @@ if __name__ == "__main__":
     parser.add_argument("--archive-2024", required=True)
     parser.add_argument("--archive-2025", required=True)
     parser.add_argument("--targets", default=str(TARGETS))
+    parser.add_argument("--earlier-archive", action="append", default=[],
+                        help="YEAR=PATH for a pinned earlier EIA-860 ZIP; repeatable")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
-    result = audit(args.archive_2024, args.archive_2025, args.targets)
+    earlier = {}
+    for item in args.earlier_archive:
+        year, separator, path = item.partition("=")
+        if not separator or not year.isdigit() or not path or int(year) in earlier:
+            parser.error("--earlier-archive must be unique YEAR=PATH")
+        earlier[int(year)] = path
+    result = audit(args.archive_2024, args.archive_2025, args.targets, earlier)
     destination = Path(args.output)
     destination.parent.mkdir(parents=True, exist_ok=True)
     evidence_path = destination.with_name("independent-29-entrant-plant-ba-rows.csv")
