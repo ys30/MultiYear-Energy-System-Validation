@@ -109,7 +109,7 @@ if __name__ == "__main__":
     }
     if any(abs(float(row["op_mw_2025"]) - float(row["op_mw_2024"]) - float(row["delta_mw"])) > 1e-4 for row in exported):
         raise ValueError("Exported generator rows do not reconcile before/after OP MW")
-    if any(export_totals[k] != totals[k] for k in components):
+    if any(export_totals[k] != report["components_mw"][k] for k in components):
         raise ValueError("Exported row-level bridge does not reconcile to components")
     report["row_level_artifact"] = detail_path.name
     report["row_level_rows"] = len(exported)
