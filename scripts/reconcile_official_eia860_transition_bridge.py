@@ -22,6 +22,8 @@ def load(path):
     result = {}
     with open(path, newline="") as f:
         for row in csv.DictReader(f):
+            if row.get("source_sheet") and row["source_sheet"] != "Operable":
+                continue
             key = (row["plant_id_eia"].strip(), row["generator_id"].strip())
             if not all(key):
                 raise ValueError(f"Missing generator identity: {key}")
