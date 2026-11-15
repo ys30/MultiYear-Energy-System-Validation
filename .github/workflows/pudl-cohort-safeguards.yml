@@ -192,8 +192,8 @@ jobs:
         if: always()
         run: |
           if test -f official-extract/independent-transition-bridge-rows.csv; then
-            python scripts/summarize_official_eia860_bridge_discrepancy.py \\
-              --bridge-rows official-extract/independent-transition-bridge-rows.csv \\
+            python scripts/summarize_official_eia860_bridge_discrepancy.py \
+              --bridge-rows official-extract/independent-transition-bridge-rows.csv \
               --output official-extract/independent-bridge-status-forensics.json
           else
             echo "Bridge rows unavailable; original extraction or reconciliation failed"
