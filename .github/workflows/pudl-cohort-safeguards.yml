@@ -13,6 +13,7 @@ on:
       - "scripts/extract_official_eia860_ciso.py"
       - "scripts/reconcile_official_eia860_op_totals.py"
       - "scripts/reconcile_official_eia860_transition_bridge.py"
+      - "scripts/summarize_official_eia860_bridge_discrepancy.py"
       - "tests/test_reconcile_official_eia860_op_totals.py"
       - "tests/test_reconcile_official_eia860_transition_bridge.py"
       - "tests/test_extract_official_eia860_ciso_missing_rows.py"
@@ -187,6 +188,16 @@ jobs:
           python scripts/reconcile_official_eia860_transition_bridge.py \
             --extract-dir official-extract \
             --output official-extract/independent-transition-bridge.json
+      - name: Diagnose old-to-new status classes in official bridge
+        if: always()
+        run: |
+          if test -f official-extract/independent-transition-bridge-rows.csv; then
+            python scripts/summarize_official_eia860_bridge_discrepancy.py \\
+              --bridge-rows official-extract/independent-transition-bridge-rows.csv \\
+              --output official-extract/independent-bridge-status-forensics.json
+          else
+            echo "Bridge rows unavailable; original extraction or reconciliation failed"
+          fi
       - name: Independently verify Helms status transition from original workbooks
         id: official_check_3
         continue-on-error: true
@@ -306,6 +317,7 @@ jobs:
               sys.exit("Official EIA-860 acceptance failed; available diagnostics retained")
           PY
       - name: Archive integrity manifest for future audit
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: project-a-official-eia860-integrity-manifest
