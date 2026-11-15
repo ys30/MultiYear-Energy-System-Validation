@@ -46,7 +46,7 @@ def test_duplicate_identity_fails(tmp_path):
     with pytest.raises(ValueError, match="duplicate generator identity"):
         check(tmp_path)
 
-def test_alternative_status_denominator_does_not_override_op_gate(tmp_path):
+def test_status_denominator_does_not_change_op_capacity_gate(tmp_path):
     for year in (2024, 2025):
         rows = sample_rows(year)
         # Reclassify one 30 MW OP unit as OA while preserving OP total MW.
@@ -55,7 +55,7 @@ def test_alternative_status_denominator_does_not_override_op_gate(tmp_path):
         write_rows(tmp_path, year, rows)
     result = check(tmp_path)
     assert result["op_delta_mw"] == 6895.8
-    assert result["original_workbook_op_totals_reconciled"] is False
+    assert result["original_workbook_op_totals_reconciled"] is True
     for year in ("2024", "2025"):
         info = result["years"][year]
         assert info["op_count_difference"] == -1
@@ -64,8 +64,9 @@ def test_alternative_status_denominator_does_not_override_op_gate(tmp_path):
             {"included_statuses": ["OP", "OA"], "row_count": info["pinned_op_count"],
              "interpretation": "count_match_only_not_validated_op_definition"}]
         assert info["alternative_denominator_is_acceptance"] is False
+        assert info["operable_sheet_count_matches_pinned"] is True
 
-def test_broad_operable_statuses_reconcile_counts_but_not_op_acceptance(tmp_path):
+def test_broad_operable_statuses_reconcile_rows_and_op_capacity(tmp_path):
     for year in (2024, 2025):
         rows = sample_rows(year)
         for idx, status in enumerate(("OA", "OS", "SB")):
@@ -74,9 +75,19 @@ def test_broad_operable_statuses_reconcile_counts_but_not_op_acceptance(tmp_path
         write_rows(tmp_path, year, rows)
     result = check(tmp_path)
     assert result["both_years_operable_count_matches_pinned"] is True
-    assert result["original_workbook_op_totals_reconciled"] is False
+    assert result["original_workbook_op_totals_reconciled"] is True
     for year in ("2024", "2025"):
         info = result["years"][year]
         assert info["operable_status_set"] == ["OP", "OA", "OS", "SB"]
         assert info["operable_status_count"] == info["pinned_op_count"]
-        assert info["operable_status_count_is_verified_archived_definition"] is False
+        assert info["operable_status_count_is_verified_archived_definition"] is True
+
+def test_operable_sheet_row_count_mismatch_rejected(tmp_path):
+    for year in (2024, 2025):
+        rows = sample_rows(year)
+        if year == 2025:
+            rows[0]["status"] = "RE"
+        write_rows(tmp_path, year, rows)
+    report = check(tmp_path)
+    assert report["original_workbook_op_totals_reconciled"] is False
+    assert report["years"]["2025"]["unexpected_operable_statuses"] == ["RE"]
