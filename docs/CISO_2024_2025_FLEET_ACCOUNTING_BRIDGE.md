@@ -45,7 +45,7 @@ EIA-860 OP nameplate is an annual record, not hourly available generation. The s
 
 ## Manuscript-ready Results paragraph
 
-> Reconciliation of annual EIA-860 generator inventories assigned to CISO identified 2,645 operable records in 2024 and 2,786 in 2025. Their reported OP nameplate capacity increased from 85,634.2 to 92,530.0 MW, a net gain of 6,895.8 MW (8.05%). A mutually exclusive record-level accounting bridge attributed +6,339.3 MW to units newly present in the CISO inventory, −379.9 MW to records no longer present, +862.4 MW to status transitions, and +74.0 MW to nameplate revisions. Batteries (+3,862.2 MW) and solar photovoltaic (+1,849.4 MW) together accounted for 82.83% of the net change. However, these are changes in annual reported inventory, not verified commissioning or operational availability: notably, the +1,053.0 MW pumped-storage increase arose from three OA-to-OP status transitions rather than documented new construction.
+> Reconciliation of annual EIA-860 CISO Operable-sheet generator inventories identified 2,645 accepted records across OP/OA/OS/SB statuses in 2024 and 2,786 in 2025 (strict OP counts: 2,421 and 2,552). Their reported OP nameplate capacity increased from 85,634.2 to 92,530.0 MW, a net gain of 6,895.8 MW (8.05%). A mutually exclusive record-level accounting bridge attributed +6,339.3 MW to units newly present in the CISO inventory, −379.9 MW to records no longer present, +862.4 MW to status transitions, and +74.0 MW to nameplate revisions. Batteries (+3,862.2 MW) and solar photovoltaic (+1,849.4 MW) together accounted for 82.83% of the net change. However, these are changes in annual reported inventory, not verified commissioning or operational availability: notably, the +1,053.0 MW pumped-storage increase arose from three OA-to-OP status transitions rather than documented new construction.
 
 ## Evidence and next falsification checks
 
@@ -58,3 +58,10 @@ EIA-860 OP nameplate is an annual record, not hourly available generation. The s
 - **Priority 4:** independently establish hourly availability, interchange and boundary before any empirical optimization.
 
 **Research status:** validated annual inventory accounting; causal interpretation and empirical dispatch still gated.
+
+
+## Independent original-workbook acceptance (2026-11-14)
+
+[GitHub Actions run 43669441900](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/43669441900) (commit `d30f20095072f506dc5b09539e4eec0917b92944`) passed all three jobs, including independent EIA-860 ZIP integrity, Operable-sheet all-status row counts, strict OP MW totals, the four mutually exclusive capacity components, Helms OA→OP evidence and 29 entrant identity/status/capacity checks. A machine-readable acceptance receipt was emitted. The old 224/234 count discrepancy was a **denominator-labeling error**, not missing OP capacity. The earlier bridge mismatch was caused by including Proposed/Retired worksheets in an independent identity join instead of restricting to Operable.
+
+This acceptance does **not** independently establish the 29 entrants' operating years, PUDL matching, historical BA boundaries, hourly availability, or empirical dispatch. Keep `fleet_validated=false`, `ba_mapping_validated=false`, `empirical_dispatch_approved=false` until their separate evidence gates pass.
