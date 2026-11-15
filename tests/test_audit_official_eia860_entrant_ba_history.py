@@ -66,3 +66,15 @@ def test_missing_2025_ciso_fails_closed(tmp_path):
             writer.writerow({"plant_id_eia": 100, "generator_id": str(i), "reported_operating_year": 2023})
     with pytest.raises(ValueError, match="does not report CISO"):
         audit(before, after, targets)
+
+def test_earlier_plant_history_is_separate_from_transfer_claim(tmp_path):
+    from audit_official_eia860_entrant_ba_history import earlier_year_presence
+    old = tmp_path / "2023.zip"
+    make_archive(old, [(100, "OTHER"), (200, "CISO")])
+    result = earlier_year_presence({2023: old}, {"100", "200", "300"})
+    assert result["2023"]["100"] == {"in_plant_sheet": True, "reported_ba": "OTHER"}
+    assert result["2023"]["200"]["reported_ba"] == "CISO"
+    assert result["2023"]["300"] == {"in_plant_sheet": False, "reported_ba": ""}
+    import pytest
+    with pytest.raises(ValueError, match="precede 2024"):
+        earlier_year_presence({2024: old}, {"100"})
