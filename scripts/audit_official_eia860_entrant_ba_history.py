@@ -50,6 +50,24 @@ def plant_ba(archive_path):
             wb.close()
 
 
+def validate_earlier_archive_hashes(earlier, expected):
+    """Fail closed unless every supplied historical ZIP has a matching SHA256."""
+    if set(expected) != set(earlier):
+        raise ValueError("Every earlier archive requires a matching SHA256")
+    for year, archive in earlier.items():
+        if year >= 2024:
+            raise ValueError("Earlier-year archives must precede 2024")
+        digest = expected[year].lower()
+        if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise ValueError(f"Invalid SHA256 for {year}")
+        hasher = hashlib.sha256()
+        with open(archive, "rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                hasher.update(chunk)
+        if hasher.hexdigest() != digest:
+            raise ValueError(f"Earlier EIA-860 archive SHA256 mismatch for {year}")
+
+
 def earlier_year_presence(archives_by_year, plant_ids):
     """Report annual Plant-sheet presence; missing annual records are not proof of absence."""
     history = {}
@@ -139,15 +157,7 @@ if __name__ == "__main__":
         if not separator or not year.isdigit() or len(digest) != 64 or any(c not in "0123456789abcdefABCDEF" for c in digest) or int(year) in expected:
             parser.error("--earlier-sha256 must be unique YEAR=64_HEX_DIGEST")
         expected[int(year)] = digest.lower()
-    if set(expected) != set(earlier):
-        parser.error("Every earlier archive must have a corresponding SHA256 and vice versa")
-    for year, archive in earlier.items():
-        hasher = hashlib.sha256()
-        with open(archive, "rb") as stream:
-            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-                hasher.update(chunk)
-        if hasher.hexdigest() != expected[year]:
-            parser.error(f"Earlier EIA-860 archive SHA256 mismatch for {year}")
+    validate_earlier_archive_hashes(earlier, expected)
     result = audit(args.archive_2024, args.archive_2025, args.targets, earlier)
     result["earlier_archive_sha256"] = {str(y): expected[y] for y in sorted(expected)}
     destination = Path(args.output)
