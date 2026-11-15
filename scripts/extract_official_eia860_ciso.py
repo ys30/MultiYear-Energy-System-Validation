@@ -69,7 +69,15 @@ def extract(archive_path, year, out_dir):
                     capacity = pick(labels, {"nameplate capacity mw", "nameplate capacity"})
                 except ValueError:
                     continue
+                year_columns = [i for i, label in enumerate(labels) if label == "operating year"]
+                month_columns = [i for i, label in enumerate(labels) if label == "operating month"]
+                if len(year_columns) > 1 or len(month_columns) > 1:
+                    raise ValueError(f"Ambiguous operating date columns in {sheet.title}")
+                operating_year_col = year_columns[0] if year_columns else None
+                operating_month_col = month_columns[0] if month_columns else None
                 schema.append({"sheet":sheet.title, "header_row":n,
+                               "operating_year_col":operating_year_col,
+                               "operating_month_col":operating_month_col,
                                "plant_code_col":pid, "generator_id_col":gid,
                                "status_col":status, "nameplate_col":capacity})
                 for row in sheet.iter_rows(min_row=n+1, values_only=True):
@@ -90,7 +98,9 @@ def extract(archive_path, year, out_dir):
                     records[key] = {"year":year, "plant_id_eia":plant_id, "generator_id":key[1],
                                     "status":str(row[status] or "").strip(),
                                     "nameplate_mw":row[capacity],
-                                    "plant_ba":"CISO", "source_sheet":sheet.title}
+                                    "plant_ba":"CISO", "source_sheet":sheet.title,
+                                    "operating_year_raw":row[operating_year_col] if operating_year_col is not None and len(row) > operating_year_col else None,
+                                    "operating_month_raw":row[operating_month_col] if operating_month_col is not None and len(row) > operating_month_col else None}
             if not schema or not records:
                 raise ValueError("No usable Generator schema or CISO rows")
             csv_path = out_dir / f"eia860_ciso_generators_{year}.csv"
