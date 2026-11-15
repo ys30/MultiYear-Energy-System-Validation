@@ -6,9 +6,7 @@ A successful `official-eia860-archive-integrity` job independently reproduces
 the **CISO-filtered 2024–2025 original-workbook OP inventory and generator-identity
 capacity bridge** against pinned official ZIPs. It does not certify CISO
 historical BA assignment, PUDL matching, 2025 commissioning, EIA-930 hourly
-data, or empirical PyPSA dispatch. The 29-record operating-year claim remains
-unverified because the current staging extractor does not retain the operating
-year field.
+data, or empirical PyPSA dispatch. The 29 archived historical-entrant operating years were independently checked against the original 2025 Generator workbook: 29/29 matched, zero missing, in run 43670234399. This is a reported-year check, not historical BA membership or actual commissioning certification.
 
 ## Run and retrieve evidence
 
@@ -26,8 +24,7 @@ year field.
    `github_commit_sha`, `github_run_id`, and archive SHA-256 values match
    the run. Recompute SHA-256 for every file in `output_file_sha256`.
 6. Examine `independent-transition-bridge-rows.csv` and
-   `independent-29-entrant-evidence-rows.csv` directly. The latter confirms
-   identity/status/OP capacity only, not reported operating year.
+   `independent-29-entrant-evidence-rows.csv` directly. The latter now includes official original-workbook operating year and a per-record match indicator.
 7. Only then revise manuscript evidence language and pin the archived receipt.
 
 ## Failure triage
@@ -54,7 +51,7 @@ year field.
 - [ ] Helms three-unit cross-check passes
 - [ ] All 29 archived entrant keys/statuses/OP capacities cross-check
 - [ ] All output SHA-256 values verified
-- [ ] Historical operating-year and PUDL validation still explicitly marked pending
+- [ ] Historical operating-year check confirmed 29/29 from run 43670234399; PUDL validation explicitly remains pending
 - [ ] Manuscript updated with the *actual* run evidence, not workflow configuration
 
 **Never turn an unchecked box into a success claim.**
