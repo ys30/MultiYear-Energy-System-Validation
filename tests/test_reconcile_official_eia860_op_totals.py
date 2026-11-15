@@ -45,3 +45,22 @@ def test_duplicate_identity_fails(tmp_path):
         write_rows(tmp_path, year, rows)
     with pytest.raises(ValueError, match="duplicate generator identity"):
         check(tmp_path)
+
+def test_alternative_status_denominator_does_not_override_op_gate(tmp_path):
+    for year in (2024, 2025):
+        rows = sample_rows(year)
+        # Reclassify one 30 MW OP unit as OA while preserving OP total MW.
+        rows[0]["status"] = "OA"
+        rows[-1]["nameplate_mw"] = str(round(float(rows[-1]["nameplate_mw"]) + 30, 1))
+        write_rows(tmp_path, year, rows)
+    result = check(tmp_path)
+    assert result["op_delta_mw"] == 6895.8
+    assert result["original_workbook_op_totals_reconciled"] is False
+    for year in ("2024", "2025"):
+        info = result["years"][year]
+        assert info["op_count_difference"] == -1
+        assert info["mw_matches_pinned"] is True
+        assert info["alternative_denominator_count_matches"] == [
+            {"included_statuses": ["OP", "OA"], "row_count": info["pinned_op_count"],
+             "interpretation": "count_match_only_not_validated_op_definition"}]
+        assert info["alternative_denominator_is_acceptance"] is False
