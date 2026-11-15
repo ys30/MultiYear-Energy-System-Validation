@@ -1,0 +1,51 @@
+name: Project A EIA-860 2023 source discovery
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discover-2023-official-archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Retrieve official 2023 EIA-860 archive
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 600 \
+            'https://www.eia.gov/electricity/data/eia860/archive/xls/eia8602023.zip' \
+            --output eia8602023.zip
+          unzip -tq eia8602023.zip
+          sha256sum eia8602023.zip
+      - name: Inspect archive provenance without approving evidence
+        run: |
+          python - <<'PY'
+          import hashlib, json, pathlib, zipfile
+          p = pathlib.Path("eia8602023.zip")
+          with zipfile.ZipFile(p) as z:
+              members = [x.filename for x in z.infolist() if not x.is_dir()]
+          assert any("plant" in x.lower() and x.lower().endswith(".xlsx") for x in members), "2023 Plant workbook missing"
+          report = {
+              "source_url": "https://www.eia.gov/electricity/data/eia860/archive/xls/eia8602023.zip",
+              "year": 2023,
+              "sha256_observed": hashlib.sha256(p.read_bytes()).hexdigest(),
+              "archive_bytes": p.stat().st_size,
+              "members": members,
+              "status": "discovery_only_not_yet_pinned_or_accepted",
+              "fleet_validated": False,
+              "ba_mapping_validated": False,
+              "empirical_dispatch_approved": False,
+          }
+          pathlib.Path("eia860-2023-discovery-manifest.json").write_text(json.dumps(report, indent=2) + "\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: project-a-eia860-2023-discovery-manifest
+          path: eia860-2023-discovery-manifest.json
+          retention-days: 90
