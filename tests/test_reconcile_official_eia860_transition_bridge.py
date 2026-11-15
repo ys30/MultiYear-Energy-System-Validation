@@ -98,3 +98,15 @@ def test_blank_identity_and_status_rejected(tmp_path):
         write_year(tmp_path, 2025, [("1", "a", "OP", 11)])
         with pytest.raises(ValueError, match=expected):
             bridge.decompose(tmp_path)
+
+def test_proposed_and_retired_sheet_rows_do_not_change_operable_bridge(tmp_path):
+    write_year(tmp_path, 2024, [("1", "a", "OP", 100)])
+    write_year(tmp_path, 2025, [("1", "a", "OP", 100), ("2", "b", "OP", 40)])
+    baseline, _ = bridge.decompose(tmp_path)
+    for year, extra in [(2024, ("3", "c", "V", 4000, "Proposed")),
+                        (2025, ("3", "c", "OP", 4000, "Retired and Canceled"))]:
+        with (tmp_path / f"eia860_ciso_generators_{year}.csv").open("a", newline="") as stream:
+            csv.writer(stream).writerow([year, extra[0], extra[1], extra[2], extra[3], "CISO", extra[4]])
+    report, _ = bridge.decompose(tmp_path)
+    assert report["components_mw"] == baseline["components_mw"]
+    assert report["components_mw"]["new_to_inventory"] == 40
