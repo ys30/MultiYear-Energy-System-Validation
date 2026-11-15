@@ -83,3 +83,27 @@ def test_wrong_capacity_rejected(tmp_path):
     write_csv(after, rows)
     with pytest.raises(ValueError, match="OP capacity mismatch"):
         audit.verify(tmp_path, targets)
+
+def test_operating_years_independently_verified_when_present(tmp_path):
+    targets, _, after = fixture(tmp_path)
+    with after.open(newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    for row in rows:
+        row["operating_year_raw"] = "2024"
+        row["operating_month_raw"] = "6"
+    write_csv(after, rows, FIELDS + ["operating_year_raw", "operating_month_raw"])
+    report = audit.verify(tmp_path, targets)
+    assert report["operating_year_independently_verified"] is True
+    assert report["operating_year_verified_count"] == 29
+    assert report["operating_year_missing_count"] == 0
+
+def test_operating_year_disagreement_fails_closed(tmp_path):
+    targets, _, after = fixture(tmp_path)
+    with after.open(newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    for row in rows:
+        row["operating_year_raw"] = "2024"
+    rows[0]["operating_year_raw"] = "2023"
+    write_csv(after, rows, FIELDS + ["operating_year_raw"])
+    with pytest.raises(ValueError, match="Operating year mismatch"):
+        audit.verify(tmp_path, targets)
