@@ -24,7 +24,7 @@ Our contribution is a narrow, reproducible validation case study. We do not esti
 
 ### 2.1 Sources and provenance
 
-We use annual EIA-860 2024 and final 2025 releases, specifically the original Plant and Generator Operable worksheets. The 2025 annual release status was checked against the EIA publication record. Original source ZIP hashes and source URLs are preserved in the project's private audit trail. The year-specific Plant worksheet provides the reported `Balancing Authority Code`; generator records provide plant code, generator ID, technology, status, nameplate MW and operating month/year. EIA-930 hourly CISO demand and regional/fuel net-generation endpoints provide an independent operational-data audit.
+We use annual EIA-860 2024 and final 2025 releases, specifically the original Plant and Generator Operable worksheets. The 2025 annual release status was checked against the EIA publication record. Original source ZIP hashes and source URLs are preserved in the project's reproducible GitHub Actions evidence and retained audit artifacts. The original-workbook capacity bridge and annual counts passed independent acceptance in GitHub Actions run 43669441900 (commit d30f20095072f506dc5b09539e4eec0917b92944). The year-specific Plant worksheet provides the reported `Balancing Authority Code`; generator records provide plant code, generator ID, technology, status, nameplate MW and operating month/year. EIA-930 hourly CISO demand and regional/fuel net-generation endpoints provide an independent operational-data audit.
 
 **Scope caveat:** filtering by EIA-860 plant BA code CISO is an inventory selection rule, not a validated equivalence to the physical or dispatch-operational CISO boundary.
 
@@ -61,7 +61,7 @@ The normalized CISO EIA-930 demand dataset contains 8,784 hourly records for lea
 
 ### 3.2 Annual OP fleet accounting
 
-Reported OP generator records number 2,645 in 2024 and 2,786 in 2025. OP nameplate increased from 85,634.2 to 92,530.0 MW (+6,895.8 MW; 8.05%). The accounting bridge is given in Table 2. Batteries increased by 3,862.2 MW and solar photovoltaic by 1,849.4 MW, together representing 82.83% of the **net** OP nameplate increase (Figure 1). Negative technology contributions are retained in the technology-level plot.
+Accepted CISO Operable-sheet generator records across OP, OA, OS and SB statuses number 2,645 in 2024 and 2,786 in 2025; the strictly OP-status subsets contain 2,421 and 2,552 records, respectively. OP nameplate increased from 85,634.2 to 92,530.0 MW (+6,895.8 MW; 8.05%). The accounting bridge is given in Table 2. Batteries increased by 3,862.2 MW and solar photovoltaic by 1,849.4 MW, together representing 82.83% of the **net** OP nameplate increase (Figure 1). Negative technology contributions are retained in the technology-level plot.
 
 **Table 2.** Mutually exclusive first-match accounting bridge for CISO OP nameplate capacity.
 
