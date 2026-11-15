@@ -20,6 +20,7 @@ on:
       - "tests/test_extract_official_eia860_ciso_missing_rows.py"
       - "scripts/verify_official_eia860_helms.py"
       - "scripts/verify_official_eia860_29_entrants.py"
+      - "scripts/audit_official_eia860_entrant_ba_history.py"
       - "tests/test_verify_official_eia860_29_entrants.py"
       - "tests/test_verify_official_eia860_helms.py"
       - "tests/test_official_eia860_workbook_schema.py"
@@ -213,8 +214,16 @@ jobs:
           python scripts/verify_official_eia860_29_entrants.py \
             --extract-dir official-extract \
             --output official-extract/independent-29-entrant-crosscheck.json
+      - name: Audit historical reported Plant-sheet BA for 29 entrants
+        id: official_ba_history
+        continue-on-error: true
+        run: |
+          python scripts/audit_official_eia860_entrant_ba_history.py \
+            --archive-2024 eia8602024.zip \
+            --archive-2025 eia8602025.zip \
+            --output official-extract/independent-29-entrant-plant-ba-history.json
       - name: Publish machine-readable official-data acceptance receipt
-        if: ${{ steps.official_check_1.outcome == 'success' && steps.official_check_2.outcome == 'success' && steps.official_check_3.outcome == 'success' && steps.official_check_4.outcome == 'success' }}
+        if: ${{ steps.official_check_1.outcome == 'success' && steps.official_check_2.outcome == 'success' && steps.official_check_3.outcome == 'success' && steps.official_check_4.outcome == 'success' && steps.official_ba_history.outcome == 'success' }}
         run: |
           python - <<'PY'
           import hashlib, json, os, pathlib
@@ -223,6 +232,9 @@ jobs:
           bridge = json.loads((root / "independent-transition-bridge.json").read_text())
           helms = json.loads((root / "independent-helms-transition.json").read_text())
           entrants = json.loads((root / "independent-29-entrant-crosscheck.json").read_text())
+          ba_history = json.loads((root / "independent-29-entrant-plant-ba-history.json").read_text())
+          assert ba_history["record_count"] == 29
+          assert ba_history["historical_ba_reporting_audited"] is True
           assert entrants["official_extracts_crosschecked"] is True
           assert entrants["record_count"] == 29
           assert entrants["evidence_row_count"] == 29
@@ -260,6 +272,9 @@ jobs:
               "operating_year_independently_verified": entrants["operating_year_independently_verified"],
               "operating_year_verified_count": entrants["operating_year_verified_count"],
               "operating_year_missing_count": entrants["operating_year_missing_count"],
+              "historical_plant_ba_classification_counts": ba_history["classification_counts"],
+              "historical_ba_reporting_audited": True,
+              "physical_ba_transfer_verified": False,
               "github_repository": os.environ.get("GITHUB_REPOSITORY"),
               "github_run_id": os.environ.get("GITHUB_RUN_ID"),
               "github_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
@@ -279,6 +294,8 @@ jobs:
                       "independent-helms-transition.json",
                       "independent-29-entrant-crosscheck.json",
                       "independent-29-entrant-evidence-rows.csv",
+                      "independent-29-entrant-plant-ba-history.json",
+                      "independent-29-entrant-plant-ba-rows.csv",
                   )
               },
               "fleet_validated": False,
@@ -308,10 +325,11 @@ jobs:
           BRIDGE_RESULT: ${{ steps.official_check_2.outcome }}
           HELMS_RESULT: ${{ steps.official_check_3.outcome }}
           ENTRANTS_RESULT: ${{ steps.official_check_4.outcome }}
+          BA_HISTORY_RESULT: ${{ steps.official_ba_history.outcome }}
         run: |
           python - <<'PY'
           import json, os, pathlib, sys
-          names = ("OP_RESULT", "BRIDGE_RESULT", "HELMS_RESULT", "ENTRANTS_RESULT")
+          names = ("OP_RESULT", "BRIDGE_RESULT", "HELMS_RESULT", "ENTRANTS_RESULT", "BA_HISTORY_RESULT")
           outcomes = {name: os.environ.get(name, "unknown") for name in names}
           receipt = pathlib.Path("official-extract/official-data-acceptance-receipt.json")
           accepted = all(value == "success" for value in outcomes.values()) and receipt.exists()
