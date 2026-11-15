@@ -7,6 +7,7 @@ import argparse
 import csv
 import json
 import math
+from itertools import combinations
 from pathlib import Path
 
 EXPECTED = {2024: (2645, 85634.2), 2025: (2786, 92530.0)}
@@ -33,6 +34,21 @@ def check(directory):
                 raise ValueError(f"{year}: invalid OP nameplate {r}")
             capacity.append(value)
         total = round(math.fsum(capacity), 1)
+        # Diagnostic only: test whether a different status denominator reproduces
+        # the archived row count. Never use it to override the OP acceptance gate.
+        status_counts = {status: sum(row["status"].strip().upper() == status for row in rows)
+                         for status in sorted(set(row["status"].strip().upper() for row in rows))}
+        other_statuses = [status for status in status_counts if status != "OP"]
+        denominator_candidates = []
+        for n in range(1, min(4, len(other_statuses)) + 1):
+            for subset in combinations(other_statuses, n):
+                candidate_count = len(op) + sum(status_counts[status] for status in subset)
+                if candidate_count == expected_count:
+                    denominator_candidates.append({
+                        "included_statuses": ["OP", *subset],
+                        "row_count": candidate_count,
+                        "interpretation": "count_match_only_not_validated_op_definition",
+                    })
         report["years"][str(year)] = {
             "op_count": len(op), "op_mw": total,
             "all_ciso_generator_rows": len(rows),
@@ -40,8 +56,9 @@ def check(directory):
             "op_count_difference": len(op) - expected_count,
             "op_mw_difference": round(total - expected_mw, 1),
             "zero_mw_op_count": sum(mw == 0 for mw in capacity),
-            "status_counts": {status: sum(row["status"].strip().upper() == status for row in rows)
-                              for status in sorted(set(row["status"].strip().upper() for row in rows))},
+            "status_counts": status_counts,
+            "alternative_denominator_count_matches": denominator_candidates,
+            "alternative_denominator_is_acceptance": False,
             "source_sheet_op_counts": {sheet: sum(row["status"].strip().upper() == "OP" and
                                              row.get("source_sheet", "") == sheet for row in rows)
                                        for sheet in sorted(set(row.get("source_sheet", "") for row in rows))},
