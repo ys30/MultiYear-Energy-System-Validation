@@ -59,3 +59,19 @@ def test_valid_ciso_row_extracted_and_other_ba_excluded(tmp_path):
     assert rows[0]["plant_id_eia"] == "6100"
     assert rows[0]["generator_id"] == "G1"
     assert rows[0]["nameplate_mw"] == "351"
+
+def test_original_operating_date_columns_retained(tmp_path):
+    import csv
+    archive = tmp_path / "eia8602025.zip"
+    with zipfile.ZipFile(archive, "w") as z:
+        z.writestr("2___Plant_Y2025.xlsx", workbook_bytes(
+            ["Plant Code", "Balancing Authority Code"], [[6100, "CISO"]]))
+        z.writestr("3_1_Generator_Y2025.xlsx", workbook_bytes(
+            ["Plant Code", "Generator ID", "Status", "Nameplate Capacity (MW)",
+             "Operating Month", "Operating Year"],
+            [[6100, "1", "OP", 351, 6, 1984]]))
+    extractor.extract(archive, 2025, tmp_path / "out")
+    with (tmp_path / "out" / "eia860_ciso_generators_2025.csv").open(newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    assert rows[0]["operating_month_raw"] == "6"
+    assert rows[0]["operating_year_raw"] == "1984"
