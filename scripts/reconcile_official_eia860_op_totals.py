@@ -49,6 +49,8 @@ def check(directory):
                         "row_count": candidate_count,
                         "interpretation": "count_match_only_not_validated_op_definition",
                     })
+        operable_statuses = ("OP", "OA", "OS", "SB")
+        operable_count = sum(status_counts.get(status, 0) for status in operable_statuses)
         report["years"][str(year)] = {
             "op_count": len(op), "op_mw": total,
             "all_ciso_generator_rows": len(rows),
@@ -58,6 +60,10 @@ def check(directory):
             "zero_mw_op_count": sum(mw == 0 for mw in capacity),
             "status_counts": status_counts,
             "alternative_denominator_count_matches": denominator_candidates,
+            "operable_status_set": list(operable_statuses),
+            "operable_status_count": operable_count,
+            "operable_count_matches_pinned": operable_count == expected_count,
+            "operable_status_count_is_verified_archived_definition": False,
             "alternative_denominator_is_acceptance": False,
             "source_sheet_op_counts": {sheet: sum(row["status"].strip().upper() == "OP" and
                                              row.get("source_sheet", "") == sheet for row in rows)
@@ -70,6 +76,8 @@ def check(directory):
     if abs(delta - 6895.8) > 0.11:
         raise ValueError(f"Independent net change {delta} does not match pinned 6895.8")
     report["op_delta_mw"] = delta
+    report["both_years_operable_count_matches_pinned"] = all(
+        info["operable_count_matches_pinned"] for info in report["years"].values())
     report["original_workbook_op_totals_reconciled"] = all(
         row["count_matches_pinned"] and row["mw_matches_pinned"]
         for row in report["years"].values())
