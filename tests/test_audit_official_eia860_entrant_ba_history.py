@@ -38,6 +38,12 @@ def test_ba_categories_and_no_physical_transfer_claim(tmp_path):
                              "generator_id": str(i), "reported_operating_year": "2023"})
     result = audit(before, after, targets)
     assert result["record_count"] == 29
+    assert result["unique_plant_count"] == 4
+    assert result["unique_plant_classification_counts"] == {
+        "ciso_both_years_generator_absent_2024": 2,
+        "reported_ba_changed_to_ciso": 1,
+        "not_in_2024_plant_sheet": 1,
+    }
     assert result["classification_counts"] == {
         "ciso_both_years_generator_absent_2024": 15,
         "reported_ba_changed_to_ciso": 7,
