@@ -25,7 +25,7 @@ jobs:
             'https://www.eia.gov/electricity/data/eia860/archive/xls/eia8602023.zip' \
             --output eia8602023.zip
           unzip -tq eia8602023.zip
-          printf "%s  %s\\n" "1447e23e608bea1523961542a90eb93ea86715067a37f211282541461049b46f" eia8602023.zip | sha256sum --check --strict
+          echo '1447e23e608bea1523961542a90eb93ea86715067a37f211282541461049b46f  eia8602023.zip' | sha256sum --check --strict
       - name: Inspect archive provenance without approving evidence
         run: |
           python - <<'PY'
