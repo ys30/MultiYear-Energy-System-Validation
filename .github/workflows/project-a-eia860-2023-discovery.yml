@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - ".github/workflows/project-a-eia860-2023-discovery.yml"
+      - "scripts/audit_official_eia860_entrant_ba_history.py"
+      - "tests/test_audit_official_eia860_entrant_ba_history.py"
 
 permissions:
   contents: read
