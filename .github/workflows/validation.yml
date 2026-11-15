@@ -11,4 +11,5 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install -e ".[test]"
+      - run: python -m pip install openpyxl
       - run: python -m pytest -q
