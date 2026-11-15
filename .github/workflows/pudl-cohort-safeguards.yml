@@ -235,6 +235,7 @@ jobs:
           entrants = json.loads((root / "independent-29-entrant-crosscheck.json").read_text())
           ba_history = json.loads((root / "independent-29-entrant-plant-ba-history.json").read_text())
           assert ba_history["record_count"] == 29
+          assert sum(ba_history["unique_plant_classification_counts"].values()) == ba_history["unique_plant_count"]
           assert ba_history["historical_ba_reporting_audited"] is True
           assert entrants["official_extracts_crosschecked"] is True
           assert entrants["record_count"] == 29
@@ -274,6 +275,7 @@ jobs:
               "operating_year_verified_count": entrants["operating_year_verified_count"],
               "operating_year_missing_count": entrants["operating_year_missing_count"],
               "historical_plant_ba_classification_counts": ba_history["classification_counts"],
+              "historical_unique_plant_ba_classification_counts": ba_history["unique_plant_classification_counts"],
               "historical_ba_reporting_audited": True,
               "physical_ba_transfer_verified": False,
               "github_repository": os.environ.get("GITHUB_REPOSITORY"),
