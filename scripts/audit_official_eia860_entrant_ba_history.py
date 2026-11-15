@@ -76,11 +76,21 @@ def audit(archive_2024, archive_2025, targets=TARGETS):
                          "plant_in_2024_sheet": ba24 is not None,
                          "classification": classification})
     categories = sorted({r["classification"] for r in evidence})
+    plants = {}
+    for row in evidence:
+        plant = row["plant_id_eia"]
+        classification = row["classification"]
+        if plant in plants and plants[plant] != classification:
+            raise ValueError(f"Conflicting BA history classification within plant {plant}")
+        plants[plant] = classification
+    plant_counts = {c: sum(value == c for value in plants.values()) for c in categories}
+    assert sum(plant_counts.values()) == len(plants)
     return {"scope": "year_specific_original_plant_sheet_reported_ba_only",
             "record_count": len(evidence),
             "unique_plant_count": len({r["plant_id_eia"] for r in evidence}),
             "classification_counts": {c: sum(r["classification"] == c for r in evidence)
                                       for c in categories},
+            "unique_plant_classification_counts": plant_counts,
             "historical_ba_reporting_audited": True,
             "physical_ba_transfer_verified": False,
             "pudl_matched": False, "ba_mapping_validated": False,
