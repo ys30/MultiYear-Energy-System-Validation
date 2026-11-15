@@ -226,6 +226,7 @@ jobs:
           assert entrants["official_extracts_crosschecked"] is True
           assert entrants["record_count"] == 29
           assert entrants["evidence_row_count"] == 29
+          assert entrants["operating_year_verified_count"] + entrants["operating_year_missing_count"] == 29
           assert abs(entrants["op_capacity_mw"] - 138.1) < 0.01
           assert helms["helms_transition_reconciled"] is True
           assert abs(helms["helms_op_delta_mw"] - 1053.0) < 0.01
@@ -256,7 +257,9 @@ jobs:
               "helms_oa_to_op_mw": helms["helms_op_delta_mw"],
               "helms_bridge_rows_crosschecked": True,
               "archived_29_entrant_official_keys_status_capacity_crosschecked": True,
-              "operating_year_independently_verified": False,
+              "operating_year_independently_verified": entrants["operating_year_independently_verified"],
+              "operating_year_verified_count": entrants["operating_year_verified_count"],
+              "operating_year_missing_count": entrants["operating_year_missing_count"],
               "github_repository": os.environ.get("GITHUB_REPOSITORY"),
               "github_run_id": os.environ.get("GITHUB_RUN_ID"),
               "github_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
