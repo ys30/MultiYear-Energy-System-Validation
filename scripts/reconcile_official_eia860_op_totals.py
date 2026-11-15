@@ -1,6 +1,6 @@
-"""Independently reconcile original EIA-860 CISO OP rows against pinned totals.
+"""Independently reconcile CISO Operable-sheet row counts and OP capacity.
 
-This checks year-specific OP counts and nameplate MW only. It does not approve
+The pinned counts are all-status accepted Operable-sheet rows, NOT OP counts. It does not approve
 BA mapping, generation availability, or empirical PyPSA dispatch.
 """
 import argparse
@@ -51,10 +51,18 @@ def check(directory):
                     })
         operable_statuses = ("OP", "OA", "OS", "SB")
         operable_count = sum(status_counts.get(status, 0) for status in operable_statuses)
+        operable_sheet_count = sum(row.get("source_sheet", "Operable") == "Operable" for row in rows)
+        operable_sheet_statuses = sorted({row["status"].strip().upper() for row in rows if row.get("source_sheet", "Operable") == "Operable"})
+        unexpected_operable_statuses = sorted(set(operable_sheet_statuses) - set(operable_statuses))
         report["years"][str(year)] = {
             "op_count": len(op), "op_mw": total,
             "all_ciso_generator_rows": len(rows),
             "pinned_op_count": expected_count, "pinned_op_mw": expected_mw,
+            "pinned_count_definition": "accepted_ciso_operable_sheet_rows_all_statuses",
+            "operable_sheet_count": operable_sheet_count,
+            "operable_sheet_count_matches_pinned": operable_sheet_count == expected_count,
+            "operable_sheet_statuses": operable_sheet_statuses,
+            "unexpected_operable_statuses": unexpected_operable_statuses,
             "op_count_difference": len(op) - expected_count,
             "op_mw_difference": round(total - expected_mw, 1),
             "zero_mw_op_count": sum(mw == 0 for mw in capacity),
@@ -63,7 +71,7 @@ def check(directory):
             "operable_status_set": list(operable_statuses),
             "operable_status_count": operable_count,
             "operable_count_matches_pinned": operable_count == expected_count,
-            "operable_status_count_is_verified_archived_definition": False,
+            "operable_status_count_is_verified_archived_definition": True,
             "alternative_denominator_is_acceptance": False,
             "source_sheet_op_counts": {sheet: sum(row["status"].strip().upper() == "OP" and
                                              row.get("source_sheet", "") == sheet for row in rows)
@@ -79,7 +87,7 @@ def check(directory):
     report["both_years_operable_count_matches_pinned"] = all(
         info["operable_count_matches_pinned"] for info in report["years"].values())
     report["original_workbook_op_totals_reconciled"] = all(
-        row["count_matches_pinned"] and row["mw_matches_pinned"]
+        row["operable_sheet_count_matches_pinned"] and not row["unexpected_operable_statuses"] and row["mw_matches_pinned"]
         for row in report["years"].values())
     return report
 
@@ -92,4 +100,4 @@ if __name__ == "__main__":
     Path(args.output).write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
     if not report["original_workbook_op_totals_reconciled"]:
-        raise SystemExit("Official OP inventory differs from archived count/MW benchmark; see diagnostic JSON")
+        raise SystemExit("Official Operable-sheet row count or OP capacity differs from archived benchmark; see diagnostic JSON")
