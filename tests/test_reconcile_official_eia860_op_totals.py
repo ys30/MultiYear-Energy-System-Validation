@@ -87,6 +87,7 @@ def test_operable_sheet_row_count_mismatch_rejected(tmp_path):
         rows = sample_rows(year)
         if year == 2025:
             rows[0]["status"] = "RE"
+            rows[-1]["nameplate_mw"] = str(round(float(rows[-1]["nameplate_mw"]) + 30, 1))
         write_rows(tmp_path, year, rows)
     report = check(tmp_path)
     assert report["original_workbook_op_totals_reconciled"] is False
