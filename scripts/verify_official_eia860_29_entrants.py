@@ -1,6 +1,6 @@
 """Cross-check archived 29-entrant cohort identities/statuses against official extracts.
 
-Operating-year fields are NOT present in these extracts and are NOT verified.
+Operating-year checks use independently extracted original-workbook fields when available.
 """
 import argparse
 import csv
@@ -31,6 +31,8 @@ def verify(extract_dir, targets=TARGETS):
         raise ValueError(f"Expected 29 archived cohort records, got {len(cohort)}")
     total = 0.0
     evidence_rows = []
+    verified_year_count = 0
+    missing_year_count = 0
     for key, target in sorted(cohort.items()):
         if key in before:
             raise ValueError(f"Archived entrant already in 2024 official inventory: {key}")
@@ -44,6 +46,21 @@ def verify(extract_dir, targets=TARGETS):
         expected_mw = float(target["op_nameplate_mw_2025"])
         if abs(observed_mw - expected_mw) > 0.01:
             raise ValueError(f"OP capacity mismatch for {key}: {observed_mw} vs {expected_mw}")
+        raw_year = str(observed.get("operating_year_raw") or "").strip()
+        archived_year = str(target["reported_operating_year"]).strip()
+        if raw_year:
+            try:
+                official_year = int(float(raw_year))
+                if float(raw_year) != official_year:
+                    raise ValueError(raw_year)
+            except (ValueError, OverflowError):
+                raise ValueError(f"Invalid official operating year for {key}: {raw_year}")
+            if str(official_year) != archived_year:
+                raise ValueError(f"Operating year mismatch for {key}: official {official_year}, archived {archived_year}")
+            verified_year_count += 1
+        else:
+            official_year = None
+            missing_year_count += 1
         total += observed_mw
         evidence_rows.append({
             "plant_id_eia": key[0], "generator_id": key[1],
@@ -55,7 +72,9 @@ def verify(extract_dir, targets=TARGETS):
             "archived_op_mw_2025": expected_mw,
             "official_op_mw_2025": observed_mw,
             "status_and_capacity_match": True,
-            "operating_year_verified": False,
+            "official_operating_year": official_year,
+            "official_operating_month_raw": observed.get("operating_month_raw"),
+            "operating_year_verified": official_year is not None,
         })
     if abs(total - 138.1) > 0.01:
         raise ValueError(f"29-record OP total mismatch: {total}")
@@ -63,7 +82,9 @@ def verify(extract_dir, targets=TARGETS):
             "evidence_rows": evidence_rows,
             "official_extracts_crosschecked": True,
             "record_count": len(cohort), "op_capacity_mw": round(total, 1),
-            "operating_year_independently_verified": False,
+            "operating_year_independently_verified": verified_year_count == 29,
+            "operating_year_verified_count": verified_year_count,
+            "operating_year_missing_count": missing_year_count,
             "pudl_matched": False, "fleet_validated": False,
             "ba_mapping_validated": False, "empirical_dispatch_approved": False}
 
