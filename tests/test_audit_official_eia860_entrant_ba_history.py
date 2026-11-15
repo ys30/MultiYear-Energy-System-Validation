@@ -78,3 +78,18 @@ def test_earlier_plant_history_is_separate_from_transfer_claim(tmp_path):
     import pytest
     with pytest.raises(ValueError, match="precede 2024"):
         earlier_year_presence({2024: old}, {"100"})
+
+def test_historical_archive_sha256_gate(tmp_path):
+    import hashlib
+    import pytest
+    from audit_official_eia860_entrant_ba_history import validate_earlier_archive_hashes
+    archive = tmp_path / "2023.zip"
+    make_archive(archive, [(100, "CISO")])
+    digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+    validate_earlier_archive_hashes({2023: archive}, {2023: digest})
+    with pytest.raises(ValueError, match="SHA256 mismatch"):
+        validate_earlier_archive_hashes({2023: archive}, {2023: "0" * 64})
+    with pytest.raises(ValueError, match="requires a matching SHA256"):
+        validate_earlier_archive_hashes({2023: archive}, {})
+    with pytest.raises(ValueError, match="precede 2024"):
+        validate_earlier_archive_hashes({2024: archive}, {2024: digest})
