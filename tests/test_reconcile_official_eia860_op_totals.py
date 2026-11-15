@@ -64,3 +64,19 @@ def test_alternative_status_denominator_does_not_override_op_gate(tmp_path):
             {"included_statuses": ["OP", "OA"], "row_count": info["pinned_op_count"],
              "interpretation": "count_match_only_not_validated_op_definition"}]
         assert info["alternative_denominator_is_acceptance"] is False
+
+def test_broad_operable_statuses_reconcile_counts_but_not_op_acceptance(tmp_path):
+    for year in (2024, 2025):
+        rows = sample_rows(year)
+        for idx, status in enumerate(("OA", "OS", "SB")):
+            rows[idx]["status"] = status
+        rows[-1]["nameplate_mw"] = str(round(float(rows[-1]["nameplate_mw"]) + 90, 1))
+        write_rows(tmp_path, year, rows)
+    result = check(tmp_path)
+    assert result["both_years_operable_count_matches_pinned"] is True
+    assert result["original_workbook_op_totals_reconciled"] is False
+    for year in ("2024", "2025"):
+        info = result["years"][year]
+        assert info["operable_status_set"] == ["OP", "OA", "OS", "SB"]
+        assert info["operable_status_count"] == info["pinned_op_count"]
+        assert info["operable_status_count_is_verified_archived_definition"] is False
