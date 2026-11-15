@@ -61,6 +61,8 @@ def audit(targets, pudl, output, release, expected_sha256=None):
     if not release or release.lower() in {"latest", "nightly"}:
         raise ValueError("Specify an immutable PUDL release version")
     digest = sha256(pudl)
+    if not expected_sha256 and not release.startswith("fixture-"):
+        raise ValueError("Real PUDL input requires a pinned --sha256 checksum")
     if expected_sha256 and digest.lower() != expected_sha256.lower():
         raise ValueError("PUDL SHA256 mismatch")
     # Parquet source can contain millions of changelog rows; restrict to target keys
@@ -132,6 +134,9 @@ def audit(targets, pudl, output, release, expected_sha256=None):
         "records": results,
         "source_independence": "PUDL EIA-860M transforms EIA reports; not independent physical evidence",
         "causal_status": "unresolved", "empirical_dispatch_approved": False,
+        "source_sha256_verified": bool(expected_sha256),
+        "pudl_matched": bool(expected_sha256) and not release.startswith("fixture-") and len(rows) > 0,
+        "data_is_fixture": release.startswith("fixture-"),
     }
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     Path(output).write_text(json.dumps(out, indent=2) + "\n")
