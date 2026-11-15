@@ -51,7 +51,7 @@ def check(directory):
     delta = round(report["years"]["2025"]["op_mw"] -
                   report["years"]["2024"]["op_mw"], 1)
     if abs(delta - 6895.8) > 0.11:
-        raise ValueError(f"Independent net change mismatch: {delta}")
+        raise ValueError(f"Independent net change {delta} does not match pinned 6895.8")
     report["op_delta_mw"] = delta
     report["original_workbook_op_totals_reconciled"] = all(
         row["count_matches_pinned"] and row["mw_matches_pinned"]
