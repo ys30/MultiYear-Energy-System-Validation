@@ -73,6 +73,9 @@ def test_cli_exports_reconcilable_generator_rows(tmp_path):
         [sys.executable, str(SCRIPT), "--extract-dir", str(tmp_path),
          "--output", str(output)], capture_output=True, text=True)
     assert result.returncode != 0  # synthetic data must fail pinned benchmark
+    assert output.is_file(), (
+        f"Bridge CLI did not write JSON. exit={result.returncode}\\n"
+        f"stdout={result.stdout}\\nstderr={result.stderr}")
     report = json.loads(output.read_text())
     assert report["row_level_reconciled"] is True
     assert report["row_level_rows"] == 5
