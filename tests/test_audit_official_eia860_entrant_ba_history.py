@@ -108,6 +108,10 @@ def test_earlier_summary_counts_unique_plants_not_generators(tmp_path):
                              "generator_id": str(i), "reported_operating_year": 2023})
     result = audit(before, after, targets, {2023: old})
     assert result["unique_plant_count"] == 2
+    assert result["earlier_to_2024_plant_classification"]["2023"] == {
+        "other_BA__to__ciso_both_years_generator_absent_2024": 1,
+        "absent__to__not_in_2024_plant_sheet": 1,
+    }
     assert result["earlier_plant_sheet_summary"]["2023"] == {
         "unique_plants_present": 1,
         "unique_plants_absent_from_plant_sheet": 1,
