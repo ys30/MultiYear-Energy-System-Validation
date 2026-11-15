@@ -151,8 +151,6 @@ if __name__ == "__main__":
     result = audit(args.archive_2024, args.archive_2025, args.targets, earlier)
     result["earlier_archive_sha256"] = {str(y): expected[y] for y in sorted(expected)}
     destination = Path(args.output)
-    destination.write_text(json.dumps(result, indent=2) + "\\n")
-    destination = Path(args.output)
     destination.parent.mkdir(parents=True, exist_ok=True)
     evidence_path = destination.with_name("independent-29-entrant-plant-ba-rows.csv")
     with evidence_path.open("w", newline="") as stream:
