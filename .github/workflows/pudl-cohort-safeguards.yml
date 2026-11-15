@@ -16,6 +16,7 @@ on:
       - "scripts/summarize_official_eia860_bridge_discrepancy.py"
       - "tests/test_reconcile_official_eia860_op_totals.py"
       - "tests/test_reconcile_official_eia860_transition_bridge.py"
+      - "tests/test_summarize_official_eia860_bridge_discrepancy.py"
       - "tests/test_extract_official_eia860_ciso_missing_rows.py"
       - "scripts/verify_official_eia860_helms.py"
       - "scripts/verify_official_eia860_29_entrants.py"
@@ -40,7 +41,7 @@ jobs:
       - name: Install test dependency
         run: python -m pip install pytest openpyxl
       - name: Validate 29-row cohort and changelog fixtures
-        run: python -m pytest -q tests/test_pudl_pre2025_entrant_crosscheck.py tests/test_eia860_source_gates.py tests/test_official_eia860_workbook_schema.py tests/test_reconcile_official_eia860_op_totals.py tests/test_reconcile_official_eia860_transition_bridge.py tests/test_extract_official_eia860_ciso_missing_rows.py tests/test_verify_official_eia860_helms.py tests/test_verify_official_eia860_29_entrants.py
+        run: python -m pytest -q tests/test_pudl_pre2025_entrant_crosscheck.py tests/test_eia860_source_gates.py tests/test_official_eia860_workbook_schema.py tests/test_reconcile_official_eia860_op_totals.py tests/test_reconcile_official_eia860_transition_bridge.py tests/test_summarize_official_eia860_bridge_discrepancy.py tests/test_extract_official_eia860_ciso_missing_rows.py tests/test_verify_official_eia860_helms.py tests/test_verify_official_eia860_29_entrants.py
 
   archived-source-reconciliation:
     needs: cohort-tests
