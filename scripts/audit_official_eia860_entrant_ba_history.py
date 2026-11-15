@@ -119,6 +119,21 @@ def audit(archive_2024, archive_2025, targets=TARGETS, earlier_archives=None):
             raise ValueError(f"Conflicting BA history classification within plant {plant}")
         plants[plant] = classification
     plant_counts = {c: sum(value == c for value in plants.values()) for c in categories}
+    historical_summary = {}
+    for year, plant_history in historical.items():
+        counts = {
+            "unique_plants_present": sum(bool(v["in_plant_sheet"]) for v in plant_history.values()),
+            "unique_plants_absent_from_plant_sheet": sum(not v["in_plant_sheet"] for v in plant_history.values()),
+            "unique_plants_reported_ciso": sum(v["reported_ba"] == "CISO" for v in plant_history.values()),
+            "unique_plants_reported_other_ba": sum(
+                bool(v["reported_ba"]) and v["reported_ba"] != "CISO" for v in plant_history.values()),
+            "unique_plants_reported_blank_ba": sum(
+                bool(v["in_plant_sheet"]) and not v["reported_ba"] for v in plant_history.values()),
+        }
+        if counts["unique_plants_present"] + counts["unique_plants_absent_from_plant_sheet"] != len(plants):
+            raise ValueError("Historical plant presence counts do not reconcile")
+        historical_summary[year] = counts
+
     assert sum(plant_counts.values()) == len(plants)
     return {"scope": "year_specific_original_plant_sheet_reported_ba_only",
             "record_count": len(evidence),
@@ -127,6 +142,7 @@ def audit(archive_2024, archive_2025, targets=TARGETS, earlier_archives=None):
                                       for c in categories},
             "unique_plant_classification_counts": plant_counts,
             "earlier_plant_sheet_history": historical,
+            "earlier_plant_sheet_summary": historical_summary,
             "earlier_history_years_checked": sorted(historical),
             "historical_ba_reporting_audited": True,
             "physical_ba_transfer_verified": False,
