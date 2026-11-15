@@ -33,17 +33,29 @@ def check(directory):
                 raise ValueError(f"{year}: invalid OP nameplate {r}")
             capacity.append(value)
         total = round(math.fsum(capacity), 1)
-        if len(op) != expected_count or abs(total - expected_mw) > 0.11:
-            raise ValueError(f"{year}: independent OP count/MW {len(op)}/{total} "
-                             f"does not match pinned {expected_count}/{expected_mw}")
-        report["years"][str(year)] = {"op_count": len(op), "op_mw": total,
-                                      "all_ciso_generator_rows": len(rows)}
+        report["years"][str(year)] = {
+            "op_count": len(op), "op_mw": total,
+            "all_ciso_generator_rows": len(rows),
+            "pinned_op_count": expected_count, "pinned_op_mw": expected_mw,
+            "op_count_difference": len(op) - expected_count,
+            "op_mw_difference": round(total - expected_mw, 1),
+            "zero_mw_op_count": sum(mw == 0 for mw in capacity),
+            "status_counts": {status: sum(row["status"].strip().upper() == status for row in rows)
+                              for status in sorted(set(row["status"].strip().upper() for row in rows))},
+            "source_sheet_op_counts": {sheet: sum(row["status"].strip().upper() == "OP" and
+                                             row.get("source_sheet", "") == sheet for row in rows)
+                                       for sheet in sorted(set(row.get("source_sheet", "") for row in rows))},
+            "count_matches_pinned": len(op) == expected_count,
+            "mw_matches_pinned": abs(total - expected_mw) <= 0.11,
+        }
     delta = round(report["years"]["2025"]["op_mw"] -
                   report["years"]["2024"]["op_mw"], 1)
     if abs(delta - 6895.8) > 0.11:
         raise ValueError(f"Independent net change mismatch: {delta}")
     report["op_delta_mw"] = delta
-    report["original_workbook_op_totals_reconciled"] = True
+    report["original_workbook_op_totals_reconciled"] = all(
+        row["count_matches_pinned"] and row["mw_matches_pinned"]
+        for row in report["years"].values())
     return report
 
 if __name__ == "__main__":
@@ -54,3 +66,5 @@ if __name__ == "__main__":
     report = check(args.extract_dir)
     Path(args.output).write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
+    if not report["original_workbook_op_totals_reconciled"]:
+        raise SystemExit("Official OP inventory differs from archived count/MW benchmark; see diagnostic JSON")
