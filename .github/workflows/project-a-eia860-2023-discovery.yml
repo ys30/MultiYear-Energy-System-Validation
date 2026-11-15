@@ -2,6 +2,9 @@ name: Project A EIA-860 2023 source discovery
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/project-a-eia860-2023-discovery.yml"
 
 permissions:
   contents: read
@@ -22,7 +25,7 @@ jobs:
             'https://www.eia.gov/electricity/data/eia860/archive/xls/eia8602023.zip' \
             --output eia8602023.zip
           unzip -tq eia8602023.zip
-          sha256sum eia8602023.zip
+          printf "%s  %s\\n" "1447e23e608bea1523961542a90eb93ea86715067a37f211282541461049b46f" eia8602023.zip | sha256sum --check --strict
       - name: Inspect archive provenance without approving evidence
         run: |
           python - <<'PY'
@@ -48,4 +51,25 @@ jobs:
         with:
           name: project-a-eia860-2023-discovery-manifest
           path: eia860-2023-discovery-manifest.json
+          retention-days: 90
+      - name: Retrieve pinned 2024 and 2025 archives
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 'https://www.eia.gov/electricity/data/eia860/archive/xls/eia8602024.zip' -o eia8602024.zip
+          curl -fL --retry 3 'https://www.eia.gov/electricity/data/eia860/xls/eia8602025.zip' -o eia8602025.zip
+          printf '%s  %s\n' '0aaae04812cd4ab87a3e346bdf93848a3cc15053fd4dc2a4cf82d2aeac95f12b' eia8602024.zip '2b27929d26cc1da9ad6a530da1cac6718cd8496098ee560c4d47cfffd96d08ba' eia8602025.zip | sha256sum --check --strict
+      - name: Audit actual 2023 Plant history for 29 records
+        run: |
+          python -m pip install openpyxl
+          python scripts/audit_official_eia860_entrant_ba_history.py \
+            --archive-2024 eia8602024.zip --archive-2025 eia8602025.zip \
+            --earlier-archive 2023=eia8602023.zip \
+            --earlier-sha256 2023=1447e23e608bea1523961542a90eb93ea86715067a37f211282541461049b46f \
+            --output project-a-2023-2025-plant-history.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: project-a-2023-2025-plant-history
+          path: |
+            project-a-2023-2025-plant-history.json
+            independent-29-entrant-plant-ba-rows.csv
           retention-days: 90
