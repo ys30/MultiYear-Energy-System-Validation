@@ -4,6 +4,7 @@ A Plant-sheet BA code is annual reported metadata, not proof of physical transfe
 """
 import argparse
 import csv
+import hashlib
 import io
 import json
 import re
@@ -120,6 +121,8 @@ if __name__ == "__main__":
     parser.add_argument("--archive-2024", required=True)
     parser.add_argument("--archive-2025", required=True)
     parser.add_argument("--targets", default=str(TARGETS))
+    parser.add_argument("--earlier-sha256", action="append", default=[],
+                        help="YEAR=SHA256 for each earlier archive; mandatory when earlier archive supplied")
     parser.add_argument("--earlier-archive", action="append", default=[],
                         help="YEAR=PATH for a pinned earlier EIA-860 ZIP; repeatable")
     parser.add_argument("--output", required=True)
@@ -130,7 +133,25 @@ if __name__ == "__main__":
         if not separator or not year.isdigit() or not path or int(year) in earlier:
             parser.error("--earlier-archive must be unique YEAR=PATH")
         earlier[int(year)] = path
+    expected = {}
+    for item in args.earlier_sha256:
+        year, separator, digest = item.partition("=")
+        if not separator or not year.isdigit() or len(digest) != 64 or any(c not in "0123456789abcdefABCDEF" for c in digest) or int(year) in expected:
+            parser.error("--earlier-sha256 must be unique YEAR=64_HEX_DIGEST")
+        expected[int(year)] = digest.lower()
+    if set(expected) != set(earlier):
+        parser.error("Every earlier archive must have a corresponding SHA256 and vice versa")
+    for year, archive in earlier.items():
+        hasher = hashlib.sha256()
+        with open(archive, "rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                hasher.update(chunk)
+        if hasher.hexdigest() != expected[year]:
+            parser.error(f"Earlier EIA-860 archive SHA256 mismatch for {year}")
     result = audit(args.archive_2024, args.archive_2025, args.targets, earlier)
+    result["earlier_archive_sha256"] = {str(y): expected[y] for y in sorted(expected)}
+    destination = Path(args.output)
+    destination.write_text(json.dumps(result, indent=2) + "\\n")
     destination = Path(args.output)
     destination.parent.mkdir(parents=True, exist_ok=True)
     evidence_path = destination.with_name("independent-29-entrant-plant-ba-rows.csv")
