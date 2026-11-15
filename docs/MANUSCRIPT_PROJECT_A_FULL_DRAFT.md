@@ -106,6 +106,11 @@ Three 351-MW generators at Helms Pumped Storage (Plant 6100) report operating da
 
 For 2025-07-31T19–T23, regional net generation and signed fuel-category sums differ by 0, −1, +2,271, 0 and +1 MWh, respectively. The large difference is localized to T21 in this five-hour case. The T21 difference numerically matches the reported nuclear fuel category, but this equality alone does not establish nuclear omission or any particular upstream cause. No source correction is applied.
 
+
+### 3.X Independent historical Plant-sheet BA audit (new evidence)
+
+A pinned original-workbook audit of the 29 records reporting operating years before 2025 classified 23 records as belonging to plants not found in the **2024 Plant worksheet** and six as belonging to plants reporting **CISO in both 2024 and 2025** while their generator keys were absent from the 2024 CISO generator inventory. No record showed a directly observed 2024-to-2025 non-CISO-to-CISO Plant-sheet BA change, and none had a blank 2024 BA code among the plants present. All three GitHub Actions jobs passed in [run 43675449423](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/43675449423), with the reported-year audit also matching 29/29. These categories count **generator records**, not unique plants. Absence from a Plant worksheet is not proof of nonexistence, a physical boundary change, or a commissioning event. Historical PUDL matching remains unverified.
+
 ## 4. Discussion
 
 This study should be interpreted against existing PUDL generator changelogs and published EIA-930 demand-screening methods. The present two-year, one-BA case does not establish a new general-purpose record-linkage algorithm or a superior anomaly-detection method. Its contribution is the bounded, source-traceable accounting interpretation and a deliberately fail-closed model-input gate. A cross-check against monthly PUDL changelog histories would strengthen interpretation of first appearances but has **not** yet been performed.
