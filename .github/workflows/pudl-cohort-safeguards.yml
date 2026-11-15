@@ -204,6 +204,7 @@ jobs:
           entrants = json.loads((root / "independent-29-entrant-crosscheck.json").read_text())
           assert entrants["official_extracts_crosschecked"] is True
           assert entrants["record_count"] == 29
+          assert entrants["evidence_row_count"] == 29
           assert abs(entrants["op_capacity_mw"] - 138.1) < 0.01
           assert helms["helms_transition_reconciled"] is True
           assert abs(helms["helms_op_delta_mw"] - 1053.0) < 0.01
@@ -253,6 +254,7 @@ jobs:
                       "independent-transition-bridge-rows.csv",
                       "independent-helms-transition.json",
                       "independent-29-entrant-crosscheck.json",
+                      "independent-29-entrant-evidence-rows.csv",
                   )
               },
               "fleet_validated": False,
