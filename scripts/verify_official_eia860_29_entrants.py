@@ -64,7 +64,7 @@ def verify(extract_dir, targets=TARGETS):
         total += observed_mw
         evidence_rows.append({
             "plant_id_eia": key[0], "generator_id": key[1],
-            "archived_operating_year_unverified": target["reported_operating_year"],
+            "archived_reported_operating_year": target["reported_operating_year"],
             "official_2024_ciso_present": False,
             "official_2025_ciso_present": True,
             "archived_status_2025": target["status_2025"],
@@ -78,7 +78,7 @@ def verify(extract_dir, targets=TARGETS):
         })
     if abs(total - 138.1) > 0.01:
         raise ValueError(f"29-record OP total mismatch: {total}")
-    return {"scope": "29_archived_entrant_keys_status_and_op_capacity_only",
+    return {"scope": "29_archived_entrant_keys_status_op_capacity_and_reported_operating_year",
             "evidence_rows": evidence_rows,
             "official_extracts_crosschecked": True,
             "record_count": len(cohort), "op_capacity_mw": round(total, 1),
