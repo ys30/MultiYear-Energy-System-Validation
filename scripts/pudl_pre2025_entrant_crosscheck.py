@@ -135,7 +135,8 @@ def audit(targets, pudl, output, release, expected_sha256=None):
         "source_independence": "PUDL EIA-860M transforms EIA reports; not independent physical evidence",
         "causal_status": "unresolved", "empirical_dispatch_approved": False,
         "source_sha256_verified": bool(expected_sha256),
-        "pudl_matched": bool(expected_sha256) and not release.startswith("fixture-") and len(rows) > 0,
+        "pudl_matched": bool(expected_sha256) and not release.startswith("fixture-") and any(r["changelog_rows"] > 0 for r in results),
+        "all_targets_pudl_matched": bool(expected_sha256) and not release.startswith("fixture-") and all(r["changelog_rows"] > 0 for r in results),
         "data_is_fixture": release.startswith("fixture-"),
     }
     Path(output).parent.mkdir(parents=True, exist_ok=True)
