@@ -35,6 +35,7 @@ def run(targets, source, output, release, expected_sha256):
     seen = set()
     present = set()
     source_rows = 0
+    source_years = Counter()
     with open(source, newline="") as f:
         reader = csv.DictReader(f)
         if not reader.fieldnames or not {"plant_id_eia", "generator_id", "report_date"}.issubset(reader.fieldnames):
@@ -49,6 +50,7 @@ def run(targets, source, output, release, expected_sha256):
                 raise ValueError(f"Invalid annual row {source_rows}") from exc
             if not generator:
                 raise ValueError("Blank generator_id")
+            source_years[d.year] += 1
             key = (plant, generator, d.year)
             if key in seen:
                 raise ValueError(f"Duplicate plant/generator/year key: {key}")
@@ -57,6 +59,9 @@ def run(targets, source, output, release, expected_sha256):
                 present.add(key)
     if not source_rows:
         raise ValueError("Empty annual source")
+    missing_years = set(YEARS) - set(source_years)
+    if missing_years:
+        raise ValueError(f"Annual source missing entire requested report years: {sorted(missing_years)}")
     records = [
         {"plant_id_eia": plant, "generator_id": generator,
          "presence": {str(y): (plant, generator, y) in present for y in YEARS}}
@@ -66,7 +71,7 @@ def run(targets, source, output, release, expected_sha256):
     result = {
         "release": release, "source_sha256": actual, "targets_sha256": digest(targets),
         "input_kind": "PUDL_annual_generators_not_changelog",
-        "source_rows": source_rows, "targets": len(keys),
+        "source_rows": source_rows, "source_rows_by_year": {str(y): source_years[y] for y in YEARS}, "targets": len(keys),
         "present_by_year": summary, "missing_by_year": {str(y): len(keys) - summary[str(y)] for y in YEARS},
         "records": records, "physical_commissioning_verified": False,
         "pudl_annual_presence_audited": True, "pudl_changelog_matched": False,
