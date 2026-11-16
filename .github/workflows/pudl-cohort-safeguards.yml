@@ -5,6 +5,8 @@ on:
     paths:
       - "data/pudl/project_a_pudl_29_targets.csv"
       - "scripts/pudl_pre2025_entrant_crosscheck.py"
+      - "scripts/pudl_annual_generator_presence.py"
+      - "tests/test_pudl_annual_generator_presence.py"
       - "scripts/verify_pudl_targets_against_artifact.py"
       - "tests/test_pudl_pre2025_entrant_crosscheck.py"
       - "tests/test_eia860_source_gates.py"
@@ -43,7 +45,7 @@ jobs:
       - name: Install test dependency
         run: python -m pip install pytest openpyxl
       - name: Validate 29-row cohort and changelog fixtures
-        run: python -m pytest -q tests/test_pudl_pre2025_entrant_crosscheck.py tests/test_eia860_source_gates.py tests/test_official_eia860_workbook_schema.py tests/test_reconcile_official_eia860_op_totals.py tests/test_reconcile_official_eia860_transition_bridge.py tests/test_summarize_official_eia860_bridge_discrepancy.py tests/test_extract_official_eia860_ciso_missing_rows.py tests/test_verify_official_eia860_helms.py tests/test_verify_official_eia860_29_entrants.py tests/test_audit_official_eia860_entrant_ba_history.py
+        run: python -m pytest -q tests/test_pudl_pre2025_entrant_crosscheck.py tests/test_pudl_annual_generator_presence.py tests/test_eia860_source_gates.py tests/test_official_eia860_workbook_schema.py tests/test_reconcile_official_eia860_op_totals.py tests/test_reconcile_official_eia860_transition_bridge.py tests/test_summarize_official_eia860_bridge_discrepancy.py tests/test_extract_official_eia860_ciso_missing_rows.py tests/test_verify_official_eia860_helms.py tests/test_verify_official_eia860_29_entrants.py tests/test_audit_official_eia860_entrant_ba_history.py
 
   archived-source-reconciliation:
     needs: cohort-tests
