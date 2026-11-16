@@ -53,3 +53,9 @@ def test_rejects_bad_date(tmp_path):
     assert proc.returncode != 0
     assert "Invalid annual row" in proc.stderr
     assert not output.exists()
+
+def test_rejects_partial_year_export(tmp_path):
+    proc, output = execute(tmp_path, "50535,MWD1,2025-12-31\\n")
+    assert proc.returncode != 0
+    assert "missing entire requested report years" in proc.stderr
+    assert not output.exists()
