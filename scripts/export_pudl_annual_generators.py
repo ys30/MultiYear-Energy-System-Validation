@@ -38,6 +38,8 @@ def main():
         parser.error("Parquet byte checksums require a local verified download; remote scans cannot validate this flag")
     con = duckdb.connect()
     try:
+        # PUDL's dotted S3 bucket requires path-style addressing for TLS.
+        con.execute("CREATE SECRET pudl_public_s3 (TYPE s3, PROVIDER config, REGION 'us-west-2', URL_STYLE 'path')")
         columns = [r[0] for r in con.execute(f"DESCRIBE SELECT * FROM read_parquet('{url}')").fetchall()]
         needed = {"plant_id_eia", "generator_id", "report_date"}
         if not needed.issubset(columns):
