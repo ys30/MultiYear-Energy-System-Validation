@@ -64,3 +64,11 @@ def test_missing_release_rejected(tmp_path):
     receipt.pop("release")
     with pytest.raises(ValueError, match="release"):
         build_matrix(receipt, targets)
+
+
+def test_annual_source_checksum_mismatch_rejected(tmp_path):
+    targets, receipt = fixtures(tmp_path)
+    annual_csv = tmp_path / "annual.csv"
+    annual_csv.write_text("plant_id_eia,generator_id,report_date\\n")
+    with pytest.raises(ValueError, match="Annual source SHA256"):
+        build_matrix(receipt, targets, annual_csv)
