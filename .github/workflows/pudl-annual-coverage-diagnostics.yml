@@ -6,6 +6,11 @@ on:
       - "scripts/audit_pudl_annual_coverage.py"
       - "tests/test_audit_pudl_annual_coverage.py"
       - ".github/workflows/pudl-annual-coverage-diagnostics.yml"
+  pull_request:
+    paths:
+      - "scripts/audit_pudl_annual_coverage.py"
+      - "tests/test_audit_pudl_annual_coverage.py"
+      - ".github/workflows/pudl-annual-coverage-diagnostics.yml"
   workflow_dispatch:
 
 permissions:
