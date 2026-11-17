@@ -23,7 +23,7 @@ def main():
     parser.add_argument("--source-url", help="Exact verified versioned Parquet URL; defaults to release/table S3 path")
     parser.add_argument("--expected-parquet-sha256", help="Optional independent checksum of downloaded Parquet; remote range scans cannot validate it")
     args = parser.parse_args()
-    if not re.fullmatch(r"v[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+", args.release):
+    if not re.fullmatch(r"v[0-9]{4}\.[0-9]{1,2}\.[0-9]+", args.release):
         parser.error("Use a fixed PUDL release such as v2026.11.0")
     if not re.fullmatch(r"[a-z][a-z0-9_]+", args.table):
         parser.error("Invalid table name")
@@ -32,7 +32,7 @@ def main():
     except ImportError as exc:
         parser.error("Install duckdb before running this export")
     url = args.source_url or f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/{args.release}/{args.table}.parquet"
-    if not re.fullmatch(r"https://[a-zA-Z0-9.-]+/[a-zA-Z0-9_./-]+\\.parquet", url) or f"/{args.release}/" not in url:
+    if not re.fullmatch(r"https://[a-zA-Z0-9.-]+/[a-zA-Z0-9_./-]+\.parquet", url) or f"/{args.release}/" not in url:
         parser.error("Source must be an HTTPS Parquet URL containing the pinned release")
     if args.expected_parquet_sha256:
         parser.error("Parquet byte checksums require a local verified download; remote scans cannot validate this flag")
