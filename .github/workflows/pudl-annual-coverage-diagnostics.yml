@@ -10,6 +10,7 @@ on:
       - "scripts/run_pudl_annual_evidence_pipeline.py"
       - "tests/test_run_pudl_annual_evidence_pipeline.py"
       - ".github/workflows/pudl-annual-coverage-diagnostics.yml"
+      - ".github/workflows/pudl-pinned-source-preflight.yml"
   pull_request:
     paths:
       - "scripts/audit_pudl_annual_coverage.py"
@@ -25,6 +26,37 @@ permissions:
   contents: read
 
 jobs:
+
+  pinned-source-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install DuckDB
+        run: python -m pip install 'duckdb>=1.4,<3'
+      - name: Probe pinned annual Parquet schema and report years
+        run: |
+          python - <<'PY'
+          import duckdb, json
+          release = "v2026.11.0"
+          url = f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/{release}/out_eia__yearly_generators.parquet"
+          con = duckdb.connect()
+          con.execute("CREATE SECRET pudl_public_s3 (TYPE s3, PROVIDER config, REGION 'us-west-2', URL_STYLE 'path')")
+          cols = [r[0] for r in con.execute("DESCRIBE SELECT * FROM read_parquet(?)", [url]).fetchall()]
+          required = {"plant_id_eia", "generator_id", "report_date"}
+          assert required.issubset(cols), f"Missing columns: {required-set(cols)}"
+          counts = con.execute(
+              "SELECT year(report_date), count(*) FROM read_parquet(?) "
+              "WHERE year(report_date) BETWEEN 2023 AND 2025 GROUP BY 1 ORDER BY 1",
+              [url]).fetchall()
+          print(json.dumps({"release": release, "source_url": url,
+              "rows_by_year": counts, "empirical_dispatch_approved": False}, indent=2))
+          assert {row[0] for row in counts} == {2023, 2024, 2025}
+          PY
   coverage-unit-tests:
     runs-on: ubuntu-latest
     steps:
