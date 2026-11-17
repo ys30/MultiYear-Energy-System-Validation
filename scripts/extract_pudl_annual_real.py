@@ -10,7 +10,6 @@ import json
 from pathlib import Path
 import duckdb
 from pudl_pre2025_entrant_crosscheck import read_targets
-from pudl_annual_generator_presence import run as audit_annual
 
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -42,6 +41,15 @@ def main():
         required = {"plant_id_eia", "generator_id", "report_date"}
         if not required.issubset(columns):
             raise ValueError(f"Unexpected PUDL annual schema: {columns}")
+        coverage_rows = con.execute("""
+            SELECT year(report_date) AS report_year, count(*) AS n
+            FROM read_parquet(?)
+            WHERE year(report_date) BETWEEN 2023 AND 2025
+            GROUP BY 1 ORDER BY 1
+        """, [url]).fetchall()
+        source_by_year = {str(y): int(n) for y, n in coverage_rows}
+        if set(source_by_year) != {"2023", "2024", "2025"} or any(n <= 0 for n in source_by_year.values()):
+            raise ValueError(f"PUDL source does not cover all requested years: {source_by_year}")
         rows = con.execute("""
             SELECT p.plant_id_eia, CAST(p.generator_id AS VARCHAR), CAST(p.report_date AS VARCHAR)
             FROM read_parquet(?) AS p
@@ -71,8 +79,9 @@ def main():
     provenance.update({"query_success": True, "matched_rows": len(rows),
                        "matched_rows_by_year": by_year, "extracted_csv_sha256": sha(path),
                        "source_schema": columns,
-                       "full_annual_source_coverage_verified": False,
-                       "interpretation": "matched annual rows only; missing rows are not verified absence"})
+                       "source_rows_by_year": source_by_year,
+                       "full_annual_source_coverage_verified": True,
+                       "interpretation": "annual reporting presence only, not physical commissioning or transfer"})
     (out / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
     print(json.dumps(provenance, indent=2))
 
