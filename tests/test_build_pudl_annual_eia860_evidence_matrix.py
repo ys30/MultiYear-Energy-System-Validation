@@ -23,7 +23,7 @@ def fixtures(tmp_path):
             rows.append({"plant_id_eia": 100 + i, "generator_id": "G",
                          "year": year, "classification": "plant_unmatched",
                          "exact_generator_record": False})
-    receipt = {"input_kind": "PUDL_annual_generators", "empirical_dispatch_approved": False,
+    receipt = {"input_kind": "PUDL_annual_generators", "release": "v2026.11.0", "empirical_dispatch_approved": False,
                "source_sha256": "a" * 64, "targets_sha256": hashlib.sha256(targets.read_bytes()).hexdigest(), "records": rows}
     return targets, receipt
 
@@ -56,4 +56,11 @@ def test_tampered_target_file_rejected(tmp_path):
     with targets.open("a") as f:
         f.write("\\n")
     with pytest.raises(ValueError, match="SHA256"):
+        build_matrix(receipt, targets)
+
+
+def test_missing_release_rejected(tmp_path):
+    targets, receipt = fixtures(tmp_path)
+    receipt.pop("release")
+    with pytest.raises(ValueError, match="release"):
         build_matrix(receipt, targets)
