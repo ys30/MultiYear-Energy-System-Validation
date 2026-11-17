@@ -25,7 +25,7 @@ def main():
         raise ValueError("Release must be explicitly reviewed before changing")
     out = Path(args.output_dir)
     out.mkdir(parents=True, exist_ok=True)
-    url = f"https://pudl.catalyst.coop/{args.release}/out_eia__yearly_generators.parquet"
+    url = f"s3://pudl.catalyst.coop/{args.release}/out_eia__yearly_generators.parquet"
     provenance = {"release": args.release, "source_url": url,
                   "remote_parquet_sha256_verified": False,
                   "query_success": False, "empirical_dispatch_approved": False}
@@ -34,6 +34,7 @@ def main():
     con = duckdb.connect()
     try:
         con.execute("INSTALL httpfs; LOAD httpfs")
+        con.execute("CREATE SECRET pudl_anon (TYPE s3, PROVIDER config, REGION 'us-west-2', URL_STYLE 'path')")
         con.execute("CREATE TEMP TABLE cohort (plant_id_eia BIGINT, generator_id VARCHAR)")
         con.executemany("INSERT INTO cohort VALUES (?, ?)", keys)
         # Confirm actual source schema rather than silently assuming a changelog.
