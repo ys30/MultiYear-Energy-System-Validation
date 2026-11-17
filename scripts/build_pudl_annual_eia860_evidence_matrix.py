@@ -17,7 +17,7 @@ def file_sha256(path):
     return h.hexdigest()
 
 
-def build_matrix(coverage, targets):
+def build_matrix(coverage, targets, annual_csv=None):
     if coverage.get("input_kind") != "PUDL_annual_generators":
         raise ValueError("Expected annual PUDL generator coverage receipt")
     release = coverage.get("release")
@@ -25,6 +25,8 @@ def build_matrix(coverage, targets):
         raise ValueError("Immutable non-fixture PUDL release required")
     if coverage.get("empirical_dispatch_approved") is not False:
         raise ValueError("Unsafe coverage receipt")
+    if annual_csv is not None and coverage.get("source_sha256", "").lower() != file_sha256(annual_csv).lower():
+        raise ValueError("Annual source SHA256 does not match coverage receipt")
     if coverage.get("targets_sha256") != file_sha256(targets):
         raise ValueError("Target file SHA256 does not match coverage receipt")
     if not isinstance(coverage.get("source_sha256"), str) or len(coverage["source_sha256"]) != 64 or any(ch not in "0123456789abcdefABCDEF" for ch in coverage["source_sha256"]):
@@ -74,10 +76,11 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--coverage-json", required=True)
     p.add_argument("--targets", required=True)
+    p.add_argument("--annual-csv", required=True, help="Exact pinned annual CSV used by coverage audit")
     p.add_argument("--output", required=True)
     a = p.parse_args()
     coverage = json.loads(Path(a.coverage_json).read_text())
-    result = build_matrix(coverage, a.targets)
+    result = build_matrix(coverage, a.targets, a.annual_csv)
     out = Path(a.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, indent=2) + "\n")
