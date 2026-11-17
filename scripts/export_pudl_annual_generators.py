@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--release", required=True)
     parser.add_argument("--table", default="out_eia__yearly_generators")
     parser.add_argument("--output", required=True)
+    parser.add_argument("--source-url", help="Exact verified versioned Parquet URL; defaults to release/table S3 path")
     args = parser.parse_args()
     if not args.release.startswith("v") or args.release in ("vlatest", "vnightly"):
         parser.error("Use a fixed PUDL release such as v2026.11.0")
@@ -28,7 +29,9 @@ def main():
         import duckdb
     except ImportError as exc:
         parser.error("Install duckdb before running this export")
-    url = f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/{args.release}/{args.table}.parquet"
+    url = args.source_url or f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/{args.release}/{args.table}.parquet"
+    if not url.startswith("https://") or not url.endswith(".parquet") or args.release not in url:
+        parser.error("Source must be an HTTPS Parquet URL containing the pinned release")
     con = duckdb.connect()
     try:
         columns = [r[0] for r in con.execute(f"DESCRIBE SELECT * FROM read_parquet('{url}')").fetchall()]
@@ -37,12 +40,13 @@ def main():
             raise ValueError(f"Annual table missing columns: {sorted(needed - set(columns))}")
         output = Path(args.output).resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
+        temporary = output.with_suffix(output.suffix + ".partial")
         count = 0
         by_year = {str(y): 0 for y in (2023, 2024, 2025)}
         query = (f"SELECT plant_id_eia, generator_id, report_date FROM read_parquet('{url}') "
                  "WHERE year(report_date) BETWEEN 2023 AND 2025 "
                  "ORDER BY report_date, plant_id_eia, generator_id")
-        with output.open("w", newline="", encoding="utf-8") as stream:
+        with temporary.open("w", newline="", encoding="utf-8") as stream:
             writer = csv.writer(stream)
             writer.writerow(("plant_id_eia", "generator_id", "report_date"))
             cursor = con.execute(query)
@@ -52,9 +56,9 @@ def main():
                     by_year[str(report_date.year)] += 1
                     count += 1
         if any(not n for n in by_year.values()):
-            output.unlink(missing_ok=True)
+            temporary.unlink(missing_ok=True)
             raise ValueError(f"Annual source missing year(s): {by_year}")
-        checksum = hashlib.sha256(output.read_bytes()).hexdigest()
+        checksum = hashlib.sha256(temporary.read_bytes()).hexdigest()
         manifest = {"source_url": url, "release": args.release, "table": args.table,
                     "sha256": checksum, "rows": count, "rows_by_year": by_year,
                     "physical_commissioning_verified": False,
