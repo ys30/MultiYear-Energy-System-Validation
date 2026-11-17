@@ -4,8 +4,17 @@ This produces an evidence matrix, not a commissioning inference.
 """
 import argparse
 import csv
+import hashlib
 import json
 from pathlib import Path
+
+
+def file_sha256(path):
+    h = hashlib.sha256()
+    with open(path, 'rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            h.update(block)
+    return h.hexdigest()
 
 
 def build_matrix(coverage, targets):
@@ -13,6 +22,10 @@ def build_matrix(coverage, targets):
         raise ValueError("Expected annual PUDL generator coverage receipt")
     if coverage.get("empirical_dispatch_approved") is not False:
         raise ValueError("Unsafe coverage receipt")
+    if coverage.get("targets_sha256") != file_sha256(targets):
+        raise ValueError("Target file SHA256 does not match coverage receipt")
+    if not isinstance(coverage.get("source_sha256"), str) or len(coverage["source_sha256"]) != 64 or any(ch not in "0123456789abcdefABCDEF" for ch in coverage["source_sha256"]):
+        raise ValueError("Invalid annual source SHA256 in receipt")
     with open(targets, newline="", encoding="utf-8-sig") as f:
         source = list(csv.DictReader(f))
     keys = {(int(r["plant_id_eia"]), r["generator_id"].strip()): r for r in source}
