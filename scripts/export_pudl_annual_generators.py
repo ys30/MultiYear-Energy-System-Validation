@@ -63,6 +63,7 @@ def main():
                     "sha256": checksum, "rows": count, "rows_by_year": by_year,
                     "physical_commissioning_verified": False,
                     "empirical_dispatch_approved": False}
+        temporary.replace(output)
         output.with_suffix(output.suffix + ".provenance.json").write_text(json.dumps(manifest, indent=2) + "\n")
         print(json.dumps(manifest, indent=2))
     finally:
