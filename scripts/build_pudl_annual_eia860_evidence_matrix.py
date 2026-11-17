@@ -20,6 +20,9 @@ def file_sha256(path):
 def build_matrix(coverage, targets):
     if coverage.get("input_kind") != "PUDL_annual_generators":
         raise ValueError("Expected annual PUDL generator coverage receipt")
+    release = coverage.get("release")
+    if not isinstance(release, str) or not release.strip() or release.lower() in ("latest", "nightly") or release.startswith("fixture-"):
+        raise ValueError("Immutable non-fixture PUDL release required")
     if coverage.get("empirical_dispatch_approved") is not False:
         raise ValueError("Unsafe coverage receipt")
     if coverage.get("targets_sha256") != file_sha256(targets):
@@ -57,6 +60,7 @@ def build_matrix(coverage, targets):
         raise ValueError(f"Expected 87 target-year observations, got {len(seen)}")
     return {
         "schema_version": 1,
+        "pudl_release": release,
         "source_sha256": coverage["source_sha256"],
         "targets_sha256": coverage["targets_sha256"],
         "target_year_rows": len(rows),
