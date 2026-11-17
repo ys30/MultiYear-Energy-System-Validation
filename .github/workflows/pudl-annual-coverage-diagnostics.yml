@@ -56,6 +56,33 @@ jobs:
           print(json.dumps({"release": release, "source_url": url,
               "rows_by_year": counts, "empirical_dispatch_approved": False}, indent=2))
           assert {row[0] for row in counts} == {2023, 2024, 2025}
+          import csv
+          with open("data/pudl/project_a_pudl_29_targets.csv", newline="") as stream:
+              targets = list(csv.DictReader(stream))
+          assert len(targets) == 29
+          con.execute("CREATE TEMP TABLE target_keys (plant_id_eia INTEGER, generator_id VARCHAR)")
+          con.executemany("INSERT INTO target_keys VALUES (?, ?)",
+              [(int(t["plant_id_eia"]), t["generator_id"]) for t in targets])
+          result = con.execute("""
+              WITH annual AS (
+                SELECT year(report_date) AS yr, plant_id_eia,
+                       trim(cast(generator_id AS VARCHAR)) AS generator_id
+                FROM read_parquet(?)
+                WHERE year(report_date) BETWEEN 2023 AND 2025
+              ), matched AS (
+                SELECT a.yr, t.plant_id_eia, t.generator_id,
+                       COUNT(*) AS matches
+                FROM target_keys t JOIN annual a
+                  ON a.plant_id_eia = t.plant_id_eia
+                 AND a.generator_id = t.generator_id
+                GROUP BY 1, 2, 3
+              )
+              SELECT yr, COUNT(*) AS exact_keys, SUM(matches) AS matched_rows
+              FROM matched GROUP BY 1 ORDER BY 1
+          """, [url]).fetchall()
+          print("TARGET_29_EXACT_MATCH_COUNTS=" + json.dumps(result))
+          assert all(int(r[1]) <= 29 for r in result)
+
           PY
   coverage-unit-tests:
     runs-on: ubuntu-latest
