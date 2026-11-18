@@ -6,8 +6,8 @@ US Energy Information Administration (EIA), Form EIA-860 detailed annual generat
 https://www.eia.gov/electricity/data/eia860/
 
 Official annual ZIP endpoints to independently retrieve and checksum:
-- 2023: https://www.eia.gov/electricity/data/eia860/xls/eia8602023.zip
-- 2024: https://www.eia.gov/electricity/data/eia860/xls/eia8602024.zip
+- 2023: https://www.eia.gov/electricity/data/eia860/archive/xls/eia8602023.zip
+- 2024: https://www.eia.gov/electricity/data/eia860/archive/xls/eia8602024.zip
 - 2025: https://www.eia.gov/electricity/data/eia860/xls/eia8602025.zip
 
 These are **source URLs**, not a claim that the files have been downloaded or independently inspected. Before processing, verify HTTP status, ZIP integrity, archive member names, raw ZIP SHA256, spreadsheet sheet names and header row positions for each year. Preserve immutable raw downloads outside Git and record checksums in the evidence receipt.
