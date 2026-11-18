@@ -82,6 +82,21 @@ jobs:
           """, [url]).fetchall()
           print("TARGET_29_EXACT_MATCH_COUNTS=" + json.dumps(result))
           assert all(int(r[1]) <= 29 for r in result)
+          plant_results = con.execute("""
+              WITH annual_plants AS (
+                SELECT DISTINCT year(report_date) AS yr, plant_id_eia
+                FROM read_parquet(?)
+                WHERE year(report_date) BETWEEN 2023 AND 2025
+              )
+              SELECT y.yr,
+                COUNT(DISTINCT CASE WHEN a.plant_id_eia IS NOT NULL THEN t.plant_id_eia END) AS matched_plants,
+                COUNT(CASE WHEN a.plant_id_eia IS NOT NULL THEN 1 END) AS target_generators_at_present_plants
+              FROM target_keys t CROSS JOIN (VALUES (2023),(2024),(2025)) y(yr)
+              LEFT JOIN annual_plants a ON a.yr=y.yr AND a.plant_id_eia=t.plant_id_eia
+              GROUP BY 1 ORDER BY 1
+          """, [url]).fetchall()
+          print("TARGET_PLANT_LEVEL_COVERAGE=" + json.dumps(plant_results))
+
 
           PY
   coverage-unit-tests:
