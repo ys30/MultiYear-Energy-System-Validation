@@ -7,7 +7,8 @@ on:
       - "tests/test_audit_pudl_annual_coverage.py"
       - "scripts/build_pudl_annual_eia860_evidence_matrix.py"
       - "tests/test_build_pudl_annual_eia860_evidence_matrix.py"
-      - "scripts/run_pudl_annual_evidence_pipeline.py"\n      - "scripts/export_pudl_annual_generators.py"
+      - "scripts/run_pudl_annual_evidence_pipeline.py"
+      - "scripts/export_pudl_annual_generators.py"
       - "tests/test_run_pudl_annual_evidence_pipeline.py"
       - ".github/workflows/pudl-annual-coverage-diagnostics.yml"
       - ".github/workflows/pudl-pinned-source-preflight.yml"
@@ -137,7 +138,8 @@ jobs:
               "records": [dict(year=r[0], plant_id_eia=r[1],
                   generator_id=r[2], classification=r[3]) for r in evidence],
               "physical_commissioning_verified": False,
-              "empirical_dispatch_approved": False}, indent=2) + "\n")
+              "empirical_dispatch_approved": False}, indent=2) + "
+")
 
 
 
@@ -161,7 +163,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pudl-29-target-87-year-diagnostics
-          path: |\n            pudl_29_target_87_year_diagnostics.json\n            pudl_annual_coverage.json\n            pudl_eia860_87_row_evidence_matrix.json\n            annual_generators.csv.provenance.json
+          path: |
+            pudl_29_target_87_year_diagnostics.json
+            pudl_annual_coverage.json
+            pudl_eia860_87_row_evidence_matrix.json
+            annual_generators.csv.provenance.json
           retention-days: 30
   coverage-unit-tests:
     runs-on: ubuntu-latest
@@ -175,4 +181,6 @@ jobs:
       - name: Test fail-closed coverage semantics
         run: python -m pytest -q tests/test_audit_pudl_annual_coverage.py tests/test_build_pudl_annual_eia860_evidence_matrix.py tests/test_run_pudl_annual_evidence_pipeline.py
 
-# The live preflight queries the fixed PUDL Parquet release and uploads only\n# descriptive 29-target/87-year coverage evidence, not raw source data.\n# This does not verify physical commissioning or approve dispatch.
+# The live preflight queries the fixed PUDL Parquet release and uploads only
+# descriptive 29-target/87-year coverage evidence, not raw source data.
+# This does not verify physical commissioning or approve dispatch.
