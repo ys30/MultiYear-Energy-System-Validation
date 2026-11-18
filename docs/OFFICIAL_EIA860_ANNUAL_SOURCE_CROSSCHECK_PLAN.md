@@ -45,3 +45,23 @@ Include an explicit `unmatched` row for every target/year with no official recor
 PUDL descriptive evidence is already reproducible in GitHub Actions run
 https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44242038951 .
 This independent official EIA check must not reuse the PUDL annual table as a stand-in for original survey spreadsheets.
+
+
+## Verified official workbook exact-key audit (2026-11-18)
+
+GitHub Actions run 44387479905 executed `scripts/audit_official_eia860_generator_keys.py` against independently downloaded official EIA-860 annual Generator workbooks. The parsing and matching steps succeeded; the workflow's overall failure was caused by exhausted GitHub Actions artifact storage, not a failed data assertion. Follow-up run 44390939797 succeeded with quota-blocked artifact uploads disabled.
+
+| Year | Official annual exact generator keys | PUDL v2026.11.0 annual exact generator keys |
+|---|---:|---:|
+| 2023 | 0 / 29 | 0 / 29 |
+| 2024 | 0 / 29 | 0 / 29 |
+| 2025 | 29 / 29 | 29 / 29 |
+
+Official ZIP SHA256 (independent download receipts):
+- 2023: `1447e23e608bea1523961542a90eb93ea86715067a37f211282541461049b46f`
+- 2024: `0aaae04812cd4ab87a3e346bdf93848a3cc15053fd4dc2a4cf82d2aeac95f12b`
+- 2025: `2b27929d26cc1da9ad6a530da1cac6718cd8496098ee560c4d47cfffd96d08ba`
+
+This is **agreement on the target-key presence/absence counts**, not a validated historical generator crosswalk, physical commissioning chronology, row-level metadata equivalence, or evidence of physical absence. In particular, the official workbooks have multiple operational/status sheets; a key found on any recognized sheet is counted as an exact key match. A subsequent audit must compare sheet/status, capacity, and operating-year metadata without silently merging distinct records.
+
+The 87-row audit JSON is generated within CI, but artifact upload is temporarily disabled due to the account's GitHub Actions artifact storage quota. No empirical dispatch approval is implied.
