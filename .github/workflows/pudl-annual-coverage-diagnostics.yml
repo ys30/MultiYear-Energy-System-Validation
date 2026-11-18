@@ -11,6 +11,8 @@ on:
       - "scripts/export_pudl_annual_generators.py"
       - "tests/test_run_pudl_annual_evidence_pipeline.py"
       - ".github/workflows/pudl-annual-coverage-diagnostics.yml"
+      - "scripts/inspect_official_eia860_archives.py"
+      - ".github/workflows/official-eia860-archive-inventory.yml"
       - ".github/workflows/pudl-pinned-source-preflight.yml"
   pull_request:
     paths:
@@ -195,6 +197,23 @@ jobs:
             pudl_annual_coverage.json
             pudl_eia860_87_row_evidence_matrix.json
             annual_generators.csv.provenance.json
+          retention-days: 30
+  official-eia860-archive-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download and verify official annual archives
+        run: python scripts/inspect_official_eia860_archives.py --out-dir /tmp/eia860-official
+      - name: Upload archive manifest
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-eia860-2023-2025-archive-inventory
+          path: /tmp/eia860-official/official_eia860_archive_inventory.json
           retention-days: 30
   coverage-unit-tests:
     runs-on: ubuntu-latest
