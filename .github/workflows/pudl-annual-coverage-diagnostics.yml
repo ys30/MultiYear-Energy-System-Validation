@@ -121,7 +121,7 @@ jobs:
                     historical_generator_id=r[2]) for r in historical],
                 "generator_identity_crosswalk_verified": False,
                 "physical_commissioning_verified": False,
-                "empirical_dispatch_approved": False}, indent=2) + "\\n")
+                "empirical_dispatch_approved": False}, indent=2) + "\n")
 
           # One row per target/year: do not confuse missing keys with commissioning.
           evidence = con.execute("""
