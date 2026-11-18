@@ -112,6 +112,7 @@ jobs:
               FROM historical_plant_rows
               ORDER BY yr, plant_id_eia, historical_generator_id
           """, [url]).fetchall()
+          print("HISTORICAL_TARGET_PLANT_IDS=" + json.dumps(historical))
           print("HISTORICAL_TARGET_PLANT_ROW_COUNTS=" + json.dumps({
               str(y): sum(r[0] == y for r in historical) for y in (2023, 2024)}))
           import pathlib
