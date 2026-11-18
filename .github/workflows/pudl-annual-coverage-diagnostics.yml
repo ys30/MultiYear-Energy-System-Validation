@@ -7,7 +7,7 @@ on:
       - "tests/test_audit_pudl_annual_coverage.py"
       - "scripts/build_pudl_annual_eia860_evidence_matrix.py"
       - "tests/test_build_pudl_annual_eia860_evidence_matrix.py"
-      - "scripts/run_pudl_annual_evidence_pipeline.py"
+      - "scripts/run_pudl_annual_evidence_pipeline.py"\n      - "scripts/export_pudl_annual_generators.py"
       - "tests/test_run_pudl_annual_evidence_pipeline.py"
       - ".github/workflows/pudl-annual-coverage-diagnostics.yml"
       - ".github/workflows/pudl-pinned-source-preflight.yml"
@@ -142,12 +142,26 @@ jobs:
 
 
           PY
+      - name: Export fixed PUDL annual generator CSV and execute evidence pipeline
+        run: |
+          mkdir -p /tmp/project-a-pudl-annual
+          python scripts/export_pudl_annual_generators.py \
+            --release v2026.11.0 \
+            --output /tmp/project-a-pudl-annual/annual_generators.csv
+          SHA=$(python -c 'import json; print(json.load(open("/tmp/project-a-pudl-annual/annual_generators.csv.provenance.json"))["sha256"])')
+          python scripts/run_pudl_annual_evidence_pipeline.py \
+            --annual-csv /tmp/project-a-pudl-annual/annual_generators.csv \
+            --release v2026.11.0 \
+            --sha256 "$SHA" \
+            --out-dir /tmp/project-a-pudl-annual/evidence
+          cp /tmp/project-a-pudl-annual/evidence/*.json .
+          cp /tmp/project-a-pudl-annual/annual_generators.csv.provenance.json .
       - name: Upload descriptive annual coverage diagnostics
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: pudl-29-target-87-year-diagnostics
-          path: pudl_29_target_87_year_diagnostics.json
+          path: |\n            pudl_29_target_87_year_diagnostics.json\n            pudl_annual_coverage.json\n            pudl_eia860_87_row_evidence_matrix.json\n            annual_generators.csv.provenance.json
           retention-days: 30
   coverage-unit-tests:
     runs-on: ubuntu-latest
