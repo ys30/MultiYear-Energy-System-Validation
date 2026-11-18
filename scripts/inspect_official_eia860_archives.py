@@ -22,7 +22,9 @@ def main():
     for year in args.years:
         if year not in (2023, 2024, 2025):
             p.error("Only explicitly scoped annual years 2023–2025 allowed")
-        url = f"https://www.eia.gov/electricity/data/eia860/xls/eia860{year}.zip"
+        url = (f"https://www.eia.gov/electricity/data/eia860/xls/eia860{year}.zip"
+               if year == 2025 else
+               f"https://www.eia.gov/electricity/data/eia860/archive/xls/eia860{year}.zip")
         dest = out / f"eia860{year}.zip"
         req = urllib.request.Request(url, headers={"User-Agent": "ProjectA-Annual-EIA860-Research/1.0"})
         with urllib.request.urlopen(req, timeout=90) as response, dest.open("wb") as stream:
@@ -31,6 +33,8 @@ def main():
             import shutil
             shutil.copyfileobj(response, stream)
         digest = hashlib.sha256(dest.read_bytes()).hexdigest()
+        if not zipfile.is_zipfile(dest):
+            raise RuntimeError(f"{year}: official URL returned non-ZIP content; url={url}; bytes={dest.stat().st_size}")
         with zipfile.ZipFile(dest) as z:
             if z.testzip() is not None:
                 raise RuntimeError(f"{year}: corrupt ZIP")
