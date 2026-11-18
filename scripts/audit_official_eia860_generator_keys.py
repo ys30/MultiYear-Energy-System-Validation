@@ -52,6 +52,7 @@ def main():
             exact = {}
             sheets = []
             recognized_sheets = 0
+            target_rows = {}
             for sheet in workbook.worksheets:
                 preview = list(sheet.iter_rows(min_row=1, max_row=30, values_only=True))
                 try:
@@ -73,7 +74,11 @@ def main():
                         continue
                     key = (plant, generator)
                     if key in targets:
-                        exact.setdefault(key, []).append({"sheet": sheet.title, "row": rownum})
+                        record = {"sheet": sheet.title, "row": rownum}
+                        exact.setdefault(key, []).append(record)
+                        target_rows.setdefault(key, []).append({"sheet": sheet.title, "row": rownum,
+                            "raw_values": [str(value)[:120] if value is not None else None for value in row[:35]],
+                            "column_headers": [str(value)[:100] if value is not None else None for value in preview[header_row - 1][:35]]})
                     count += 1
                 sheets.append({"sheet": sheet.title, "rows_with_keys": count,
                                "header_row": header_row})
@@ -83,7 +88,9 @@ def main():
         for plant, generator in targets:
             matches = exact.get((plant, generator), [])
             matrix.append({"year": year, "plant_id_eia": plant, "generator_id": generator,
-                           "exact_official_records": matches, "exact_match": bool(matches),
+                           "exact_official_records": matches,
+                           "official_record_fields": target_rows.get((plant, generator), []),
+                           "exact_match": bool(matches),
                            "physical_absence_inferred": False,
                            "commissioning_verified": False})
         receipts.append({"year": year, "zip_sha256": digest, "member": members[0],
