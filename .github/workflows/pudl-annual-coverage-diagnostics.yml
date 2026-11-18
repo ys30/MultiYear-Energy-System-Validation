@@ -213,6 +213,23 @@ jobs:
         run: python scripts/inspect_official_eia860_archives.py --out-dir /tmp/eia860-official
       - name: Independently audit 87 official generator target-year keys
         run: python scripts/audit_official_eia860_generator_keys.py --archive-dir /tmp/eia860-official --output /tmp/eia860-official/official_eia860_87_row_key_audit.json
+      - name: Report official EIA860 source-sheet and duplicate-key diagnostics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path("/tmp/eia860-official/official_eia860_87_row_key_audit.json").read_text())
+          assert len(p["target_year_records"]) == 87
+          for source in p["annual_sources"]:
+              year = source["year"]
+              recognized = source["recognized_generator_sheets"]
+              duplicates = source["targets_with_multiple_official_rows"]
+              matches = source["target_exact_matches"]
+              print(f"OFFICIAL_EIA860_{year}: exact={matches}/29 recognized_sheets={recognized} ambiguous_target_keys={duplicates}")
+              print(f"OFFICIAL_EIA860_{year}_SHEETS=" + json.dumps(source["sheets"], sort_keys=True))
+              assert recognized > 0
+          assert p["empirical_dispatch_approved"] is False
+          PY
       - name: Upload archive manifest
         if: false # quota-blocked; exact counts retained in job logs
         uses: actions/upload-artifact@v4
