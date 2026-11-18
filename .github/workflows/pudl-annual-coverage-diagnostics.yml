@@ -188,7 +188,7 @@ jobs:
           cp /tmp/project-a-pudl-annual/evidence/*.json .
           cp /tmp/project-a-pudl-annual/annual_generators.csv.provenance.json .
       - name: Upload descriptive annual coverage diagnostics
-        if: success()
+        if: false # quota-blocked; retained in job logs
         uses: actions/upload-artifact@v4
         with:
           name: pudl-29-target-87-year-diagnostics
@@ -214,7 +214,7 @@ jobs:
       - name: Independently audit 87 official generator target-year keys
         run: python scripts/audit_official_eia860_generator_keys.py --archive-dir /tmp/eia860-official --output /tmp/eia860-official/official_eia860_87_row_key_audit.json
       - name: Upload archive manifest
-        if: success()
+        if: false # quota-blocked; exact counts retained in job logs
         uses: actions/upload-artifact@v4
         with:
           name: official-eia860-2023-2025-archive-inventory
