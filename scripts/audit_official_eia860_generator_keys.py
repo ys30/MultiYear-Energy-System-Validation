@@ -51,6 +51,7 @@ def main():
             workbook = load_workbook(io.BytesIO(z.read(members[0])), read_only=True, data_only=True)
             exact = {}
             sheets = []
+            recognized_sheets = 0
             for sheet in workbook.worksheets:
                 preview = list(sheet.iter_rows(min_row=1, max_row=30, values_only=True))
                 try:
@@ -58,6 +59,7 @@ def main():
                 except ValueError:
                     sheets.append({"sheet": sheet.title, "status": "unrecognized_header"})
                     continue
+                recognized_sheets += 1
                 count = 0
                 for rownum, row in enumerate(sheet.iter_rows(min_row=header_row + 1, values_only=True), header_row + 1):
                     if len(row) <= max(plant_idx, gen_idx):
@@ -76,6 +78,8 @@ def main():
                 sheets.append({"sheet": sheet.title, "rows_with_keys": count,
                                "header_row": header_row})
             workbook.close()
+            if recognized_sheets == 0:
+                raise ValueError(f"{year}: no recognized generator data sheets")
         for plant, generator in targets:
             matches = exact.get((plant, generator), [])
             matrix.append({"year": year, "plant_id_eia": plant, "generator_id": generator,
@@ -83,6 +87,8 @@ def main():
                            "physical_absence_inferred": False,
                            "commissioning_verified": False})
         receipts.append({"year": year, "zip_sha256": digest, "member": members[0],
+                         "recognized_generator_sheets": recognized_sheets,
+                         "targets_with_multiple_official_rows": sum(len(v) > 1 for v in exact.values()),
                          "sheets": sheets, "target_exact_matches": sum(
                              bool(exact.get(k)) for k in targets)})
         print(f"{year}: {receipts[-1]['target_exact_matches']}/29 exact official annual matches", flush=True)
