@@ -126,15 +126,18 @@ jobs:
           print("TARGET_87_CLASSIFICATIONS=" + json.dumps({
               str(year): dict(Counter(r[3] for r in evidence if r[0] == year))
               for year in (2023, 2024, 2025)}, sort_keys=True))
-          import pathlib
+          import pathlib, hashlib
+          target_sha256 = hashlib.sha256(pathlib.Path("data/pudl/project_a_pudl_29_targets.csv").read_bytes()).hexdigest()
           out = pathlib.Path("pudl_29_target_87_year_diagnostics.json")
           out.write_text(json.dumps({
               "release": release, "source_url": url,
               "source_kind": "PUDL_annual_generators",
+              "target_csv_sha256": target_sha256,
+              "source_rows_by_year": {str(year): n for year, n in counts},
               "records": [dict(year=r[0], plant_id_eia=r[1],
                   generator_id=r[2], classification=r[3]) for r in evidence],
               "physical_commissioning_verified": False,
-              "empirical_dispatch_approved": False}, indent=2) + "\\n")
+              "empirical_dispatch_approved": False}, indent=2) + "\n")
 
 
 
