@@ -6,7 +6,7 @@ import urllib.request
 
 from openpyxl import load_workbook
 
-from scripts.audit_official_eia860_generator_keys import find_columns, normalized_header
+from audit_official_eia860_generator_keys import find_columns, normalized_header
 
 
 def main():
