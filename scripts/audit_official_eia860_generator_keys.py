@@ -53,6 +53,7 @@ def main():
             sheets = []
             recognized_sheets = 0
             target_rows = {}
+            target_metadata = {}
             for sheet in workbook.worksheets:
                 preview = list(sheet.iter_rows(min_row=1, max_row=30, values_only=True))
                 try:
@@ -76,6 +77,13 @@ def main():
                     if key in targets:
                         record = {"sheet": sheet.title, "row": rownum}
                         exact.setdefault(key, []).append(record)
+                        header_values = preview[header_row - 1]
+                        selected = {}
+                        for idx, label in enumerate(header_values):
+                            name = normalized_header(label)
+                            if name and any(token in name for token in ("status", "nameplate", "operatingyear", "operationyear", "operatingmonth", "operationmonth")):
+                                selected[str(label)] = str(row[idx]) if idx < len(row) and row[idx] is not None else None
+                        target_metadata.setdefault(key, []).append({"sheet": sheet.title, "row": rownum, "fields": selected})
                         target_rows.setdefault(key, []).append({"sheet": sheet.title, "row": rownum,
                             "raw_values": [str(value)[:120] if value is not None else None for value in row[:35]],
                             "column_headers": [str(value)[:100] if value is not None else None for value in preview[header_row - 1][:35]]})
@@ -90,6 +98,7 @@ def main():
             matrix.append({"year": year, "plant_id_eia": plant, "generator_id": generator,
                            "exact_official_records": matches,
                            "official_record_fields": target_rows.get((plant, generator), []),
+                           "official_selected_metadata": target_metadata.get((plant, generator), []),
                            "exact_match": bool(matches),
                            "physical_absence_inferred": False,
                            "commissioning_verified": False})
