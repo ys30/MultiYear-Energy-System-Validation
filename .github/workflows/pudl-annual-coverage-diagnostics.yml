@@ -230,6 +230,21 @@ jobs:
               assert recognized > 0
           assert p["empirical_dispatch_approved"] is False
           PY
+      - name: Summarize official 2025 metadata availability
+        run: |
+          python - <<'PY'
+          import json
+          p = json.load(open("/tmp/eia860-official/official_eia860_87_row_key_audit.json"))
+          rows = [r for r in p["target_year_records"] if r["year"] == 2025]
+          assert len(rows) == 29 and all(r["exact_match"] for r in rows)
+          for r in rows:
+              fields = r["official_selected_metadata"]
+              assert len(fields) == 1, "Ambiguous 2025 official target row"
+              print("OFFICIAL_2025_TARGET_METADATA=" + json.dumps({
+                  "plant_id_eia": r["plant_id_eia"],
+                  "generator_id": r["generator_id"],
+                  "metadata": fields[0]}, sort_keys=True))
+          PY
       - name: Upload archive manifest
         if: false # quota-blocked; exact counts retained in job logs
         uses: actions/upload-artifact@v4
