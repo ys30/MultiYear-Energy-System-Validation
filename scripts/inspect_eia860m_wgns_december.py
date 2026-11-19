@@ -55,6 +55,28 @@ def main():
                   "recognized_sheets": sheets, "WGNS_50535_records": hits}
         results.append(result)
         print("EIA860M_WGNS_SNAPSHOT=" + json.dumps(result, sort_keys=True), flush=True)
+    # This fixed historical evidence cohort must not silently pass on missing,
+    # duplicated, reclassified, or modified WGNS records.
+    expected = {(2023, "december")} | {
+        (2024, m) for m in ("january", "february", "march", "april", "may", "june",
+                            "july", "august", "september", "october", "november", "december")}
+    actual = {(r["year"], r["month"]) for r in results}
+    if actual != expected or len(results) != len(expected):
+        raise AssertionError(f"Incomplete WGNS monthly evidence: missing={sorted(expected - actual)}")
+    for result in results:
+        records = result["WGNS_50535_records"]
+        if len(records) != 1 or records[0]["sheet"] != "Retired":
+            raise AssertionError(f"WGNS missing, duplicated, or reclassified: {result['year']}-{result['month']}")
+        fields = records[0]["fields"]
+        for key, value in (("Nameplate Capacity (MW)", "27"),
+                           ("Operating Month", "11"), ("Operating Year", "1984"),
+                           ("Retirement Month", "12"), ("Retirement Year", "2020")):
+            if fields.get(key) != value:
+                raise AssertionError(f"WGNS unexpected {key} in {result['year']}-{result['month']}: {fields.get(key)!r}")
+    print("EIA860M_WGNS_13_SNAPSHOT_EVIDENCE_VERIFIED=" + json.dumps({
+        "snapshots": len(results), "retired_sheet": len(results),
+        "nameplate_mw": 27, "retirement_year": 2020,
+        "physical_restart_verified": False, "empirical_dispatch_approved": False}), flush=True)
     print("EIA860M_WGNS_COMPARISON=" + json.dumps({
         "snapshots_checked": len(results), "requested_snapshots": 13, "physical_restart_verified": False,
         "generator_identity_crosswalk_verified": False, "empirical_dispatch_approved": False}))
