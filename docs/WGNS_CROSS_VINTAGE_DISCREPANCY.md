@@ -45,3 +45,24 @@ Official monthly URLs follow the verified pattern
 These are **four sampled monthly vintages**, not an exhaustive review of all twelve months. No observed change across these samples establishes neither that every intervening month was identical nor when the annual workbook's different reported status first appeared.
 
 **Revised paper interpretation:** Four independent 2024 quarterly EIA-860M snapshots consistently list WGNS as retired (27 MW, retirement December 2020), whereas the 2024 annual EIA-860 lists the same key as OP (33.6 MW). The divergence is between source vintages/products and must not be described as proven physical recommissioning.
+
+## Exhaustive 2024 monthly snapshot audit (verified)
+
+GitHub Actions [44456551626](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44456551626), job `monthly-wgns-december-probe`, successfully downloaded **all twelve January–December 2024** official EIA-860M monthly generator workbooks and the December 2023 baseline. All **13/13** monthly snapshots contained exactly one observed WGNS row for plant 50535 on the **Retired** sheet, with nameplate **27 MW**, operating date **November 1984**, and retirement date **December 2020**. There were no unavailable requested monthly sources.
+
+| 2024 month | Official workbook SHA-256 |
+|---|---|
+| January | `d8fd6cd287dde8f0cafa4f511d4e2f92583a88ff912b5e03a569b5653958c6a7` |
+| February | `0e5ea012b3fe26bcee7b3b5f98f41bd9e8bb6b95df3fe6de7ab06fae18729089` |
+| March | `5002bff3d163cbf540f904431c48269005ec6f0880d633cbe969299d7107d3cc` |
+| April | `3ffe1e4ecf1c2d8276c37d026a90a6ab59ccefa783fd42dd89f345b09ec12914` |
+| May | `8086aaefdff5ddaded7eb4e7dbdccf2907af9949ec9688d9c13d6538f9cfcb83` |
+| June | `19fd9395da97d257c40b86fd976d0675088a902e3e6243f10e8dddfd960f5ea1` |
+| July | `983796eaa6c40b68ed32a6bea84477c5f31066384e276ad3bf794ccd70315693` |
+| August | `e7ae98c0336d6e1e37d18274d945a166dff0a9e48b8e04629e8ae6df4379e70d` |
+| September | `b8f123c4b8655ba384b88d4326527541c435ec46257b265c83fa1b5445fe0df9` |
+| October | `7d8395666633692d765566a376bcb793318fef92de81a16ab5583ad2efe343dc` |
+| November | `b0474987ba5d726cc2407be35cbbd52481ea05e95f10fbfee865ce239fe2bbf0` |
+| December | `22c742b72fd7709d4632a92074fa968cc5a728b9c8f0cbc82959b327e0eba8e7` |
+
+**Updated interpretation:** this is a full review of the archived **2024 monthly publication snapshots**, not a full audit of any later revised historical monthly datasets. The discrepancy with the 2024 annual EIA-860 OP/33.6 MW record persists across every examined monthly snapshot. The records do **not** establish why the annual record differs, whether a physical restart occurred, or the correct physical generator identity. The empirical dispatch and historical ID crosswalk gates remain closed.
