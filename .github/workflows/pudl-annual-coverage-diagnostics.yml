@@ -254,6 +254,23 @@ jobs:
                   "generator_id": r["generator_id"],
                   "metadata": fields[0]}, sort_keys=True))
           PY
+      - name: Inspect available official WGNS identity metadata
+        run: |
+          python - <<'PY'
+          import json
+          p = json.load(open("/tmp/eia860-official/official_eia860_87_row_key_audit.json"))
+          rows = [r for r in p["historical_four_plant_records"]
+                  if r["plant_id_eia"] == 50535 and r["generator_id"] == "WGNS"]
+          assert {r["year"] for r in rows} == {2023, 2024}
+          for row in rows:
+              print("OFFICIAL_WGNS_IDENTITY_FIELDS=" + json.dumps({
+                  "year": row["year"], "plant_id_eia": row["plant_id_eia"],
+                  "generator_id": row["generator_id"], "sheet": row["sheet"],
+                  "available_fields": row["fields"],
+                  "operator_identity_verified": False,
+                  "physical_identity_crosswalk_verified": False,
+              }, sort_keys=True))
+          PY
       - name: Generate official historical transition report
         run: python scripts/report_official_eia860_historical_transitions.py --audit-json /tmp/eia860-official/official_eia860_87_row_key_audit.json --output /tmp/eia860-official/official_historical_transitions.json
       - name: Review official historical generator IDs at four ambiguous plants
