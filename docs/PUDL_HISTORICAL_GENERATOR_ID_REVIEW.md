@@ -28,3 +28,35 @@ Historical annual generator records: **5 in 2023** and **5 in 2024** across thes
 - Empirical PyPSA dispatch approved: **false**
 
 These observations are suitable for a descriptive data-quality/results appendix, not a commissioning or dispatch claim.
+
+## Official annual source metadata audit (verified 2026-11-18)
+
+Official EIA-860 annual workbook rows independently inspected in successful CI run
+[44430217622](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44430217622).
+The 2023/2024 source sheet, row, status, nameplate capacity and reported operating dates
+were extracted directly from the official workbooks. These are *annual reported fields*,
+not evidence of a physical event.
+
+| Plant | Generator | 2023 status / MW | 2024 status / MW | Reported operating month/year | Interpretation |
+|---|---|---|---|---|---|
+| 50535 | WGNS | RE / 27.0 | OP / 33.6 | 11/1984 both years | **Flag:** 2023 reports retirement 12/2020; 2024 reports OP and different nameplate. Do not assert restart or identity with MWD1. |
+| 61446 | PV2 | OP / 45.0 | OP / 45.0 | 05/2023 both years | Stable reported annual attributes |
+| 63094 | SBAD1 | OP / 1.1 | OP / 1.1 | 06/2022 both years | Stable reported annual attributes |
+| 63094 | SBAD2 | OP / 1.1 | OP / 1.1 | 06/2022 both years | Stable reported annual attributes |
+| 65820 | OWS | OP / 50.0 | OP / 50.0 | 09/2023 both years | Stable reported annual attributes |
+
+**Independent validation:** official 2025 EIA-860 metadata gate passed all
+29 target keys with zero mismatches for reported operating year, status and
+OP-only nameplate capacity in the same CI run. Synthetic negative tests for
+year mismatch, capacity mismatch, duplicate official records and missing keys
+also passed.
+
+**Open research issue:** obtain plant/operator documentation or EIA-860M
+monthly revisions to determine whether WGNS's RE→OP and 27.0→33.6 MW
+reflect a correction, reactivation, or another reporting change. None of
+these alternatives is established by annual snapshots alone.
+
+**Modeling decision:** maintain separate exact-key historical cohorts;
+do not join historical IDs to 2025 target IDs, infer physical commissioning,
+or approve empirical PyPSA dispatch until independent crosswalk evidence
+is obtained.
