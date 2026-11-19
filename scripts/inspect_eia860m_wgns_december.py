@@ -11,11 +11,17 @@ from audit_official_eia860_generator_keys import find_columns, normalized_header
 
 def main():
     results = []
-    for year in (2023, 2024):
-        url = f"https://www.eia.gov/electricity/data/eia860m/archive/xls/december_generator{year}.xlsx"
+    for year, month in ((2023, "december"), (2024, "march"), (2024, "june"), (2024, "september"), (2024, "december")):
+        url = f"https://www.eia.gov/electricity/data/eia860m/archive/xls/{month}_generator{year}.xlsx"
         req = urllib.request.Request(url, headers={"User-Agent": "ProjectA-Research/1.0"})
-        with urllib.request.urlopen(req, timeout=90) as response:
-            raw = response.read()
+        try:
+            with urllib.request.urlopen(req, timeout=90) as response:
+                raw = response.read()
+        except Exception as exc:
+            if month == "december":
+                raise
+            print("EIA860M_QUARTERLY_SOURCE_UNAVAILABLE=" + json.dumps({"year": year, "month": month, "url": url, "error_type": type(exc).__name__}), flush=True)
+            continue
         if not raw.startswith(b"PK"):
             raise ValueError(f"{year}: not a valid XLSX ZIP signature")
         book = load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
@@ -45,12 +51,12 @@ def main():
         book.close()
         if not sheets:
             raise ValueError(f"{year}: no generator sheets recognized")
-        result = {"year": year, "source_url": url, "sha256": hashlib.sha256(raw).hexdigest(),
+        result = {"year": year, "month": month, "source_url": url, "sha256": hashlib.sha256(raw).hexdigest(),
                   "recognized_sheets": sheets, "WGNS_50535_records": hits}
         results.append(result)
-        print("EIA860M_WGNS_DECEMBER=" + json.dumps(result, sort_keys=True), flush=True)
+        print("EIA860M_WGNS_SNAPSHOT=" + json.dumps(result, sort_keys=True), flush=True)
     print("EIA860M_WGNS_COMPARISON=" + json.dumps({
-        "snapshots_checked": len(results), "physical_restart_verified": False,
+        "snapshots_checked": len(results), "requested_snapshots": 5, "physical_restart_verified": False,
         "generator_identity_crosswalk_verified": False, "empirical_dispatch_approved": False}))
 
 
