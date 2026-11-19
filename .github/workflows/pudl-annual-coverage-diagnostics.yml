@@ -14,6 +14,7 @@ on:
       - "scripts/inspect_official_eia860_archives.py"
       - "scripts/audit_official_eia860_generator_keys.py"
       - "scripts/verify_official_eia860_target_metadata.py"
+      - "scripts/report_official_eia860_historical_transitions.py"
       - "tests/test_verify_official_eia860_target_metadata.py"
       - ".github/workflows/official-eia860-archive-inventory.yml"
       - ".github/workflows/pudl-pinned-source-preflight.yml"
@@ -249,6 +250,8 @@ jobs:
                   "generator_id": r["generator_id"],
                   "metadata": fields[0]}, sort_keys=True))
           PY
+      - name: Generate official historical transition report
+        run: python scripts/report_official_eia860_historical_transitions.py --audit-json /tmp/eia860-official/official_eia860_87_row_key_audit.json --output /tmp/eia860-official/official_historical_transitions.json
       - name: Review official historical generator IDs at four ambiguous plants
         run: |
           python - <<'PY'
