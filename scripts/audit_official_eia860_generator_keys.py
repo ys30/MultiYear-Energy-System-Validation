@@ -77,8 +77,14 @@ def main():
                         continue
                     key = (plant, generator)
                     if year in (2023, 2024) and plant in historical_plants:
+                        historical_fields = {}
+                        for idx, label in enumerate(preview[header_row - 1]):
+                            name = normalized_header(label)
+                            if name in ("status", "operatingyear", "operatingmonth", "nameplatecapacitymw", "retirementyear", "retirementmonth"):
+                                historical_fields[str(label)] = str(row[idx]).strip() if idx < len(row) and row[idx] is not None else None
                         historical_plant_records.append({"year": year, "plant_id_eia": plant,
-                            "generator_id": generator, "sheet": sheet.title, "row": rownum})
+                            "generator_id": generator, "sheet": sheet.title, "row": rownum,
+                            "fields": historical_fields})
                     if key in targets:
                         record = {"sheet": sheet.title, "row": rownum}
                         exact.setdefault(key, []).append(record)
