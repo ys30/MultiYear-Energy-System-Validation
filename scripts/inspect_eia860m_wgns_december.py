@@ -11,14 +11,14 @@ from audit_official_eia860_generator_keys import find_columns, normalized_header
 
 def main():
     results = []
-    for year, month in ((2023, "december"), (2024, "march"), (2024, "june"), (2024, "september"), (2024, "december")):
+    for year, month in ((2023, "december"),) + tuple((2024, m) for m in ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december")):
         url = f"https://www.eia.gov/electricity/data/eia860m/archive/xls/{month}_generator{year}.xlsx"
         req = urllib.request.Request(url, headers={"User-Agent": "ProjectA-Research/1.0"})
         try:
             with urllib.request.urlopen(req, timeout=90) as response:
                 raw = response.read()
         except Exception as exc:
-            if month == "december":
+            if (year, month) in ((2023, "december"), (2024, "march"), (2024, "june"), (2024, "september"), (2024, "december")):
                 raise
             print("EIA860M_QUARTERLY_SOURCE_UNAVAILABLE=" + json.dumps({"year": year, "month": month, "url": url, "error_type": type(exc).__name__}), flush=True)
             continue
@@ -56,7 +56,7 @@ def main():
         results.append(result)
         print("EIA860M_WGNS_SNAPSHOT=" + json.dumps(result, sort_keys=True), flush=True)
     print("EIA860M_WGNS_COMPARISON=" + json.dumps({
-        "snapshots_checked": len(results), "requested_snapshots": 5, "physical_restart_verified": False,
+        "snapshots_checked": len(results), "requested_snapshots": 13, "physical_restart_verified": False,
         "generator_identity_crosswalk_verified": False, "empirical_dispatch_approved": False}))
 
 
