@@ -15,6 +15,7 @@ on:
       - "scripts/audit_official_eia860_generator_keys.py"
       - "scripts/verify_official_eia860_target_metadata.py"
       - "scripts/report_official_eia860_historical_transitions.py"
+      - "scripts/inspect_eia860m_wgns_december.py"
       - "tests/test_verify_official_eia860_target_metadata.py"
       - "tests/test_report_official_eia860_historical_transitions.py"
       - "tests/test_historical_identity_review.py"
@@ -276,6 +277,20 @@ jobs:
             /tmp/eia860-official/official_eia860_archive_inventory.json
             /tmp/eia860-official/official_eia860_87_row_key_audit.json
           retention-days: 30
+  monthly-wgns-december-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install official monthly workbook reader
+        run: python -m pip install openpyxl
+      - name: Independently inspect December 2023 and 2024 EIA860M WGNS
+        run: python scripts/inspect_eia860m_wgns_december.py
+
   coverage-unit-tests:
     runs-on: ubuntu-latest
     steps:
