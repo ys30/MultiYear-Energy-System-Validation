@@ -1,0 +1,5 @@
+plant_id_eia,historical_generator_ids_2023_2024,target_generator_ids_2025,official_historical_rows_verified,exact_id_overlap,physical_identity_crosswalk_verified,physical_commissioning_verified,empirical_dispatch_approved,review_status
+50535,WGNS,MWD1,true,false,false,false,false,requires_independent_evidence
+61446,PV2,BA2,true,false,false,false,false,requires_independent_evidence
+63094,SBAD1|SBAD2,G100|G200|SOLAR,true,false,false,false,false,requires_independent_evidence
+65820,OWS,OWB,true,false,false,false,false,requires_independent_evidence
