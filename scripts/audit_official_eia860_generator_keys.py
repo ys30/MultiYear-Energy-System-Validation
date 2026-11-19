@@ -38,6 +38,8 @@ def main():
         raise ValueError("Expected 29 distinct target keys")
     receipts = []
     matrix = []
+    historical_plants = {50535, 61446, 63094, 65820}
+    historical_plant_records = []
     for year in (2023, 2024, 2025):
         archive = Path(args.archive_dir) / f"eia860{year}.zip"
         digest = hashlib.sha256(archive.read_bytes()).hexdigest()
@@ -74,6 +76,9 @@ def main():
                     if not generator:
                         continue
                     key = (plant, generator)
+                    if year in (2023, 2024) and plant in historical_plants:
+                        historical_plant_records.append({"year": year, "plant_id_eia": plant,
+                            "generator_id": generator, "sheet": sheet.title, "row": rownum})
                     if key in targets:
                         record = {"sheet": sheet.title, "row": rownum}
                         exact.setdefault(key, []).append(record)
@@ -112,6 +117,7 @@ def main():
         raise RuntimeError("Incomplete official annual evidence matrix")
     output = {"schema_version": 1, "source_kind": "official_EIA860_annual_workbooks",
               "annual_sources": receipts, "target_year_records": matrix,
+              "historical_four_plant_records": historical_plant_records,
               "physical_commissioning_verified": False,
               "empirical_dispatch_approved": False}
     dest = Path(args.output)
