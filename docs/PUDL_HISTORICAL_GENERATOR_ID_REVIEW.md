@@ -60,3 +60,33 @@ these alternatives is established by annual snapshots alone.
 do not join historical IDs to 2025 target IDs, infer physical commissioning,
 or approve empirical PyPSA dispatch until independent crosswalk evidence
 is obtained.
+
+## Independent EIA-860M December snapshot contradiction (verified)
+
+Successful CI run [44449378102](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44449378102)
+downloaded the official December EIA-860M generator XLSX snapshots and
+independently located plant **50535**, generator **WGNS**:
+
+| Source | WGNS worksheet / status evidence | Nameplate | Reported operating date | Reported retirement date |
+|---|---|---:|---|---|
+| December 2023 EIA-860M | Retired worksheet | 27 MW | 11/1984 | 12/2020 |
+| December 2024 EIA-860M | Retired worksheet | 27 MW | 11/1984 | 12/2020 |
+| Annual 2023 EIA-860 | Retired and Canceled; RE | 27 MW | 11/1984 | 12/2020 |
+| Annual 2024 EIA-860 | Operable; OP | 33.6 MW | 11/1984 | No retirement field extracted |
+
+Monthly source and SHA-256 receipts:
+- 2023: `https://www.eia.gov/electricity/data/eia860m/archive/xls/december_generator2023.xlsx`,
+  `cb23a95036f99ad6f43c756c5c7d050953337149a452291760240abf881ebf00`
+- 2024: `https://www.eia.gov/electricity/data/eia860m/archive/xls/december_generator2024.xlsx`,
+  `22c742b72fd7709d4632a92074fa968cc5a728b9c8f0cbc82959b327e0eba8e7`
+
+**Interpretation:** the December 2024 preliminary monthly snapshot and the
+2024 annual release disagree on reported status and capacity for the same
+plant/generator key. The evidence does not establish a physical restart,
+the cause or timing of an administrative correction, or that either snapshot
+is necessarily authoritative for the other release's reference date.
+The next priority is to inspect the annual release's reporting vintage,
+monthly revision history and independent plant/operator documentation.
+
+**Modeling gate remains closed:** do not use WGNS as evidence of new
+commissioning, map WGNS to MWD1, or authorize empirical PyPSA dispatch.
