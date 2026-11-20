@@ -12,6 +12,19 @@ Independent documents show an actual **Mesa Wind repowering project**, but do no
 4. **BLM Decision Record**, Mesa Wind Repower Project: decommissioning ~400 existing turbines, installing nine new turbines, selected alternative up to 30 MW. Source: https://eplanning.blm.gov/public_projects/1504648/200364317/20027264/250033466/3.%20Mesa%20Draft%20Decision%20Record%20%28508%29.pdf
 5. **Independent EIA-derived plant listing (secondary; requires official verification)**: plant 50535 lists **MWD1** 30 MW, June 2024, and **WGNS** retired December 2020. Source: https://energy.statnorth.us/power-plants/ca/mesa-wind-power-llc-50535 . Do not treat this listing as primary proof of a generator-ID crosswalk.
 
+## Verified 2025 official MWD1 record
+
+The EIA-860 **2025 annual generator workbook** contains plant **50535**, generator **MWD1**, in the **Operable** worksheet, row **9577**. Its reported fields are:
+
+- Status **OP**
+- Nameplate capacity **30 MW**
+- Operating Month **6**, Operating Year **2024** (reported June 2024 operation)
+- Nameplate Power Factor **0.95**
+
+This was directly transcribed from the official annual archive by the repository's audit workflow, not inferred from a third-party listing. Provenance: [CI run 44678237561](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44678237561), `official-eia860-archive-inventory` job, `OFFICIAL_2025_TARGET_METADATA` receipt for plant 50535 / MWD1.
+
+**Important:** A 2025 annual workbook reporting a June 2024 operating date does not by itself prove the exact commissioning date or that the same generator ID was present in the **2024 annual publication vintage**. MWD1 (30 MW) and legacy WGNS (27 MW in monthly / 33.6 MW in annual 2024) must not be added as independent contemporaneous capacity without establishing unit identity and reporting scope.
+
 ## Interpretation and safeguards
 
 - **Confirmed:** repower project documented by BLM and Brookfield; FERC asset view reports 33.60 MW and a 30 MW interconnection limit.
