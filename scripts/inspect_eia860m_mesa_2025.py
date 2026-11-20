@@ -9,7 +9,7 @@ from openpyxl import load_workbook
 
 from audit_official_eia860_generator_keys import find_columns, normalized_header
 
-MONTHS = ("january", "february", "march", "april", "may", "june", "december")
+MONTHS = ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december")
 GENERATOR_IDS = {"WGNS", "MWD1"}
 FIELDS = ("status", "nameplate", "operatingyear", "operatingmonth", "retirementyear", "retirementmonth")
 
@@ -76,6 +76,8 @@ def main():
             "generator_identity_crosswalk_verified": False,
             "empirical_dispatch_approved": False,
         }, sort_keys=True), flush=True)
+    if checked != len(MONTHS):
+        raise AssertionError(f"Incomplete 2025 Mesa monthly source coverage: {checked}/{len(MONTHS)}")
     print("EIA860M_MESA_2025_PROBE_SUMMARY=" + json.dumps({
         "requested_months": len(MONTHS), "downloaded_months": checked,
         "physical_commissioning_verified": False, "empirical_dispatch_approved": False,
