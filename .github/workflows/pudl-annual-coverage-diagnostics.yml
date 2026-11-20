@@ -30,8 +30,21 @@ on:
       - "scripts/build_pudl_annual_eia860_evidence_matrix.py"
       - "tests/test_build_pudl_annual_eia860_evidence_matrix.py"
       - "scripts/run_pudl_annual_evidence_pipeline.py"
+      - "scripts/export_pudl_annual_generators.py"
       - "tests/test_run_pudl_annual_evidence_pipeline.py"
       - ".github/workflows/pudl-annual-coverage-diagnostics.yml"
+      - "scripts/inspect_official_eia860_archives.py"
+      - "scripts/audit_official_eia860_generator_keys.py"
+      - "scripts/verify_official_eia860_target_metadata.py"
+      - "scripts/report_official_eia860_historical_transitions.py"
+      - "scripts/inspect_eia860m_wgns_december.py"
+      - "scripts/inspect_eia860m_mesa_2025.py"
+      - "tests/test_verify_official_eia860_target_metadata.py"
+      - "tests/test_report_official_eia860_historical_transitions.py"
+      - "tests/test_historical_identity_review.py"
+      - "data/pudl/project_a_historical_identity_review.csv"
+      - ".github/workflows/official-eia860-archive-inventory.yml"
+      - ".github/workflows/pudl-pinned-source-preflight.yml"
   workflow_dispatch:
 
 permissions:
