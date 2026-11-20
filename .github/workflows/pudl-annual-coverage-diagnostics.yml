@@ -16,6 +16,7 @@ on:
       - "scripts/verify_official_eia860_target_metadata.py"
       - "scripts/report_official_eia860_historical_transitions.py"
       - "scripts/inspect_eia860m_wgns_december.py"
+      - "scripts/inspect_eia860m_mesa_2025.py"
       - "tests/test_verify_official_eia860_target_metadata.py"
       - "tests/test_report_official_eia860_historical_transitions.py"
       - "tests/test_historical_identity_review.py"
@@ -307,6 +308,20 @@ jobs:
         run: python -m pip install openpyxl
       - name: Independently inspect December 2023 and 2024 EIA860M WGNS
         run: python scripts/inspect_eia860m_wgns_december.py
+
+  mesa-2025-monthly-identity-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true # exploratory network source; report availability separately
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install EIA monthly workbook parser
+        run: python -m pip install openpyxl
+      - name: Probe 2025 January June December WGNS and MWD1 independently
+        run: python scripts/inspect_eia860m_mesa_2025.py
 
   coverage-unit-tests:
     runs-on: ubuntu-latest
