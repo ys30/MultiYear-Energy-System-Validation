@@ -43,3 +43,20 @@ This was directly transcribed from the official annual archive by the repository
 5. Request an EIA clarification if WGNS annual 2024 OP/33.6 MW cannot be explained from official reporting revisions.
 
 **Manuscript-safe statement:** Government permitting and developer materials document repowering of Mesa Wind; independently, a FERC asset record reports 33.60 MW with a 30 MW interconnection limit. This context is consistent with a facility undergoing substantial changes but does not resolve why 2024 annual EIA-860 marks legacy generator WGNS operable while all twelve archived monthly EIA-860M reports classify it retired.
+
+
+## 2025 monthly EIA-860M transition: verified checkpoints
+
+The official EIA-860M archived workbooks were independently downloaded and parsed by [CI run 44760887284](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44760887284), job `mesa-2025-monthly-identity-probe`:
+
+| 2025 monthly snapshot | WGNS sheet | WGNS nameplate | MWD1 exact-key row | Official workbook SHA-256 |
+|---|---|---|---|---|
+| January | Retired | 27 MW | Not observed | `a4648d046ef136582a4aaa957086795329f62c38db7c8e55a548374eb4dcdf0f` |
+| June | Operating | 33.6 MW | Not observed | `f4e91810d2cfe8c94c94b6d94bfd524f1a00d7881e870dd1f0d4a833a8e0dbfe` |
+| December | Operating | 33.6 MW | Not observed | `1264f1c37cf51ef41319067c4c0915f951535851df93c97d02e2e823e337ea2b` |
+
+**New evidence:** The archived monthly reporting of WGNS changed from Retired/27 MW to Operating/33.6 MW **after January and by June 2025**. This is a **reporting transition window**, not a verified physical restart. In the three checked monthly snapshots, no exact MWD1 row was observed; absence from these files does not prove physical absence. The 2025 **annual** workbook nevertheless lists MWD1 as OP/30 MW with reported June 2024 operating date.
+
+An expanded probe of February–May 2025 was submitted as commit `6b2fe94` to narrow the first observed month; its CI evidence must be reviewed before claiming a narrower interval.
+
+**Research implication:** 2024 annual WGNS OP/33.6 MW is inconsistent with every 2024 monthly archived record, but consistent in status/capacity with the *later* June and December 2025 monthly WGNS records. The data do not yet establish whether the discrepancy reflects reporting revisions, repower reassignment, or another mechanism.
