@@ -60,3 +60,22 @@ The official EIA-860M archived workbooks were independently downloaded and parse
 An expanded probe of February–May 2025 was submitted as commit `6b2fe94` to narrow the first observed month; its CI evidence must be reviewed before claiming a narrower interval.
 
 **Research implication:** 2024 annual WGNS OP/33.6 MW is inconsistent with every 2024 monthly archived record, but consistent in status/capacity with the *later* June and December 2025 monthly WGNS records. The data do not yet establish whether the discrepancy reflects reporting revisions, repower reassignment, or another mechanism.
+
+
+## Transition localized to May 2025 (verified)
+
+The expanded monthly EIA-860M probe **passed** in [CI run 44762285158](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44762285158), `mesa-2025-monthly-identity-probe` job. It found one WGNS record in each of the seven sampled 2025 months, with no exact MWD1 record in those sampled files.
+
+| Snapshot | WGNS sheet | Nameplate MW | Official workbook SHA-256 |
+|---|---|---:|---|
+| January 2025 | Retired | 27 | `a4648d046ef136582a4aaa957086795329f62c38db7c8e55a548374eb4dcdf0f` |
+| February 2025 | Retired | 27 | `7b2582427f34dd9d49aaa93ea8a050ae28b9410f7d170d3e83e880c348e7599c` |
+| March 2025 | Retired | 27 | `a43ee0f6351d582e4c32cd9e7abde352483be9c23b4ac9ca9bc9d82762b42f23` |
+| April 2025 | Retired | 27 | `10ef4605c4883bca00ae5e499fff01691c58c1fbd993ba0b52634de4337f5a9b` |
+| **May 2025** | **Operating** | **33.6** | `2ddd8d4f3025a5bf7dbd38a6e589da6d3e661310d2b5971051c17b598caa6adf` |
+| June 2025 | Operating | 33.6 | `f4e91810d2cfe8c94c94b6d94bfd524f1a00d7881e870dd1f0d4a833a8e0dbfe` |
+| December 2025 | Operating | 33.6 | `1264f1c37cf51ef41319067c4c0915f951535851df93c97d02e2e823e337ea2b` |
+
+**First observed monthly reporting transition: May 2025**, bounded by April (Retired/27 MW) and May (Operating/33.6 MW). This is a change in published monthly classification and nameplate, **not proof of physical restart in May**. Annual 2024 already reports WGNS OP/33.6 MW, demonstrating cross-vintage disagreement rather than a consistent chronological event sequence.
+
+**No MWD1 exact ID** was found in these seven archived monthly workbooks, whereas the 2025 annual workbook reports MWD1 OP/30 MW with operating date June 2024. An unobserved ID is not evidence of physical absence or an automatic WGNS↔MWD1 crosswalk. Empirical dispatch approval remains false.
