@@ -9,6 +9,18 @@
 - Official EIA-860M December 2023 and **every January–December 2024 monthly archive snapshot**: Retired worksheet, 27 MW, operating date November 1984, retirement December 2020.
 - Source and integrity receipts: `docs/WGNS_CROSS_VINTAGE_DISCREPANCY.md`; CI [44456551626](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44456551626).
 
+## Official annual generator-row identity fields (verified in CI)
+
+The annual EIA-860 generator workbook reports the following for plant **50535**, generator **WGNS**, in **both** 2023 and 2024:
+
+- **Plant Name:** `Mesa Wind Power LLC`
+- **Utility Name:** `Brookfield Renewable Trading and Marketing LP`
+- **Technology:** `Onshore Wind Turbine`
+- **Energy Source 1:** `WND`
+- **Operating Month/Year:** `11/1984`
+
+The utility-name field is **not** independently verified as the physical operator, owner, or entity responsible for reporting. This is an official source-field transcription, not a physical generator identity crosswalk. CI provenance: [run 44611496067](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44611496067), `official-eia860-archive-inventory` job, `OFFICIAL_WGNS_IDENTITY_FIELDS` receipts. The 2023/2024 status and capacity contradiction remains unresolved.
+
 ## Competing explanations — not yet established
 
 | Hypothesis | Distinguishing evidence | Interpretation if found |
@@ -35,5 +47,5 @@ Record the exact document title, publisher, source URL, publication/revision dat
 
 1. Obtain EIA-860 annual 2024 release metadata and generator status definitions from official EIA documentation.
 2. Check whether an archived prior 2024 annual workbook exists and compare WGNS rows byte-for-byte with the currently downloaded annual release.
-3. Locate the 50535 plant name/operator from the official annual workbook before searching for regulator/operator filings. Avoid inferring plant identity from the ID alone.
+3. Using the official **Mesa Wind Power LLC** plant name and **Brookfield Renewable Trading and Marketing LP** utility field, seek independent operator/owner records and dated generator capacity changes. Do not conflate the EIA utility field with ownership or operational control.
 4. If necessary, send EIA a focused inquiry quoting the exact two source rows and asking about vintage/revisions; do not assert a correction before a reply.
