@@ -9,7 +9,7 @@ from openpyxl import load_workbook
 
 from audit_official_eia860_generator_keys import find_columns, normalized_header
 
-MONTHS = ("january", "june", "december")
+MONTHS = ("january", "february", "march", "april", "may", "june", "december")
 GENERATOR_IDS = {"WGNS", "MWD1"}
 FIELDS = ("status", "nameplate", "operatingyear", "operatingmonth", "retirementyear", "retirementmonth")
 
