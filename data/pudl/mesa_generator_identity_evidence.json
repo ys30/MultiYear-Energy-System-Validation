@@ -1,0 +1,10 @@
+{
+  "plant_id_eia": 50535,
+  "historical_generator_id": "WGNS",
+  "target_generator_id": "MWD1",
+  "identity_evidence_type": "monthly_status_transition",
+  "source_url": "https://www.eia.gov/electricity/data/eia860m/",
+  "source_document_sha256": null,
+  "independent_review_status": "pending",
+  "notes": "Official monthly status transition is not a primary generator-level lineage record. Do not approve crosswalk or dispatch."
+}
