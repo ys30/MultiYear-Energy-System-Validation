@@ -1,6 +1,8 @@
 """Fail-closed evidence gate: Mesa Wind WGNS/MWD1 must not be auto-crosswalked."""
 import argparse
 import json
+import re
+from urllib.parse import urlparse
 from pathlib import Path
 
 PLANT = 50535
@@ -23,9 +25,13 @@ def evaluate(evidence):
     if evidence.get("identity_evidence_type") != "primary_generator_lineage":
         return {"identity_crosswalk_verified": False, "empirical_dispatch_approved": False,
                 "reason": "No primary generator-level lineage evidence"}
-    if not evidence.get("source_url") or not evidence.get("source_document_sha256"):
+    url = evidence.get("source_url")
+    digest = evidence.get("source_document_sha256")
+    if (not isinstance(url, str) or urlparse(url).scheme != "https"
+            or not urlparse(url).netloc or not isinstance(digest, str)
+            or re.fullmatch(r"[0-9a-fA-F]{64}", digest) is None):
         return {"identity_crosswalk_verified": False, "empirical_dispatch_approved": False,
-                "reason": "Missing source URL or immutable source digest"}
+                "reason": "Missing or invalid HTTPS source URL / SHA-256 digest"}
     if evidence.get("independent_review_status") != "approved":
         return {"identity_crosswalk_verified": False, "empirical_dispatch_approved": False,
                 "reason": "Generator lineage has not been independently reviewed"}
