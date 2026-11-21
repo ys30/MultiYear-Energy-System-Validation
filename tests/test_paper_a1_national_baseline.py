@@ -49,6 +49,20 @@ class BaselineTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "three expected years"):
             analyze(FakeConnection(self.counts[:2], self.pairs))
 
+    def test_missing_overlap_pair_fails(self):
+        with self.assertRaisesRegex(ValueError, "Missing adjacent-year"):
+            analyze(FakeConnection(self.counts, self.pairs[:1]))
+
+    def test_inconsistent_denominator_fails(self):
+        bad_pairs = [(2023, 2024, 99, 110, 90), self.pairs[1]]
+        with self.assertRaisesRegex(ValueError, "denominator"):
+            analyze(FakeConnection(self.counts, bad_pairs))
+
+    def test_impossible_overlap_fails(self):
+        bad_pairs = [(2023, 2024, 100, 110, 101), self.pairs[1]]
+        with self.assertRaisesRegex(ValueError, "Impossible"):
+            analyze(FakeConnection(self.counts, bad_pairs))
+
     def test_null_keys_fail(self):
         counts = [(2023, 100, 20, 1), *self.counts[1:]]
         with self.assertRaisesRegex(ValueError, "Missing exact generator keys"):
