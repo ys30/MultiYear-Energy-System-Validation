@@ -20,6 +20,7 @@ on:
       - "tests/test_verify_official_eia860_target_metadata.py"
       - "tests/test_report_official_eia860_historical_transitions.py"
       - "tests/test_historical_identity_review.py"
+      - "tests/test_inspect_eia860m_mesa_2025.py"
       - "data/pudl/project_a_historical_identity_review.csv"
       - ".github/workflows/official-eia860-archive-inventory.yml"
       - ".github/workflows/pudl-pinned-source-preflight.yml"
@@ -42,6 +43,7 @@ on:
       - "tests/test_verify_official_eia860_target_metadata.py"
       - "tests/test_report_official_eia860_historical_transitions.py"
       - "tests/test_historical_identity_review.py"
+      - "tests/test_inspect_eia860m_mesa_2025.py"
       - "data/pudl/project_a_historical_identity_review.csv"
       - ".github/workflows/official-eia860-archive-inventory.yml"
       - ".github/workflows/pudl-pinned-source-preflight.yml"
@@ -343,10 +345,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install pytest
-        run: python -m pip install pytest
+      - name: Install pytest and workbook parser
+        run: python -m pip install pytest openpyxl
       - name: Test fail-closed coverage semantics
-        run: python -m pytest -q tests/test_audit_pudl_annual_coverage.py tests/test_build_pudl_annual_eia860_evidence_matrix.py tests/test_run_pudl_annual_evidence_pipeline.py tests/test_verify_official_eia860_target_metadata.py tests/test_report_official_eia860_historical_transitions.py tests/test_historical_identity_review.py
+        run: python -m pytest -q tests/test_audit_pudl_annual_coverage.py tests/test_build_pudl_annual_eia860_evidence_matrix.py tests/test_run_pudl_annual_evidence_pipeline.py tests/test_verify_official_eia860_target_metadata.py tests/test_report_official_eia860_historical_transitions.py tests/test_historical_identity_review.py tests/test_inspect_eia860m_mesa_2025.py
 
 # The live preflight queries the fixed PUDL Parquet release and uploads only
 # descriptive 29-target/87-year coverage evidence, not raw source data.
