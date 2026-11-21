@@ -35,6 +35,18 @@ class MesaIdentityGateTests(unittest.TestCase):
         self.assertTrue(result["identity_crosswalk_verified"])
         self.assertFalse(result["empirical_dispatch_approved"])
 
+    def test_invalid_sha256_cannot_approve(self):
+        self.evidence.update(identity_evidence_type="primary_generator_lineage",
+                             independent_review_status="approved",
+                             source_document_sha256="not-a-real-sha256")
+        self.assertFalse(evaluate(self.evidence)["identity_crosswalk_verified"])
+
+    def test_insecure_source_cannot_approve(self):
+        self.evidence.update(identity_evidence_type="primary_generator_lineage",
+                             independent_review_status="approved",
+                             source_url="http://example.com/lineage")
+        self.assertFalse(evaluate(self.evidence)["identity_crosswalk_verified"])
+
     def test_wrong_plant_fails(self):
         self.evidence["plant_id_eia"] = 50536
         with self.assertRaisesRegex(ValueError, "plant ID"):
