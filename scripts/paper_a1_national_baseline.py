@@ -15,14 +15,14 @@ YEARS = (2023, 2024, 2025)
 
 def analyze(connection):
     """Calculate census denominators and adjacent-year exact-ID overlaps."""
-    connection.execute("""
+    connection.execute(f"""
         CREATE OR REPLACE TEMP VIEW a1_generators AS
         SELECT CAST(year(report_date) AS INTEGER) AS report_year,
                CAST(plant_id_eia AS VARCHAR) AS plant_id_eia,
                CAST(generator_id AS VARCHAR) AS generator_id
-        FROM read_parquet(?)
+        FROM read_parquet('{URL}')
         WHERE year(report_date) BETWEEN 2023 AND 2025
-    """, [URL])
+    """)
     duplicate_rows = connection.execute("""
         SELECT report_year, plant_id_eia, generator_id, count(*) AS n
         FROM a1_generators
