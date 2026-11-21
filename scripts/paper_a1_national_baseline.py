@@ -50,6 +50,17 @@ def analyze(connection):
              AND a.generator_id=b.generator_id AND b.report_year=a.report_year+1
         GROUP BY 1,2 ORDER BY 1
     """).fetchall()
+    if len(pairs) != len(YEARS) - 1:
+        raise ValueError("Missing adjacent-year overlap pair")
+    expected_pairs = list(zip(YEARS[:-1], YEARS[1:]))
+    if [(a, b) for a, b, *_ in pairs] != expected_pairs:
+        raise ValueError("Unexpected adjacent-year pair sequence")
+    counts_by_year = {y: n for y, n, _, _ in counts}
+    for a, b, na, nb, n in pairs:
+        if na != counts_by_year[a] or nb != counts_by_year[b]:
+            raise ValueError("Pair denominator does not match national census")
+        if n < 0 or n > min(na, nb):
+            raise ValueError("Impossible exact-key overlap count")
     # Missing exact keys may reflect ID changes, data coverage or commissioning:
     # they are NOT automatically data errors or physically different generators.
     return {
