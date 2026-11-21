@@ -30,7 +30,11 @@ class MesaIdentityGateTests(unittest.TestCase):
 
     def test_reviewed_lineage_still_does_not_approve_dispatch(self):
         self.evidence.update(identity_evidence_type="primary_generator_lineage",
-                             independent_review_status="approved")
+                             independent_review_status="approved",
+                             source_record_locator="Table 2, row 5",
+                             lineage_claim={"from_generator_id": "WGNS",
+                                            "to_generator_id": "MWD1",
+                                            "relationship": "repowered_successor"})
         result = evaluate(self.evidence)
         self.assertTrue(result["identity_crosswalk_verified"])
         self.assertFalse(result["empirical_dispatch_approved"])
@@ -45,6 +49,28 @@ class MesaIdentityGateTests(unittest.TestCase):
         self.evidence.update(identity_evidence_type="primary_generator_lineage",
                              independent_review_status="approved",
                              source_url="http://example.com/lineage")
+        self.assertFalse(evaluate(self.evidence)["identity_crosswalk_verified"])
+
+    def test_review_flag_without_lineage_claim_fails(self):
+        self.evidence.update(identity_evidence_type="primary_generator_lineage",
+                             independent_review_status="approved")
+        self.assertFalse(evaluate(self.evidence)["identity_crosswalk_verified"])
+
+    def test_lineage_without_record_locator_fails(self):
+        self.evidence.update(identity_evidence_type="primary_generator_lineage",
+                             independent_review_status="approved",
+                             lineage_claim={"from_generator_id": "WGNS",
+                                            "to_generator_id": "MWD1",
+                                            "relationship": "repowered_successor"})
+        self.assertFalse(evaluate(self.evidence)["identity_crosswalk_verified"])
+
+    def test_wrong_lineage_target_fails(self):
+        self.evidence.update(identity_evidence_type="primary_generator_lineage",
+                             independent_review_status="approved",
+                             source_record_locator="Table 2, row 5",
+                             lineage_claim={"from_generator_id": "WGNS",
+                                            "to_generator_id": "OTHER",
+                                            "relationship": "repowered_successor"})
         self.assertFalse(evaluate(self.evidence)["identity_crosswalk_verified"])
 
     def test_wrong_plant_fails(self):
