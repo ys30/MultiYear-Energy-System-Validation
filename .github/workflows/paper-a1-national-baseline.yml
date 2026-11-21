@@ -1,0 +1,39 @@
+name: Paper A1 national exact-key baseline
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/paper_a1_national_baseline.py"
+      - "tests/test_paper_a1_national_baseline.py"
+      - ".github/workflows/paper-a1-national-baseline.yml"
+  pull_request:
+    paths:
+      - "scripts/paper_a1_national_baseline.py"
+      - "tests/test_paper_a1_national_baseline.py"
+      - ".github/workflows/paper-a1-national-baseline.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  national-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: python -m pip install 'duckdb>=1.4,<3' pytest
+      - name: Offline regression tests
+        run: python -m pytest -q tests/test_paper_a1_national_baseline.py
+      - name: Compute pinned national census and exact-key overlaps
+        run: python scripts/paper_a1_national_baseline.py --output-dir results/paper_a1
+      - name: Archive computed results
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-a1-national-exact-key-baseline
+          path: results/paper_a1/
+          retention-days: 30
