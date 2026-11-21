@@ -79,3 +79,20 @@ The expanded monthly EIA-860M probe **passed** in [CI run 44762285158](https://g
 **First observed monthly reporting transition: May 2025**, bounded by April (Retired/27 MW) and May (Operating/33.6 MW). This is a change in published monthly classification and nameplate, **not proof of physical restart in May**. Annual 2024 already reports WGNS OP/33.6 MW, demonstrating cross-vintage disagreement rather than a consistent chronological event sequence.
 
 **No MWD1 exact ID** was found in these seven archived monthly workbooks, whereas the 2025 annual workbook reports MWD1 OP/30 MW with operating date June 2024. An unobserved ID is not evidence of physical absence or an automatic WGNS↔MWD1 crosswalk. Empirical dispatch approval remains false.
+
+
+## Complete 2025 monthly series (verified 12/12)
+
+The strict (non-`continue-on-error`) monthly CI job **passed**: [run 44787027792](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44787027792), `mesa-2025-monthly-identity-probe`. The job downloaded and parsed **12 of 12** official 2025 monthly EIA-860M workbooks, with no exact MWD1 ID in any of them. WGNS is Retired/27 MW in January–April and Operating/33.6 MW in May–December, without a later reversal.
+
+Newly verified months and raw-workbook SHA-256 values:
+
+| Snapshot | WGNS classification | Nameplate MW | Workbook SHA-256 |
+|---|---|---:|---|
+| July 2025 | Operating | 33.6 | `6c004fd52982e94a9c0180af7076dd5633fab3fc90fa43ee580065c9a2a14056` |
+| August 2025 | Operating | 33.6 | `eb15e1fdbc77d01cc1969f7a7f5d98a83d74e536e82d86437073ea2b58d85df2` |
+| September 2025 | Operating | 33.6 | `069de3bee5de7c560297a814a3e90beeb6b5e10642c5c83bf4a49c4ef74da08b` |
+| October 2025 | Operating | 33.6 | `cf560a5e9f3b4438bf5a1e485e07f6eee50fe16b52e224480c61e7fcb060a308` |
+| November 2025 | Operating | 33.6 | `5dc458f278b68504830b048b8728539f104057de100f8eae6ed301d3d603ea12` |
+
+The preceding seven hashes (January–June and December) are listed above. **May 2025 is the first monthly publication snapshot with the Operating/33.6 MW classification, not an independently confirmed physical commissioning month.** This monthly series does not resolve the annual 2024 discrepancy or prove the physical identity of WGNS and MWD1. Empirical dispatch remains unapproved.
