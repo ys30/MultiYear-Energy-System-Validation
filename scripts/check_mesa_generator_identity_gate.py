@@ -32,6 +32,20 @@ def evaluate(evidence):
             or re.fullmatch(r"[0-9a-fA-F]{64}", digest) is None):
         return {"identity_crosswalk_verified": False, "empirical_dispatch_approved": False,
                 "reason": "Missing or invalid HTTPS source URL / SHA-256 digest"}
+    # A source digest and reviewer flag alone do not establish a lineage claim.
+    # Require the primary record to explicitly name both generator IDs and
+    # document the type of physical relationship being asserted.
+    claim = evidence.get("lineage_claim")
+    if (not isinstance(claim, dict)
+            or claim.get("from_generator_id") != HISTORICAL
+            or claim.get("to_generator_id") != TARGET
+            or claim.get("relationship") not in
+            {"same_physical_generator", "repowered_successor"}):
+        return {"identity_crosswalk_verified": False, "empirical_dispatch_approved": False,
+                "reason": "Missing explicit generator-level lineage claim"}
+    if not evidence.get("source_record_locator"):
+        return {"identity_crosswalk_verified": False, "empirical_dispatch_approved": False,
+                "reason": "Missing page, table, or record locator for lineage claim"}
     if evidence.get("independent_review_status") != "approved":
         return {"identity_crosswalk_verified": False, "empirical_dispatch_approved": False,
                 "reason": "Generator lineage has not been independently reviewed"}
