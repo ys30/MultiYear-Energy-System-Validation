@@ -8,8 +8,7 @@ Status: evidence audit; **no physical generator-ID crosswalk accepted**. This ta
 | Official EIA-860M monthly Jan–Dec 2024 (12 archived files) | Retired sheet; 27 MW in all 12 | Not independently established | All 2024 monthly archives retain the retired classification |
 | Official EIA-860 annual 2024 | OP; 33.6 MW; operating date Nov 1984 | No exact 2024 target key in the pinned annual PUDL comparison | Cross-product/vintage discrepancy with monthly 2024 |
 | Official EIA-860M monthly Jan–Apr 2025 (4 archived files) | Retired sheet; 27 MW | No exact ID in sampled monthly files | Last observed retired snapshot: April 2025 |
-| Official EIA-860M monthly May–Jun 2025 | Operating sheet; 33.6 MW | No exact ID in sampled monthly files | First observed operating snapshot: May 2025 |
-| Official EIA-860M monthly Dec 2025 | Operating sheet; 33.6 MW | No exact ID in sampled monthly file | Reported operating status persists in December |
+| Official EIA-860M monthly May–Dec 2025 (8 archived files) | Operating sheet; 33.6 MW in every file | No exact ID in all eight files | First observed operating snapshot: May 2025; no later reversal |
 | Official EIA-860 annual 2025 | Annual WGNS classification not established here | OP; 30 MW; reported operating June 2024 | Annual MWD1 record; **not** evidence of WGNS-to-MWD1 identity |
 | Pinned PUDL annual parquet v2026.11.0 | Historical WGNS observed in 2023/24 | MWD1 observed as a 2025 target | PUDL key differences across years; not an asset lineage |
 
@@ -18,7 +17,7 @@ Sources and reproducibility:
 - 2024 monthly and annual discrepancy: [cross-vintage audit](WGNS_CROSS_VINTAGE_DISCREPANCY.md).
 - Official annual source crosscheck: [annual audit plan](OFFICIAL_EIA860_ANNUAL_SOURCE_CROSSCHECK_PLAN.md).
 - Independent repowering project evidence: [independent evidence audit](MESA_WIND_REPOWER_INDEPENDENT_EVIDENCE.md).
-- Full 2025 12-month extension has been submitted but **is not yet validated**; July–November must not be marked as observed until CI succeeds.
+- Full 2025 twelve-month extension **passed** in [CI run 44787027792](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44787027792), with 12/12 source workbooks downloaded and parsed; July–November each report WGNS Operating/33.6 MW and no MWD1 exact ID.
 
 ## Competing explanations, not findings
 
