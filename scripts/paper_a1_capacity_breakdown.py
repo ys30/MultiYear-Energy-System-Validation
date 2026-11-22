@@ -22,12 +22,11 @@ def calculate(con):
             WHERE year(report_date) BETWEEN 2023 AND 2025
         ), differences AS (
             SELECT a.yr AS year_a, b.yr AS year_b,
-                   CASE WHEN a.yr=b.yr-1 THEN 'only_in_earlier_year'
-                        ELSE 'only_in_later_year' END AS side,
+                   'only_in_earlier_year' AS side,
                    CASE WHEN EXISTS (
                         SELECT 1 FROM base other
-                        WHERE other.yr=CASE WHEN a.yr=b.yr-1 THEN b.yr ELSE a.yr END
-                          AND other.plant=coalesce(a.plant,b.plant))
+                        WHERE other.yr=a.yr+1
+                          AND other.plant=a.plant)
                         THEN 'plant_present_other_year'
                         ELSE 'plant_absent_other_year' END AS plant_context,
                    coalesce(a.technology,b.technology,'Unknown') AS technology,
