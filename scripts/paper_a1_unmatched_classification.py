@@ -8,7 +8,9 @@ import csv
 import json
 from pathlib import Path
 
-from scripts.paper_a1_national_baseline import URL, YEARS
+RELEASE = "v2026.11.0"
+URL = f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/{RELEASE}/out_eia__yearly_generators.parquet"
+YEARS = (2023, 2024, 2025)
 
 
 def classify(con):
