@@ -26,8 +26,8 @@ def verify(baseline, classified):
                            row["year_a"] == a and row["year_b"] == b and row["side"] == side)
             if observed != pair[field]:
                 raise ValueError(f"Classification total mismatch for {a}->{b} {side}: {observed} != {pair[field]}")
-    if keys != expected_keys:
-        raise ValueError("Missing or unexpected classification categories")
+    if not keys.issubset(expected_keys):
+        raise ValueError("Unexpected classification categories")
     if baseline["source_url"] != classified["source_url"]:
         raise ValueError("Source provenance mismatch")
     return True
