@@ -21,7 +21,7 @@ def calculate(con):
             FROM read_parquet('{URL}')
             WHERE year(report_date) BETWEEN 2023 AND 2025
         ), differences AS (
-            SELECT a.yr AS year_a, b.yr AS year_b,
+            SELECT a.yr AS year_a, a.yr+1 AS year_b,
                    'only_in_earlier_year' AS side,
                    CASE WHEN EXISTS (
                         SELECT 1 FROM base other
