@@ -23,3 +23,13 @@ The reproducible stratified review queue contains 158 source-year keys (eight st
 ## Priority
 
 The next useful step is to inspect the PUDL published output catalog and entity-resolution documentation, then build a verified B1 extractor only if the actual schema supports it. In parallel, begin official EIA source collection for within-plant review cases.
+
+## 2026-11-23 official methodology review (substantive finding)
+
+PUDL's published [Entity Resolution methodology](https://docs.catalyst.coop/pudl/en/nightly/methodology/entity_resolution.html) explicitly identifies EIA generators by **(plant_id_eia, generator_id)**. It describes static `core_eia__entity_generators` and slowly changing dimension records for this same generator entity, and forensic value tables. This is **attribute canonicalization within the reported EIA entity key**, not documentation of a cross-ID physical generator linkage.
+
+The [PUDL Data Dictionary](https://docs.catalyst.coop/pudl/en/latest/data_dictionaries/pudl_db.html) warns that `unit_id_pudl` is dynamically assigned and may change as inputs/algorithms change. A unit may aggregate multiple generators. `plant_id_pudl` is a plant identifier, not a physical generator crosswalk. Neither is acceptable as an independently verified E2 physical-generator ground truth. The [EIA/EPA crosswalk transformation notes](https://docs.catalyst.coop/pudl/en/v2026.2.0/autoapi/pudl/etl/glue_assets/index.html) explicitly caution that relationships are not necessarily 1:1; that crosswalk is for EPA/EIA identifiers, not an automatic EIA-year generator renaming map.
+
+**Decision:** B1 is currently **unavailable as an independent cross-EIA-ID physical generator identity baseline**. Do not report B1 accuracy or treat PUDL entity resolution as a superior cross-ID method. Retain B0 exact EIA key and B2 independently sourced official lineage adjudication. If a documented version-pinned cross-ID mapping is found later, reconsider B1 through the preregistered gates above. This conclusion refers to the published methodology reviewed here, not a proof that no specialized mapping exists anywhere.
+
+The probe's 114-column schema count is confirmed by CI run 45233024270, but no claim is made that schema columns establish physical lineage.
