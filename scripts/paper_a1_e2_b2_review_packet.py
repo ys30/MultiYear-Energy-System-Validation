@@ -46,6 +46,12 @@ def main():
           "note":"Triage packet, not random subsample or evidence of physical generator identity. No claim of review completion."}
     (folder/"e2_b2_first_review_packet_manifest.json").write_text(json.dumps(info,indent=2)+"\n")
     print(json.dumps(info,indent=2))
+    print("B2 first review packet keys (identifiers only; not identity matches):")
+    for row in rows:
+        print(f"  #{row['packet_rank']} {row['year_a']}->{row['year_b']} "
+              f"{row['side']} plant={row['plant_id_eia']} "
+              f"generator={row['generator_id']} report_year={row['report_year']} "
+              f"reported_mw={row['capacity_mw']}")
 
 if __name__=="__main__":
     main()
