@@ -30,7 +30,7 @@ def audit(year,folder):
         bad=z.testzip()
         if bad is not None:
             raise ValueError(f"Corrupt member: {bad}")
-    return {"year":year,"url":url,"sha256":observed,"size_bytes":len(raw),
+    target.unlink()  # Do not upload raw source ZIPs as workflow artifacts.\n    return {"year":year,"url":url,"sha256":observed,"size_bytes":len(raw),
             "archive_verified":True,"members":members,
             "official_generator_rows_located":0,"physical_lineage_links_verified":0}
 
