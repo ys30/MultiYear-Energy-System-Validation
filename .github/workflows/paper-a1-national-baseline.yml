@@ -13,6 +13,7 @@ on:
       - "scripts/paper_a1_capacity_summary.py"
       - "scripts/paper_a1_e2_review_queue.py"
       - "scripts/check_paper_a1_e2_queue.py"
+      - "scripts/paper_a1_e2_evidence_template.py"
       - "tests/test_check_paper_a1_classification_totals.py"
       - "tests/test_paper_a1_national_baseline.py"
       - ".github/workflows/paper-a1-national-baseline.yml"
@@ -56,6 +57,8 @@ jobs:
         run: python scripts/paper_a1_e2_review_queue.py --output-dir results/paper_a1 --per-stratum 20
       - name: Verify E2 sampling design and empty adjudications
         run: python scripts/check_paper_a1_e2_queue.py --output-dir results/paper_a1
+      - name: Generate E2 official source evidence collection sheet
+        run: python scripts/paper_a1_e2_evidence_template.py --output-dir results/paper_a1
       - name: Archive computed results
         uses: actions/upload-artifact@v4
         with:
