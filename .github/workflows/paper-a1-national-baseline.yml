@@ -23,6 +23,7 @@ on:
       - "scripts/paper_a1_e2_b2_candidate_summary.py"
       - "scripts/paper_a1_e2_b2_plant_review_index.py"
       - "scripts/paper_a1_e2_official_archive_audit.py"
+      - "scripts/paper_a1_e2_official_rows.py"
       - "tests/test_check_paper_a1_classification_totals.py"
       - "tests/test_paper_a1_national_baseline.py"
       - ".github/workflows/paper-a1-national-baseline.yml"
@@ -86,6 +87,10 @@ jobs:
         run: python scripts/paper_a1_e2_b2_plant_review_index.py --output-dir results/paper_a1
       - name: Audit official EIA-860 source archive SHA256 and members
         run: python scripts/paper_a1_e2_official_archive_audit.py --output-dir results/paper_a1
+      - name: Extract official EIA generator workbook evidence
+        run: |
+          python -m pip install openpyxl
+          python scripts/paper_a1_e2_official_rows.py --output-dir results/paper_a1
       - name: Archive computed results
         uses: actions/upload-artifact@v4
         with:
