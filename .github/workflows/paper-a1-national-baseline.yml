@@ -25,6 +25,7 @@ on:
       - "scripts/paper_a1_e2_official_archive_audit.py"
       - "scripts/paper_a1_e2_official_rows.py"
       - "scripts/paper_a1_e2_official_compare.py"
+      - "scripts/paper_a1_unmatched_status.py"
       - "tests/test_check_paper_a1_classification_totals.py"
       - "tests/test_paper_a1_national_baseline.py"
       - ".github/workflows/paper-a1-national-baseline.yml"
@@ -94,6 +95,8 @@ jobs:
           python scripts/paper_a1_e2_official_rows.py --output-dir results/paper_a1
       - name: Compare exact source keys across official EIA vintages
         run: python scripts/paper_a1_e2_official_compare.py --output-dir results/paper_a1
+      - name: Compute national unmatched capacity by operational status
+        run: python scripts/paper_a1_unmatched_status.py --output-dir results/paper_a1
       - name: Archive computed results
         uses: actions/upload-artifact@v4
         with:
