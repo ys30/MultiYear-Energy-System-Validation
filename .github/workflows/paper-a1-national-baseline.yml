@@ -36,6 +36,7 @@ on:
       - "scripts/paper_a1_e4_pilot_inputs.py"
       - "scripts/paper_a1_e4_synthetic_dispatch.py"
       - "scripts/paper_a1_e4_synthetic_storage.py"
+      - "scripts/paper_a1_e4_ba_stock.py"
       - "tests/test_check_paper_a1_classification_totals.py"
       - "tests/test_paper_a1_national_baseline.py"
       - ".github/workflows/paper-a1-national-baseline.yml"
@@ -129,6 +130,8 @@ jobs:
           python scripts/paper_a1_e4_synthetic_dispatch.py --output-dir results/paper_a1
       - name: Execute storage sensitivity cases
         run: python scripts/paper_a1_e4_synthetic_storage.py --output-dir results/paper_a1
+      - name: Probe and reconcile provisional BA capacity inputs
+        run: python scripts/paper_a1_e4_ba_stock.py --output-dir results/paper_a1
       - name: Archive computed results
         uses: actions/upload-artifact@v4
         with:
