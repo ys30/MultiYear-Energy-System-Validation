@@ -233,14 +233,18 @@ def fetch_eia_demand(year: int, bas=DEFAULT_BAS, api_key=None, length=5000):
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--output-dir",type=Path,required=True)
-    d=p.parse_args().output_dir
+    p.add_argument("--years",nargs="+",type=int,default=[2024,2025])
+    p.add_argument("--bas",nargs="+",default=list(DEFAULT_BAS))
+    a=p.parse_args()
+    d=a.output_dir
+    d.mkdir(parents=True,exist_ok=True)
     report=[]
     if not os.getenv("EIA_API_KEY"):
         (d/"e4_demand_admission.json").write_text(json.dumps({"status":"blocked","reason":"EIA_API_KEY not configured"}))
         print("EIA demand blocked: key not configured")
         return
-    for year in (2024,2025):
-        for ba in DEFAULT_BAS:
+    for year in a.years:
+        for ba in a.bas:
             try:
                 x=fetch_eia_demand(year,(ba,))
                 x.to_csv(d/f"e4_demand_{ba}_{year}.csv",index=False)
