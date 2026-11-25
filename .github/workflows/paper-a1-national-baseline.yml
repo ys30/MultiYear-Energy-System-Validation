@@ -37,6 +37,7 @@ on:
       - "scripts/paper_a1_e4_synthetic_dispatch.py"
       - "scripts/paper_a1_e4_synthetic_storage.py"
       - "scripts/paper_a1_e4_ba_stock.py"
+      - "scripts/paper_a1_e4_ba_demand.py"
       - "tests/test_check_paper_a1_classification_totals.py"
       - "tests/test_paper_a1_national_baseline.py"
       - ".github/workflows/paper-a1-national-baseline.yml"
@@ -52,7 +53,7 @@ permissions:
 jobs:
   national-baseline:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -132,6 +133,10 @@ jobs:
         run: python scripts/paper_a1_e4_synthetic_storage.py --output-dir results/paper_a1
       - name: Probe and reconcile provisional BA capacity inputs
         run: python scripts/paper_a1_e4_ba_stock.py --output-dir results/paper_a1
+      - name: Acquire and validate observed BA hourly demand
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: python scripts/paper_a1_e4_ba_demand.py --output-dir results/paper_a1
       - name: Archive computed results
         uses: actions/upload-artifact@v4
         with:
