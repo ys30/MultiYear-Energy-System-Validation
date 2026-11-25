@@ -33,6 +33,7 @@ on:
       - "scripts/paper_a1_e3_stock_state.py"
       - "scripts/paper_a1_e3_stock_state_technology.py"
       - "scripts/paper_a1_e4_capacity_scenarios.py"
+      - "scripts/paper_a1_e4_pilot_inputs.py"
       - "tests/test_check_paper_a1_classification_totals.py"
       - "tests/test_paper_a1_national_baseline.py"
       - ".github/workflows/paper-a1-national-baseline.yml"
@@ -118,6 +119,8 @@ jobs:
         run: python scripts/paper_a1_e3_stock_state_technology.py --output-dir results/paper_a1
       - name: Build E4 aggregate capacity counterfactuals
         run: python scripts/paper_a1_e4_capacity_scenarios.py --output-dir results/paper_a1
+      - name: Export seven-state pilot inputs
+        run: python scripts/paper_a1_e4_pilot_inputs.py --output-dir results/paper_a1
       - name: Archive computed results
         uses: actions/upload-artifact@v4
         with:
