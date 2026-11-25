@@ -1,0 +1,29 @@
+name: Paper A1 official BA mapping audit
+on:
+  push:
+    paths:
+      - ".github/workflows/paper-a1-official-ba-audit.yml"
+      - "scripts/paper_a1_e4_official_ba_audit.py"
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-official-ba-audit.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install duckdb openpyxl
+      - run: mkdir -p results/ba-audit
+      - run: python scripts/paper_a1_e4_official_ba_audit.py --output-dir results/ba-audit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: official-ba-audit
+          path: results/ba-audit/
