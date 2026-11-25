@@ -1,0 +1,37 @@
+name: Paper A1 observed generation and interchange
+on:
+  push:
+    paths:
+      - ".github/workflows/paper-a1-observed-generation.yml"
+      - "scripts/paper_a1_e4_observed_generation.py"
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-observed-generation.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        year: [2024, 2025]
+        ba: [CISO, ERCO, AZPS, PNM, PSCO, IPCO, PACW]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy
+      - name: Retrieve observed series
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: python scripts/paper_a1_e4_observed_generation.py --output-dir results/observed --year ${{ matrix.year }} --ba ${{ matrix.ba }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: observed-${{ matrix.ba }}-${{ matrix.year }}
+          path: results/observed/
