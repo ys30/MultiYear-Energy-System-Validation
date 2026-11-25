@@ -1,0 +1,32 @@
+name: Paper A1 targeted demand retry
+on:
+  push:
+    paths:
+      - ".github/workflows/paper-a1-demand-retry.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-demand-retry.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy
+      - name: Retry PSCO 2025
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: |
+          python scripts/paper_a1_e4_ba_demand.py --output-dir results/retry --years 2025 --bas PSCO
+          test -f results/retry/e4_demand_PSCO_2025.csv
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: paper-a1-psco-2025-retry
+          path: results/retry/
