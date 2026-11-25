@@ -14,13 +14,13 @@ def main():
     result=[]
     for y in (2023,2024):
         rows=con.execute("""WITH a AS (SELECT * FROM base WHERE yr=?),b AS (SELECT * FROM base WHERE yr=?),
-        paired AS (SELECT a.gen ag,b.gen bg,a.status ast,b.status bst,a.tech at,b.tech bt,a.mw am,b.mw bm
+        paired AS (SELECT a.gen ag,b.gen bg,a.status ast,b.status bst,a.tech AS earlier_tech,b.tech AS later_tech,a.mw am,b.mw bm
         FROM a FULL OUTER JOIN b ON a.plant=b.plant AND a.gen=b.gen),
         classified AS (SELECT *,CASE WHEN ag IS NULL THEN 'later_only' WHEN bg IS NULL THEN 'earlier_only'
         WHEN ast='OP' AND bst='OP' THEN 'matched_OP_both' WHEN ast='OP' THEN 'matched_exit_OP'
         WHEN bst='OP' THEN 'matched_enter_OP' ELSE 'neither_OP' END category FROM paired),
-        contributions AS (SELECT category,at tech,am earlier_mw,0.0 later_mw FROM classified WHERE ast='OP'
-        UNION ALL SELECT category,bt,0.0,bm FROM classified WHERE bst='OP')
+        contributions AS (SELECT category,earlier_tech AS tech,am earlier_mw,0.0 later_mw FROM classified WHERE ast='OP'
+        UNION ALL SELECT category,later_tech,0.0,bm FROM classified WHERE bst='OP')
         SELECT category,tech,sum(earlier_mw),sum(later_mw) FROM contributions GROUP BY ALL ORDER BY 1,2""",[y,y+1]).fetchall()
         for cat,tech,a,b in rows:
             result.append(dict(year_a=y,year_b=y+1,category=cat,technology=tech,earlier_mw=a,later_mw=b,delta_mw=b-a))
