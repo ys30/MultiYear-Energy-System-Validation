@@ -1,0 +1,30 @@
+name: Paper A1 representative wind curves
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_representative_curves.py"
+      - ".github/workflows/paper-a1-representative-curves.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install atlite==0.4.1 pandas pyyaml
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45900246129
+          name: wind-parameter-coverage
+          path: inputs/wind
+      - run: python scripts/paper_a1_e4_representative_curves.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: representative-wind-curves
+          path: results/representative/
