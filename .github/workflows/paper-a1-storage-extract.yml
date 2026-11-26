@@ -1,0 +1,25 @@
+name: Paper A1 storage rating extraction
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-storage-extract.yml"
+      - "scripts/paper_a1_e4_storage_extract.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas duckdb openpyxl
+      - run: python scripts/paper_a1_e4_storage_extract.py --output-dir results/storage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: storage-rating-audit
+          path: results/storage/
