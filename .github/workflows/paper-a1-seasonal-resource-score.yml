@@ -1,0 +1,53 @@
+name: Paper A1 independent seasonal resource scoring
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-seasonal-resource-score.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  seasonal:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        year: [2024, 2025]
+        month: [1, 4, 10]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy pandas
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45856946706
+          name: renewable-resource-weights
+          path: inputs/weights
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45866330446
+          name: seasonal-weather-${{ matrix.year }}-${{ matrix.month }}
+          path: inputs/weather
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45757723985
+          path: inputs/observed
+      - run: |
+          OBS=$(find inputs/observed -name reconciled.csv)
+          test -f "$OBS"
+          python scripts/paper_a1_e4_resource_cf.py --raw inputs/weather/raw_weather.csv --weights inputs/weights/resource_grid_weights.csv --year ${{ matrix.year }} --output-dir results/cf
+          python scripts/paper_a1_e4_cf_validate.py --cf results/cf/exploratory_cf.csv --weights inputs/weights/resource_grid_weights.csv --observed "$OBS" --year ${{ matrix.year }} --output-dir results/validation
+          python scripts/paper_a1_e4_wind_sensitivity.py --raw inputs/weather/raw_weather.csv --weights inputs/weights/resource_grid_weights.csv --year ${{ matrix.year }} --output-dir results/wind
+          python scripts/paper_a1_e4_wind_sensitivity_score.py --wind results/wind/wind_sensitivity.csv --weights inputs/weights/resource_grid_weights.csv --observed "$OBS" --year ${{ matrix.year }} --output-dir results/score
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: seasonal-score-${{ matrix.year }}-${{ matrix.month }}
+          path: results/
