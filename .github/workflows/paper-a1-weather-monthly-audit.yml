@@ -46,7 +46,13 @@ jobs:
           run-id: 45891450354
           pattern: monthly-weather-*
           path: inputs/weather/batch3
-      - run: python scripts/paper_a1_e4_monthly_weather_audit.py --root inputs/weather --weights inputs/weights/resource_grid_weights.csv --output results/monthly_audit.json
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45895515819
+          pattern: monthly-weather-*
+          path: inputs/weather/batch4
+      - run: python scripts/paper_a1_e4_monthly_weather_audit.py --root inputs/weather --weights inputs/weights/resource_grid_weights.csv --output results/monthly_audit.json --require-full
       - uses: actions/upload-artifact@v4
         with:
           name: monthly-weather-audit
