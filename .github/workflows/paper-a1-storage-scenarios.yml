@@ -1,0 +1,32 @@
+name: Paper A1 battery scenario accounting
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-storage-scenarios.yml"
+      - "scripts/paper_a1_e4_storage_scenarios.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  scenarios:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas duckdb
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45759622217
+          name: storage-rating-audit
+          path: inputs/storage
+      - run: python scripts/paper_a1_e4_storage_scenarios.py --audit inputs/storage/storage_exact_key_audit.csv --output-dir results/scenarios
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: battery-scenarios
+          path: results/scenarios/
