@@ -27,10 +27,10 @@ def main():
         f=pd.read_csv(path)
         f["time"]=pd.to_datetime(f.time,utc=True)
         cells=cells.rename(columns={"grid_lat":"latitude","grid_lon":"longitude"}).reset_index(drop=True)
-        cells["cell"]=cells.index
+        cells["audit_grid_id"]=cells.index
         f=f.merge(cells,on=["latitude","longitude"],how="left",validate="many_to_one")
-        if f.cell.isna().any() or f.duplicated(["time","cell"]).any():raise ValueError("invalid grid keys")
-        actual=pd.MultiIndex.from_frame(f[["time","cell"]])
+        if f.audit_grid_id.isna().any() or f.duplicated(["time","audit_grid_id"]).any():raise ValueError("invalid grid keys")
+        actual=pd.MultiIndex.from_frame(f[["time","audit_grid_id"]])
         if len(actual)!=len(expected) or len(expected.difference(actual)) or len(actual.difference(expected)):raise ValueError("calendar or grid coverage mismatch")
         if not np.isfinite(f[VARIABLES].to_numpy()).all() or (f[VARIABLES[3]] < -1).any():raise ValueError("invalid weather values")
         if m["rows"]!=len(f) or m["hours"]!=len(times) or m["cells"]!=len(cells):raise ValueError("manifest count mismatch")
