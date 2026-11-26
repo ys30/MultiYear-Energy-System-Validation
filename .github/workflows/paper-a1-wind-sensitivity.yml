@@ -1,0 +1,39 @@
+name: Paper A1 wind resource sensitivity
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-wind-sensitivity.yml"
+      - "scripts/paper_a1_e4_wind_sensitivity.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  sensitivity:
+    strategy:
+      matrix:
+        year: [2024, 2025]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy pandas
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45856946706
+          name: renewable-resource-weights
+          path: inputs/weights
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45859204968
+          name: weather-batch-${{ matrix.year }}
+          path: inputs/weather
+      - run: python scripts/paper_a1_e4_wind_sensitivity.py --raw inputs/weather/raw_weather.csv --weights inputs/weights/resource_grid_weights.csv --year ${{ matrix.year }} --output-dir results/wind
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wind-sensitivity-${{ matrix.year }}
+          path: results/wind/
