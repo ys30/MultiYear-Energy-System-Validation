@@ -4,6 +4,10 @@ on:
     paths:
       - ".github/workflows/paper-a1-storage-probe.yml"
       - "scripts/paper_a1_e4_storage_probe.py"
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-storage-probe.yml"
+      - "scripts/paper_a1_e4_storage_probe.py"
   workflow_dispatch:
 permissions:
   contents: read
