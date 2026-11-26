@@ -1,0 +1,36 @@
+name: Paper A1 monthly weather batch 1
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-weather-monthly-batch1.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  monthly:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        year: [2024, 2025]
+        month: [1, 3, 4]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy pandas xarray zarr gcsfs
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45856946706
+          name: renewable-resource-weights
+          path: inputs/weights
+      - run: python scripts/paper_a1_e4_weather_batch.py --weights inputs/weights/resource_grid_weights.csv --year ${{ matrix.year }} --month ${{ matrix.month }} --full-month --output-dir results/monthly
+      - uses: actions/upload-artifact@v4
+        with:
+          name: monthly-weather-${{ matrix.year }}-${{ matrix.month }}
+          path: results/monthly/
