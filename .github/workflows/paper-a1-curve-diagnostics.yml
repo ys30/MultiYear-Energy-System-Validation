@@ -1,0 +1,23 @@
+name: Paper A1 curve rejection diagnostics
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_curve_diagnostics.py"
+      - ".github/workflows/paper-a1-curve-diagnostics.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install atlite==0.4.1 pyyaml
+      - run: python scripts/paper_a1_e4_curve_diagnostics.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: curve-rejection-diagnostics
+          path: results/curve_diagnostics/
