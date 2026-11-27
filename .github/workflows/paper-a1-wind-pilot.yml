@@ -1,0 +1,48 @@
+name: Paper A1 W2 July pilot
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_wind_pilot.py"
+      - "scripts/paper_a1_e4_wind_curve_kernel.py"
+      - ".github/workflows/paper-a1-wind-pilot.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  pilot:
+    strategy:
+      fail-fast: false
+      matrix:
+        year: [2024, 2025]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy pandas
+      - run: python scripts/paper_a1_e4_wind_curve_kernel.py
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45927018386
+          name: representative-wind-curves
+          path: inputs/curves
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45856946706
+          name: resource-grid-weights
+          path: inputs/weights
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45859204968
+          name: weather-batch-${{ matrix.year }}
+          path: inputs/weather
+      - run: python scripts/paper_a1_e4_wind_pilot.py --year ${{ matrix.year }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w2-pilot-${{ matrix.year }}
+          path: results/wind_pilot/
