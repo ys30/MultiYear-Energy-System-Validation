@@ -8,19 +8,20 @@ def main():
     root=Path(atlite.__file__).parent/"resources"/"windturbine"
     catalog=[]
     for p in sorted(root.glob("*.yaml")):
+        if "offshore" in p.stem.lower():continue
         raw=yaml.safe_load(p.read_text())
         v=np.asarray(raw["V"],float); power=np.asarray(raw["POW"],float)
-        if len(v)!=len(power) or len(v)<2 or not np.isfinite(v).all() or not np.isfinite(power).all() or not (np.diff(v)>0).all() or (power<0).any() or power.max()<=0:continue
+        if len(v)!=len(power) or len(v)<2 or not np.isfinite(v).all() or not np.isfinite(power).all() or not (np.diff(v)>=0).all() or (power<0).any() or power.max()<=0:continue
         # atlite turbine YAML POW is MW; explicitly screen plausible ratings.
         rating=float(power.max())
         if not .05<=rating<=20:continue
-        catalog.append(dict(curve=p.stem,rating_mw=rating,hub_m=raw.get("HUB_HEIGHT"),sha256=hashlib.sha256(p.read_bytes()).hexdigest()))
+        catalog.append(dict(curve=p.stem,rating_mw=rating,hub_m=raw.get("HUB_HEIGHT"),sha256=hashlib.sha256(p.read_bytes()).hexdigest(),speed=v.tolist(),power_mw=power.tolist(),duplicate_nodes=int((np.diff(v)==0).sum())))
     if not catalog:raise ValueError("no screened curves")
     a=pd.read_csv("inputs/wind/exact_key_audit.csv",dtype={"gen":str})
     rows=[]
     for r in a.itertuples(index=False):
         unit=r.mw_per_turbine
-        valid=bool(r.matched and r.mw_agree and r.count_positive and np.isfinite(unit) and .05<=unit<=20 and 20<=r.hub_m<=200)
+        valid=bool(all(pd.notna(x) and str(x).lower()=="true" for x in (r.matched,r.mw_agree,r.count_positive)) and np.isfinite(unit) and .05<=unit<=20 and 20<=r.hub_m<=200)
         best=None
         if valid:
             best=min(catalog,key=lambda c:(abs(np.log(c["rating_mw"]/unit)),c["curve"]))
