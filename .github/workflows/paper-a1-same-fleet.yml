@@ -1,0 +1,59 @@
+name: Paper A1 same fleet comparison
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_same_fleet.py"
+      - ".github/workflows/paper-a1-same-fleet.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  score:
+    strategy:
+      matrix:
+        year: [2024, 2025]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45931767511
+          name: w2-pilot-${{ matrix.year }}
+          path: inputs/wind
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45931767467
+          name: pv2-pilot-${{ matrix.year }}
+          path: inputs/solar
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45757723985
+          path: inputs/observed
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45856946706
+          name: renewable-resource-weights
+          path: inputs/weights
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45859204968
+          name: weather-batch-${{ matrix.year }}
+          path: inputs/weather
+      - run: |
+          OBS=$(find inputs/observed -name reconciled.csv)
+          test -f "$OBS"
+          python scripts/paper_a1_e4_same_fleet.py --observed "$OBS" --year ${{ matrix.year }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: same-fleet-${{ matrix.year }}
+          path: results/same_fleet/
