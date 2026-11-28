@@ -1,0 +1,57 @@
+name: Paper A1 D1 common support PV
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_monthly_pv_common.py"
+      - ".github/workflows/paper-a1-monthly-pv-common.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        year: [2024, 2025]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy pvlib==0.11.2
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45918955124
+          name: solar-parameter-coverage
+          path: inputs/solar
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45931767467
+          name: pv2-pilot-${{ matrix.year }}
+          path: inputs/pilot
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45859204968
+          name: weather-batch-${{ matrix.year }}
+          path: inputs/weather
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 46117933740
+          name: june-stock-reconciliation
+          path: inputs/june
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 46054169186
+          name: monthly-stock-reconciliation
+          path: inputs/july
+      - run: python scripts/paper_a1_e4_monthly_pv_common.py --year ${{ matrix.year }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: monthly-pv-common-${{ matrix.year }}
+          path: results/monthly_pv_common/
