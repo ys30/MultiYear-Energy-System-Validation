@@ -1,0 +1,57 @@
+name: Paper A1 D1 common support wind
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_monthly_wind_common.py"
+      - ".github/workflows/paper-a1-monthly-wind-common.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        year: [2024, 2025]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45927018386
+          name: representative-wind-curves
+          path: inputs/curves
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45856946706
+          name: renewable-resource-weights
+          path: inputs/weights
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45859204968
+          name: weather-batch-${{ matrix.year }}
+          path: inputs/weather
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 46117933740
+          name: june-stock-reconciliation
+          path: inputs/june
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 46054169186
+          name: monthly-stock-reconciliation
+          path: inputs/july
+      - run: python scripts/paper_a1_e4_monthly_wind_common.py --year ${{ matrix.year }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: monthly-wind-common-${{ matrix.year }}
+          path: results/monthly_wind_common/
