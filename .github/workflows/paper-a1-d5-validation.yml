@@ -1,0 +1,103 @@
+name: Paper A1 D5 frozen temporal validation
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_d5_score.py"
+      - ".github/workflows/paper-a1-d5-validation.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - year: 2024
+            month: 2
+            run: 45872037214
+          - year: 2024
+            month: 5
+            run: 45877926960
+          - year: 2024
+            month: 8
+            run: 45891450354
+          - year: 2024
+            month: 11
+            run: 45895515819
+          - year: 2025
+            month: 2
+            run: 45872037214
+          - year: 2025
+            month: 5
+            run: 45877926960
+          - year: 2025
+            month: 8
+            run: 45891450354
+          - year: 2025
+            month: 11
+            run: 45895515819
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy pvlib==0.11.2
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45927018386
+          name: representative-wind-curves
+          path: inputs/curves
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45856946706
+          name: renewable-resource-weights
+          path: inputs/weights
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45918955124
+          name: solar-parameter-coverage
+          path: inputs/solar
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45757723985
+          name: api-bulk-reconciliation
+          path: inputs/observed
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ matrix.run }}
+          name: monthly-weather-${{ matrix.year }}-${{ matrix.month }}
+          path: inputs/fullweather
+      - name: Select frozen window
+        run: |
+          mkdir -p inputs/weather
+          python - <<'PY'
+          import pandas as pd
+          from pathlib import Path
+          p=next(Path("inputs/fullweather").rglob("raw_weather.csv"))
+          w=pd.read_csv(p)
+          t=pd.to_datetime(w.time,utc=True)
+          start=pd.Timestamp(year=${{ matrix.year }},month=${{ matrix.month }},day=1,tz="UTC")
+          w.loc[(t>=start)&(t<start+pd.Timedelta(hours=168))].to_csv("inputs/weather/raw_weather.csv",index=False)
+          PY
+      - run: |
+          python scripts/paper_a1_e4_pv_pilot.py --year ${{ matrix.year }} --month ${{ matrix.month }}
+          python scripts/paper_a1_e4_wind_pilot.py --year ${{ matrix.year }} --month ${{ matrix.month }}
+          cp results/pv_pilot/{audit,hourly}.csv inputs/solar/
+          mkdir -p inputs/wind
+          cp results/wind_pilot/{audit,hourly}.csv inputs/wind/
+          python scripts/paper_a1_e4_same_fleet.py --year ${{ matrix.year }} --observed "$(find inputs/observed -name reconciled.csv -print -quit)"
+          python scripts/paper_a1_e4_d5_score.py --year ${{ matrix.year }} --month ${{ matrix.month }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d5-${{ matrix.year }}-${{ matrix.month }}
+          path: |
+            results/d5/
+            results/same_fleet/
