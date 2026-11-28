@@ -1,0 +1,3 @@
+# Common-support results
+PV scoring 46123413723, corrected PV coverage 46123413813, wind reconstruction 46123413668 all successful.
+PV0 mean NRMSE annual/scalar/monthly .4506387029/.4515118478/.4515038752; PV2 .3401804061/.3399120599/.3399813516 (28 groups/model). Mean composition RMS MW .1558628379/.3731024132; max absolute hourly composition MW 3.1707966685 (ERCO June 2025 PV0), 10.167645906 (CISO June 2024 PV2). Within-common-support reweighting is small, not evidence that full fleet composition is negligible. Corrected PV coverage minimum .8715143715; wind minimum .9122269851. BA total observations not common-fleet observations. No admission. Wind scoring pending.
