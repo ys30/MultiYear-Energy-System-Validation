@@ -14,6 +14,7 @@ grids={(round(float(lat),5),round(float(lon)%360,5)):g.sort_values("time") for (
 rows=[];coverage=[]
 for month in ("june","july"):
     m=pd.read_csv(f"inputs/{month}/exact_key_audit.csv",dtype={"gen":str});m=m[m.year.eq(y)]
+    full=m.copy()
     m=m[m.ba_annual.eq(m.ba_monthly)&m.tech_annual.eq("Solar Photovoltaic")&m.tech_monthly.eq("Solar Photovoltaic")]
     b=a.merge(m[["plant","gen","mw_annual","mw_monthly"]],on=["plant","gen"],validate="one_to_one")
     if not np.allclose(b.mw,b.mw_annual):raise ValueError("annual MW mismatch")
@@ -30,7 +31,7 @@ for month in ("june","july"):
             cf0=np.clip(ghi/1000*(1-.004*(temp+.03*ghi-25)),0,1)
             cf2=pv_cf(times-pd.Timedelta(minutes=30),r.lat,r.lon,ghi,temp,r.mount,r.dc_ac,r.tilt,r.azimuth)
             out+=np.array([cf0,cf2])[:,None,:]*np.array([r.mw,r.mw*mm/am,r.mw_monthly])[None,:,None]
-        total=m.loc[m.ba_monthly.eq(ba),"mw_monthly"].sum()
+        total=full.loc[full.ba_monthly.eq(ba)&full.tech_monthly.eq("Solar Photovoltaic"),"mw_monthly"].sum()
         coverage.append(dict(year=y,month=month,ba=ba,keys=len(f),annual_common_mw=am,monthly_common_mw=mm,monthly_total_mw=total,coverage=mm/total))
         for i,model in enumerate(("PV0","PV2")):
             for j,stock in enumerate(("common_annual","common_scalar","common_monthly")):
