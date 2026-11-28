@@ -1,0 +1,42 @@
+name: Paper A1 D1 common wind scoring
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_monthly_wind_score.py"
+      - ".github/workflows/paper-a1-monthly-wind-score.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 46123413668
+          name: monthly-wind-common-2024
+          path: inputs/wind/2024
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 46123413668
+          name: monthly-wind-common-2025
+          path: inputs/wind/2025
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45757723985
+          name: api-bulk-reconciliation
+          path: inputs/observed
+      - run: python scripts/paper_a1_e4_monthly_wind_score.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: monthly-wind-score
+          path: results/monthly_wind_score/

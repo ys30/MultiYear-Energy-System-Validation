@@ -1,0 +1,39 @@
+name: Paper A1 stock derate diagnostic
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_stock_derate.py"
+      - ".github/workflows/paper-a1-stock-derate.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnostic:
+    strategy:
+      matrix:
+        year: [2024, 2025]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 46054169186
+          name: monthly-stock-reconciliation
+          path: inputs/stock
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45951342303
+          name: same-fleet-${{ matrix.year }}
+          path: inputs/same
+      - run: python scripts/paper_a1_e4_stock_derate.py --year ${{ matrix.year }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stock-derate-${{ matrix.year }}
+          path: results/stock_derate/

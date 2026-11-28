@@ -1,0 +1,33 @@
+name: Paper A1 battery fallback sensitivity
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_battery_fallback.py"
+      - ".github/workflows/paper-a1-battery-fallback.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  sensitivity:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        duration: [2,4,6]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas duckdb
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45759622217
+          name: storage-rating-audit
+          path: inputs/storage
+      - run: python scripts/paper_a1_e4_battery_fallback.py --audit inputs/storage/storage_exact_key_audit.csv --duration ${{ matrix.duration }} --output-dir results/fallback
+      - uses: actions/upload-artifact@v4
+        with:
+          name: battery-fallback-${{ matrix.duration }}h
+          path: results/fallback/

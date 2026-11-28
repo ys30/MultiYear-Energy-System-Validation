@@ -1,0 +1,145 @@
+name: Paper A1 national exact-key baseline
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/paper_a1_national_baseline.py"
+      - "scripts/paper_a1_unmatched_classification.py"
+      - "scripts/check_paper_a1_classification_totals.py"
+      - "scripts/paper_a1_capacity_schema_probe.py"
+      - "scripts/paper_a1_capacity_breakdown.py"
+      - "scripts/check_paper_a1_capacity_totals.py"
+      - "scripts/paper_a1_capacity_summary.py"
+      - "scripts/paper_a1_e2_review_queue.py"
+      - "scripts/check_paper_a1_e2_queue.py"
+      - "scripts/paper_a1_e2_evidence_template.py"
+      - "scripts/check_paper_a1_e2_evidence_template.py"
+      - "scripts/paper_a1_e2_priority.py"
+      - "scripts/paper_a1_e2_pudl_entity_probe.py"
+      - "scripts/paper_a1_e2_b1_gate.py"
+      - "scripts/paper_a1_e2_b2_review_packet.py"
+      - "scripts/paper_a1_e2_b2_same_plant_candidates.py"
+      - "scripts/paper_a1_e2_b2_candidate_summary.py"
+      - "scripts/paper_a1_e2_b2_plant_review_index.py"
+      - "scripts/paper_a1_e2_official_archive_audit.py"
+      - "scripts/paper_a1_e2_official_rows.py"
+      - "scripts/paper_a1_e2_official_compare.py"
+      - "scripts/paper_a1_unmatched_status.py"
+      - "scripts/paper_a1_existing_status_codes.py"
+      - "scripts/paper_a1_e3_scope_sensitivity.py"
+      - "scripts/paper_a1_e3_op_stock_accounting.py"
+      - "scripts/paper_a1_e3_stock_technology.py"
+      - "scripts/paper_a1_e3_stock_state.py"
+      - "scripts/paper_a1_e3_stock_state_technology.py"
+      - "scripts/paper_a1_e4_capacity_scenarios.py"
+      - "scripts/paper_a1_e4_pilot_inputs.py"
+      - "scripts/paper_a1_e4_synthetic_dispatch.py"
+      - "scripts/paper_a1_e4_synthetic_storage.py"
+      - "scripts/paper_a1_e4_ba_stock.py"
+      - "scripts/paper_a1_e4_ba_demand.py"
+      - "tests/test_check_paper_a1_classification_totals.py"
+      - "tests/test_paper_a1_national_baseline.py"
+      - ".github/workflows/paper-a1-national-baseline.yml"
+  pull_request:
+    paths:
+      - "scripts/paper_a1_national_baseline.py"
+      - "tests/test_paper_a1_national_baseline.py"
+      - ".github/workflows/paper-a1-national-baseline.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  national-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: python -m pip install 'duckdb>=1.4,<3' pytest
+      - name: Offline regression tests
+        run: python -m pytest -q tests/test_paper_a1_national_baseline.py tests/test_check_paper_a1_classification_totals.py
+      - name: Compute pinned national census and exact-key overlaps
+        run: python scripts/paper_a1_national_baseline.py --output-dir results/paper_a1
+      - name: Classify unmatched generator keys by plant context
+        run: python scripts/paper_a1_unmatched_classification.py --output-dir results/paper_a1
+      - name: Reconcile E1.2 counts to E1.1 baseline
+        run: python scripts/check_paper_a1_classification_totals.py --output-dir results/paper_a1
+      - name: Probe schema for E1.3 capacity and technology analysis
+        run: python scripts/paper_a1_capacity_schema_probe.py
+      - name: Compute E1.3 unmatched MW and technology breakdown
+        run: python scripts/paper_a1_capacity_breakdown.py --output-dir results/paper_a1
+      - name: Reconcile E1.3 groups to E1.2 classification
+        run: python scripts/check_paper_a1_capacity_totals.py --output-dir results/paper_a1
+      - name: Generate manuscript-ready E1.3 summary
+        run: python scripts/paper_a1_capacity_summary.py --output-dir results/paper_a1
+      - name: Generate E2 reproducible stratified review queue (no inferred identities)
+        run: python scripts/paper_a1_e2_review_queue.py --output-dir results/paper_a1 --per-stratum 20
+      - name: Verify E2 sampling design and empty adjudications
+        run: python scripts/check_paper_a1_e2_queue.py --output-dir results/paper_a1
+      - name: Generate E2 official source evidence collection sheet
+        run: python scripts/paper_a1_e2_evidence_template.py --output-dir results/paper_a1
+      - name: Validate E2 official evidence template
+        run: python scripts/check_paper_a1_e2_evidence_template.py --output-dir results/paper_a1
+      - name: Prioritize E2 official evidence review workload
+        run: python scripts/paper_a1_e2_priority.py --output-dir results/paper_a1
+      - name: Probe PUDL E2 entity-resolution baseline fields
+        run: python scripts/paper_a1_e2_pudl_entity_probe.py --output-dir results/paper_a1
+      - name: Enforce E2 B1 cross-ID identity evidence gate
+        run: python scripts/paper_a1_e2_b1_gate.py --output-dir results/paper_a1
+      - name: Generate first 20 E2 B2 official-source review cases
+        run: python scripts/paper_a1_e2_b2_review_packet.py --output-dir results/paper_a1 --limit 20
+      - name: Extract adjacent-year same-plant B2 candidates
+        run: python scripts/paper_a1_e2_b2_same_plant_candidates.py --output-dir results/paper_a1
+      - name: Deduplicate E2 B2 candidate keys and check frozen cohort
+        run: python scripts/paper_a1_e2_b2_candidate_summary.py --output-dir results/paper_a1
+      - name: Build E2 B2 plant-level official-source review index
+        run: python scripts/paper_a1_e2_b2_plant_review_index.py --output-dir results/paper_a1
+      - name: Audit official EIA-860 source archive SHA256 and members
+        run: python scripts/paper_a1_e2_official_archive_audit.py --output-dir results/paper_a1
+      - name: Extract official EIA generator workbook evidence
+        run: |
+          python -m pip install openpyxl
+          python scripts/paper_a1_e2_official_rows.py --output-dir results/paper_a1
+      - name: Compare exact source keys across official EIA vintages
+        run: python scripts/paper_a1_e2_official_compare.py --output-dir results/paper_a1
+      - name: Compute national unmatched capacity by operational status
+        run: python scripts/paper_a1_unmatched_status.py --output-dir results/paper_a1
+      - name: Disaggregate existing unmatched records by detailed status code
+        run: python scripts/paper_a1_existing_status_codes.py --output-dir results/paper_a1
+      - name: Compute E3 status scope sensitivity
+        run: python scripts/paper_a1_e3_scope_sensitivity.py --output-dir results/paper_a1
+      - name: Reconcile annual OP capacity stocks and exact-key transitions
+        run: python scripts/paper_a1_e3_op_stock_accounting.py --output-dir results/paper_a1
+      - name: Decompose OP stock changes by technology
+        run: python scripts/paper_a1_e3_stock_technology.py --output-dir results/paper_a1
+      - name: Decompose OP stock changes by state
+        run: python scripts/paper_a1_e3_stock_state.py --output-dir results/paper_a1
+      - name: Compute joint state technology stock accounting
+        run: python scripts/paper_a1_e3_stock_state_technology.py --output-dir results/paper_a1
+      - name: Build E4 aggregate capacity counterfactuals
+        run: python scripts/paper_a1_e4_capacity_scenarios.py --output-dir results/paper_a1
+      - name: Export seven-state pilot inputs
+        run: python scripts/paper_a1_e4_pilot_inputs.py --output-dir results/paper_a1
+      - name: Execute 42 synthetic PyPSA integration cases
+        run: |
+          python -m pip install "pypsa==0.35.2" highspy
+          python scripts/paper_a1_e4_synthetic_dispatch.py --output-dir results/paper_a1
+      - name: Execute storage sensitivity cases
+        run: python scripts/paper_a1_e4_synthetic_storage.py --output-dir results/paper_a1
+      - name: Probe and reconcile provisional BA capacity inputs
+        run: python scripts/paper_a1_e4_ba_stock.py --output-dir results/paper_a1
+      - name: Acquire and validate observed BA hourly demand
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: python scripts/paper_a1_e4_ba_demand.py --output-dir results/paper_a1
+      - name: Archive computed results
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-a1-national-exact-key-baseline
+          path: results/paper_a1/
+          retention-days: 30

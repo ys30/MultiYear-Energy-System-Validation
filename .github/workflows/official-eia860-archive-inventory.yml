@@ -1,0 +1,31 @@
+name: Project A official EIA860 annual archive inventory
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/inspect_official_eia860_archives.py"
+      - ".github/workflows/official-eia860-archive-inventory.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  official-archive-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download official EIA annual ZIPs and record SHA256 and workbook members
+        run: python scripts/inspect_official_eia860_archives.py --out-dir /tmp/eia860-official
+      - name: Copy safe inventory receipt
+        run: cp /tmp/eia860-official/official_eia860_archive_inventory.json .
+      - name: Upload official archive inventory without large raw ZIPs
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-eia860-2023-2025-archive-inventory
+          path: official_eia860_archive_inventory.json
+          retention-days: 30

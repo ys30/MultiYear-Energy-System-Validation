@@ -1,0 +1,98 @@
+# Mesa Wind repower: independent documentary evidence (2026-11-19)
+
+## Evidence established
+
+Official EIA-860 annual workbooks identify plant 50535 as **Mesa Wind Power LLC**, utility field **Brookfield Renewable Trading and Marketing LP**, generator **WGNS**. The 2023 annual entry is RE / 27 MW / retired December 2020; 2024 annual is OP / 33.6 MW. All twelve 2024 EIA-860M monthly archived workbooks instead retain WGNS on the Retired sheet at 27 MW. See `WGNS_CROSS_VINTAGE_DISCREPANCY.md` and CI run 44611496067.
+
+Independent documents show an actual **Mesa Wind repowering project**, but do not establish that the *old generator ID WGNS* restarted:
+
+1. **U.S. Bureau of Land Management (BLM), 2020-09-30**, *BLM approves Mesa Wind Repower Project near Palm Springs*. The existing approximately 30 MW project, built in 1983, would remove ~460 old turbines and install up to nine new turbines. Source: https://www.blm.gov/press-release/blm-approves-mesa-wind-repower-project-near-palm-springs
+2. **Brookfield Renewable**, *Mesa Re-Power* project page. Project proposal removes ~460 legacy turbines and installs eight new WTGs with approximately 30 MW output. Source: https://mesarepower.brookfieldusprojects.com/
+3. **FERC Market-Based Rate asset appendix**, Mesa Wind Power LLC, docket ER13-1346-000. The publicly indexed asset row reports **33.60 MW** with a **30 MW point-of-interconnection limit**. Source: https://mbrweb.ferc.gov/SearchMBRAssetAppendix/AssetAppendixDetails?AssetAppendixId=57951 . The displayed asset appendix is a current/revised view; **do not attribute the 33.60 MW row to the 2024 publication vintage** without a dated snapshot.
+4. **BLM Decision Record**, Mesa Wind Repower Project: decommissioning ~400 existing turbines, installing nine new turbines, selected alternative up to 30 MW. Source: https://eplanning.blm.gov/public_projects/1504648/200364317/20027264/250033466/3.%20Mesa%20Draft%20Decision%20Record%20%28508%29.pdf
+5. **Independent EIA-derived plant listing (secondary; requires official verification)**: plant 50535 lists **MWD1** 30 MW, June 2024, and **WGNS** retired December 2020. Source: https://energy.statnorth.us/power-plants/ca/mesa-wind-power-llc-50535 . Do not treat this listing as primary proof of a generator-ID crosswalk.
+
+## Verified 2025 official MWD1 record
+
+The EIA-860 **2025 annual generator workbook** contains plant **50535**, generator **MWD1**, in the **Operable** worksheet, row **9577**. Its reported fields are:
+
+- Status **OP**
+- Nameplate capacity **30 MW**
+- Operating Month **6**, Operating Year **2024** (reported June 2024 operation)
+- Nameplate Power Factor **0.95**
+
+This was directly transcribed from the official annual archive by the repository's audit workflow, not inferred from a third-party listing. Provenance: [CI run 44678237561](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44678237561), `official-eia860-archive-inventory` job, `OFFICIAL_2025_TARGET_METADATA` receipt for plant 50535 / MWD1.
+
+**Important:** A 2025 annual workbook reporting a June 2024 operating date does not by itself prove the exact commissioning date or that the same generator ID was present in the **2024 annual publication vintage**. MWD1 (30 MW) and legacy WGNS (27 MW in monthly / 33.6 MW in annual 2024) must not be added as independent contemporaneous capacity without establishing unit identity and reporting scope.
+
+## Interpretation and safeguards
+
+- **Confirmed:** repower project documented by BLM and Brookfield; FERC asset view reports 33.60 MW and a 30 MW interconnection limit.
+- **Confirmed:** annual vs monthly EIA source disagreement for *WGNS* persists.
+- **Plausible, not proven:** annual 2024 WGNS may reflect plant-level repower information assigned to a legacy generator ID or a data-vintage/reporting mismatch.
+- **Not proven:** WGNS physically restarted, WGNS and MWD1 are identical physical units, or a dated EIA correction caused the discrepancy.
+- **Critical distinction:** **33.60 MW nameplate/asset capacity is not interchangeable with 30 MW interconnection/export limit.**
+- The 2025 target cohort and historical generator-ID crosswalk remain **unverified**; empirical PyPSA dispatch remains **blocked**.
+
+## Follow-up validation
+
+1. Inspect the official 2024 and 2025 EIA-860 generator workbooks for **both WGNS and MWD1**, including status, operating dates, technology, turbine counts and unit nameplate; preserve row provenance and archive SHA-256.
+2. Inspect EIA-860M **2025** monthly archives to identify the first month MWD1 appears and whether WGNS remains retired, without treating absence as proof of physical shutdown.
+3. Find a dated FERC asset appendix or contemporaneous filing to establish whether the 33.60 MW entry was reported in 2024.
+4. Reconcile BLM's selected nine-turbine authorization with Brookfield's eight-turbine project description using dated as-built records; do not assume a contradiction between proposal and final installation.
+5. Request an EIA clarification if WGNS annual 2024 OP/33.6 MW cannot be explained from official reporting revisions.
+
+**Manuscript-safe statement:** Government permitting and developer materials document repowering of Mesa Wind; independently, a FERC asset record reports 33.60 MW with a 30 MW interconnection limit. This context is consistent with a facility undergoing substantial changes but does not resolve why 2024 annual EIA-860 marks legacy generator WGNS operable while all twelve archived monthly EIA-860M reports classify it retired.
+
+
+## 2025 monthly EIA-860M transition: verified checkpoints
+
+The official EIA-860M archived workbooks were independently downloaded and parsed by [CI run 44760887284](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44760887284), job `mesa-2025-monthly-identity-probe`:
+
+| 2025 monthly snapshot | WGNS sheet | WGNS nameplate | MWD1 exact-key row | Official workbook SHA-256 |
+|---|---|---|---|---|
+| January | Retired | 27 MW | Not observed | `a4648d046ef136582a4aaa957086795329f62c38db7c8e55a548374eb4dcdf0f` |
+| June | Operating | 33.6 MW | Not observed | `f4e91810d2cfe8c94c94b6d94bfd524f1a00d7881e870dd1f0d4a833a8e0dbfe` |
+| December | Operating | 33.6 MW | Not observed | `1264f1c37cf51ef41319067c4c0915f951535851df93c97d02e2e823e337ea2b` |
+
+**New evidence:** The archived monthly reporting of WGNS changed from Retired/27 MW to Operating/33.6 MW **after January and by June 2025**. This is a **reporting transition window**, not a verified physical restart. In the three checked monthly snapshots, no exact MWD1 row was observed; absence from these files does not prove physical absence. The 2025 **annual** workbook nevertheless lists MWD1 as OP/30 MW with reported June 2024 operating date.
+
+An expanded probe of February–May 2025 was submitted as commit `6b2fe94` to narrow the first observed month; its CI evidence must be reviewed before claiming a narrower interval.
+
+**Research implication:** 2024 annual WGNS OP/33.6 MW is inconsistent with every 2024 monthly archived record, but consistent in status/capacity with the *later* June and December 2025 monthly WGNS records. The data do not yet establish whether the discrepancy reflects reporting revisions, repower reassignment, or another mechanism.
+
+
+## Transition localized to May 2025 (verified)
+
+The expanded monthly EIA-860M probe **passed** in [CI run 44762285158](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44762285158), `mesa-2025-monthly-identity-probe` job. It found one WGNS record in each of the seven sampled 2025 months, with no exact MWD1 record in those sampled files.
+
+| Snapshot | WGNS sheet | Nameplate MW | Official workbook SHA-256 |
+|---|---|---:|---|
+| January 2025 | Retired | 27 | `a4648d046ef136582a4aaa957086795329f62c38db7c8e55a548374eb4dcdf0f` |
+| February 2025 | Retired | 27 | `7b2582427f34dd9d49aaa93ea8a050ae28b9410f7d170d3e83e880c348e7599c` |
+| March 2025 | Retired | 27 | `a43ee0f6351d582e4c32cd9e7abde352483be9c23b4ac9ca9bc9d82762b42f23` |
+| April 2025 | Retired | 27 | `10ef4605c4883bca00ae5e499fff01691c58c1fbd993ba0b52634de4337f5a9b` |
+| **May 2025** | **Operating** | **33.6** | `2ddd8d4f3025a5bf7dbd38a6e589da6d3e661310d2b5971051c17b598caa6adf` |
+| June 2025 | Operating | 33.6 | `f4e91810d2cfe8c94c94b6d94bfd524f1a00d7881e870dd1f0d4a833a8e0dbfe` |
+| December 2025 | Operating | 33.6 | `1264f1c37cf51ef41319067c4c0915f951535851df93c97d02e2e823e337ea2b` |
+
+**First observed monthly reporting transition: May 2025**, bounded by April (Retired/27 MW) and May (Operating/33.6 MW). This is a change in published monthly classification and nameplate, **not proof of physical restart in May**. Annual 2024 already reports WGNS OP/33.6 MW, demonstrating cross-vintage disagreement rather than a consistent chronological event sequence.
+
+**No MWD1 exact ID** was found in these seven archived monthly workbooks, whereas the 2025 annual workbook reports MWD1 OP/30 MW with operating date June 2024. An unobserved ID is not evidence of physical absence or an automatic WGNS↔MWD1 crosswalk. Empirical dispatch approval remains false.
+
+
+## Complete 2025 monthly series (verified 12/12)
+
+The strict (non-`continue-on-error`) monthly CI job **passed**: [run 44787027792](https://github.com/ys30/MultiYear-Energy-System-Validation/actions/runs/44787027792), `mesa-2025-monthly-identity-probe`. The job downloaded and parsed **12 of 12** official 2025 monthly EIA-860M workbooks, with no exact MWD1 ID in any of them. WGNS is Retired/27 MW in January–April and Operating/33.6 MW in May–December, without a later reversal.
+
+Newly verified months and raw-workbook SHA-256 values:
+
+| Snapshot | WGNS classification | Nameplate MW | Workbook SHA-256 |
+|---|---|---:|---|
+| July 2025 | Operating | 33.6 | `6c004fd52982e94a9c0180af7076dd5633fab3fc90fa43ee580065c9a2a14056` |
+| August 2025 | Operating | 33.6 | `eb15e1fdbc77d01cc1969f7a7f5d98a83d74e536e82d86437073ea2b58d85df2` |
+| September 2025 | Operating | 33.6 | `069de3bee5de7c560297a814a3e90beeb6b5e10642c5c83bf4a49c4ef74da08b` |
+| October 2025 | Operating | 33.6 | `cf560a5e9f3b4438bf5a1e485e07f6eee50fe16b52e224480c61e7fcb060a308` |
+| November 2025 | Operating | 33.6 | `5dc458f278b68504830b048b8728539f104057de100f8eae6ed301d3d603ea12` |
+
+The preceding seven hashes (January–June and December) are listed above. **May 2025 is the first monthly publication snapshot with the Operating/33.6 MW classification, not an independently confirmed physical commissioning month.** This monthly series does not resolve the annual 2024 discrepancy or prove the physical identity of WGNS and MWD1. Empirical dispatch remains unapproved.

@@ -1,0 +1,41 @@
+name: Paper A1 API bulk reconciliation
+on:
+  push:
+    paths:
+      - ".github/workflows/paper-a1-bulk-reconcile.yml"
+      - "scripts/paper_a1_e4_bulk_reconcile.py"
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-bulk-reconcile.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45755742260
+          name: bulk-selected-cohorts
+          path: inputs/bulk
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45719914287
+          pattern: observed-*
+          path: inputs/api
+      - run: python scripts/paper_a1_e4_bulk_reconcile.py --bulk inputs/bulk/bulk_selected_raw.csv --api inputs/api --output-dir results/reconcile
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: api-bulk-reconciliation
+          path: results/reconcile/

@@ -1,0 +1,36 @@
+name: Paper A1 D1 June stock reconciliation
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_june_stock.py"
+      - ".github/workflows/paper-a1-june-stock.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy openpyxl
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 46085730728
+          name: june-stock-schema
+          path: inputs/monthly
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45856946706
+          name: renewable-resource-weights
+          path: inputs/weights
+      - run: python scripts/paper_a1_e4_june_stock.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: june-stock-reconciliation
+          path: results/june_stock/

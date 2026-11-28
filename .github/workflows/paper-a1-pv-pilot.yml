@@ -1,0 +1,42 @@
+name: Paper A1 PV2 July pilot
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_pv_pilot.py"
+      - "scripts/paper_a1_e4_pv_kernel.py"
+      - ".github/workflows/paper-a1-pv-pilot.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  pilot:
+    strategy:
+      fail-fast: false
+      matrix:
+        year: [2024, 2025]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pvlib==0.11.2 pandas numpy
+      - run: python scripts/paper_a1_e4_pv_kernel.py
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45918955124
+          name: solar-parameter-coverage
+          path: inputs/solar
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45859204968
+          name: weather-batch-${{ matrix.year }}
+          path: inputs/weather
+      - run: python scripts/paper_a1_e4_pv_pilot.py --year ${{ matrix.year }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pv2-pilot-${{ matrix.year }}
+          path: results/pv_pilot/

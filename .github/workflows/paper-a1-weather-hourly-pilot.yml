@@ -1,0 +1,25 @@
+name: Paper A1 hourly weather access benchmark
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-weather-hourly-pilot.yml"
+      - "scripts/paper_a1_e4_weather_hourly_pilot.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy pandas xarray zarr gcsfs
+      - run: python scripts/paper_a1_e4_weather_hourly_pilot.py --output-dir results/weather-hourly
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weather-hourly-benchmark
+          path: results/weather-hourly/

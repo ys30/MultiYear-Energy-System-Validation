@@ -1,0 +1,24 @@
+name: Paper A1 solar parameter schema
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_solar_schema.py"
+      - ".github/workflows/paper-a1-solar-schema.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install openpyxl
+      - run: python scripts/paper_a1_e4_solar_schema.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: solar-parameter-schema
+          path: results/solar_schema.json

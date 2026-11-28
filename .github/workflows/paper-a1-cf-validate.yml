@@ -1,0 +1,47 @@
+name: Paper A1 resource proxy observed comparison
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/paper-a1-cf-validate.yml"
+      - "scripts/paper_a1_e4_cf_validate.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  validate:
+    strategy:
+      matrix:
+        year: [2024, 2025]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pandas numpy
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45856946706
+          name: renewable-resource-weights
+          path: inputs/weights
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45860429826
+          name: exploratory-cf-${{ matrix.year }}
+          path: inputs/cf
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 45757723985
+          path: inputs/observed
+      - run: |
+          OBS=$(find inputs/observed -name reconciled.csv)
+          test -f "$OBS"
+          python scripts/paper_a1_e4_cf_validate.py --cf inputs/cf/exploratory_cf.csv --weights inputs/weights/resource_grid_weights.csv --observed "$OBS" --year ${{ matrix.year }} --output-dir results/validation
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cf-validation-${{ matrix.year }}
+          path: results/validation/

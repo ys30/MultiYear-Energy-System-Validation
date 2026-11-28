@@ -1,0 +1,372 @@
+name: Project A PUDL annual coverage diagnostics
+
+on:
+  push:
+    paths:
+      - "scripts/audit_pudl_annual_coverage.py"
+      - "tests/test_audit_pudl_annual_coverage.py"
+      - "scripts/build_pudl_annual_eia860_evidence_matrix.py"
+      - "tests/test_build_pudl_annual_eia860_evidence_matrix.py"
+      - "scripts/run_pudl_annual_evidence_pipeline.py"
+      - "scripts/export_pudl_annual_generators.py"
+      - "tests/test_run_pudl_annual_evidence_pipeline.py"
+      - ".github/workflows/pudl-annual-coverage-diagnostics.yml"
+      - "scripts/inspect_official_eia860_archives.py"
+      - "scripts/audit_official_eia860_generator_keys.py"
+      - "scripts/verify_official_eia860_target_metadata.py"
+      - "scripts/report_official_eia860_historical_transitions.py"
+      - "scripts/inspect_eia860m_wgns_december.py"
+      - "scripts/inspect_eia860m_mesa_2025.py"
+      - "tests/test_verify_official_eia860_target_metadata.py"
+      - "tests/test_report_official_eia860_historical_transitions.py"
+      - "tests/test_historical_identity_review.py"
+      - "tests/test_inspect_eia860m_mesa_2025.py"
+      - "scripts/check_mesa_generator_identity_gate.py"
+      - "tests/test_check_mesa_generator_identity_gate.py"
+      - "data/pudl/mesa_generator_identity_evidence.json"
+      - "data/pudl/project_a_historical_identity_review.csv"
+      - ".github/workflows/official-eia860-archive-inventory.yml"
+      - ".github/workflows/pudl-pinned-source-preflight.yml"
+  pull_request:
+    paths:
+      - "scripts/audit_pudl_annual_coverage.py"
+      - "tests/test_audit_pudl_annual_coverage.py"
+      - "scripts/build_pudl_annual_eia860_evidence_matrix.py"
+      - "tests/test_build_pudl_annual_eia860_evidence_matrix.py"
+      - "scripts/run_pudl_annual_evidence_pipeline.py"
+      - "scripts/export_pudl_annual_generators.py"
+      - "tests/test_run_pudl_annual_evidence_pipeline.py"
+      - ".github/workflows/pudl-annual-coverage-diagnostics.yml"
+      - "scripts/inspect_official_eia860_archives.py"
+      - "scripts/audit_official_eia860_generator_keys.py"
+      - "scripts/verify_official_eia860_target_metadata.py"
+      - "scripts/report_official_eia860_historical_transitions.py"
+      - "scripts/inspect_eia860m_wgns_december.py"
+      - "scripts/inspect_eia860m_mesa_2025.py"
+      - "tests/test_verify_official_eia860_target_metadata.py"
+      - "tests/test_report_official_eia860_historical_transitions.py"
+      - "tests/test_historical_identity_review.py"
+      - "tests/test_inspect_eia860m_mesa_2025.py"
+      - "scripts/check_mesa_generator_identity_gate.py"
+      - "tests/test_check_mesa_generator_identity_gate.py"
+      - "data/pudl/mesa_generator_identity_evidence.json"
+      - "data/pudl/project_a_historical_identity_review.csv"
+      - ".github/workflows/official-eia860-archive-inventory.yml"
+      - ".github/workflows/pudl-pinned-source-preflight.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+
+  pinned-source-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install DuckDB
+        run: python -m pip install 'duckdb>=1.4,<3'
+      - name: Probe pinned annual Parquet schema and report years
+        run: |
+          python - <<'PY'
+          import duckdb, json
+          release = "v2026.11.0"
+          url = f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/{release}/out_eia__yearly_generators.parquet"
+          con = duckdb.connect()
+          con.execute("CREATE SECRET pudl_public_s3 (TYPE s3, PROVIDER config, REGION 'us-west-2', URL_STYLE 'path')")
+          cols = [r[0] for r in con.execute("DESCRIBE SELECT * FROM read_parquet(?)", [url]).fetchall()]
+          required = {"plant_id_eia", "generator_id", "report_date"}
+          assert required.issubset(cols), f"Missing columns: {required-set(cols)}"
+          counts = con.execute(
+              "SELECT year(report_date), count(*) FROM read_parquet(?) "
+              "WHERE year(report_date) BETWEEN 2023 AND 2025 GROUP BY 1 ORDER BY 1",
+              [url]).fetchall()
+          print(json.dumps({"release": release, "source_url": url,
+              "rows_by_year": counts, "empirical_dispatch_approved": False}, indent=2))
+          assert {row[0] for row in counts} == {2023, 2024, 2025}
+          import csv
+          with open("data/pudl/project_a_pudl_29_targets.csv", newline="") as stream:
+              targets = list(csv.DictReader(stream))
+          assert len(targets) == 29
+          con.execute("CREATE TEMP TABLE target_keys (plant_id_eia INTEGER, generator_id VARCHAR)")
+          con.executemany("INSERT INTO target_keys VALUES (?, ?)",
+              [(int(t["plant_id_eia"]), t["generator_id"]) for t in targets])
+          result = con.execute("""
+              WITH annual AS (
+                SELECT year(report_date) AS yr, plant_id_eia,
+                       trim(cast(generator_id AS VARCHAR)) AS generator_id
+                FROM read_parquet(?)
+                WHERE year(report_date) BETWEEN 2023 AND 2025
+              ), matched AS (
+                SELECT a.yr, t.plant_id_eia, t.generator_id,
+                       COUNT(*) AS matches
+                FROM target_keys t JOIN annual a
+                  ON a.plant_id_eia = t.plant_id_eia
+                 AND a.generator_id = t.generator_id
+                GROUP BY 1, 2, 3
+              )
+              SELECT yr, COUNT(*) AS exact_keys, SUM(matches) AS matched_rows
+              FROM matched GROUP BY 1 ORDER BY 1
+          """, [url]).fetchall()
+          print("TARGET_29_EXACT_MATCH_COUNTS=" + json.dumps(result))
+          assert all(int(r[1]) <= 29 for r in result)
+          plant_results = con.execute("""
+              WITH annual_plants AS (
+                SELECT DISTINCT year(report_date) AS yr, plant_id_eia
+                FROM read_parquet(?)
+                WHERE year(report_date) BETWEEN 2023 AND 2025
+              )
+              SELECT y.yr,
+                COUNT(DISTINCT CASE WHEN a.plant_id_eia IS NOT NULL THEN t.plant_id_eia END) AS matched_plants,
+                COUNT(CASE WHEN a.plant_id_eia IS NOT NULL THEN 1 END) AS target_generators_at_present_plants
+              FROM target_keys t CROSS JOIN (VALUES (2023),(2024),(2025)) y(yr)
+              LEFT JOIN annual_plants a ON a.yr=y.yr AND a.plant_id_eia=t.plant_id_eia
+              GROUP BY 1 ORDER BY 1
+          """, [url]).fetchall()
+          print("TARGET_PLANT_LEVEL_COVERAGE=" + json.dumps(plant_results))
+          # Inspect all historical generator IDs at target plants with 2023/24 records.
+          # This is a diagnostic inventory, NOT an automatic ID crosswalk.
+          historical = con.execute("""
+              WITH target_plants AS (
+                SELECT DISTINCT plant_id_eia FROM target_keys
+              ), historical_plant_rows AS (
+                SELECT year(a.report_date) AS yr, a.plant_id_eia,
+                       trim(cast(a.generator_id AS VARCHAR)) AS historical_generator_id
+                FROM read_parquet(?) a JOIN target_plants t USING (plant_id_eia)
+                WHERE year(a.report_date) IN (2023, 2024)
+              )
+              SELECT yr, plant_id_eia, historical_generator_id
+              FROM historical_plant_rows
+              ORDER BY yr, plant_id_eia, historical_generator_id
+          """, [url]).fetchall()
+          print("HISTORICAL_TARGET_PLANT_IDS=" + json.dumps(historical))
+          print("HISTORICAL_TARGET_PLANT_ROW_COUNTS=" + json.dumps({
+              str(y): sum(r[0] == y for r in historical) for y in (2023, 2024)}))
+          import pathlib
+          pathlib.Path("pudl_historical_target_plant_generator_ids.json").write_text(
+              json.dumps({"release": release, "source_url": url,
+                "records": [dict(year=r[0], plant_id_eia=r[1],
+                    historical_generator_id=r[2]) for r in historical],
+                "generator_identity_crosswalk_verified": False,
+                "physical_commissioning_verified": False,
+                "empirical_dispatch_approved": False}, indent=2) + "\n")
+
+          # One row per target/year: do not confuse missing keys with commissioning.
+          evidence = con.execute("""
+              WITH annual AS (
+                SELECT DISTINCT year(report_date) AS yr, plant_id_eia,
+                  trim(cast(generator_id AS VARCHAR)) AS generator_id
+                FROM read_parquet(?)
+                WHERE year(report_date) BETWEEN 2023 AND 2025
+              ),
+              target_year AS (
+                SELECT y.yr, t.plant_id_eia, t.generator_id
+                FROM target_keys t CROSS JOIN (VALUES (2023),(2024),(2025)) y(yr)
+              )
+              SELECT t.yr, t.plant_id_eia, t.generator_id,
+                CASE WHEN EXISTS (
+                  SELECT 1 FROM annual a WHERE a.yr=t.yr
+                    AND a.plant_id_eia=t.plant_id_eia
+                    AND a.generator_id=t.generator_id
+                ) THEN 'exact_generator_record'
+                WHEN EXISTS (
+                  SELECT 1 FROM annual a WHERE a.yr=t.yr
+                    AND a.plant_id_eia=t.plant_id_eia
+                ) THEN 'plant_present_generator_missing'
+                ELSE 'plant_missing_from_annual_table' END AS classification
+              FROM target_year t ORDER BY t.yr, t.plant_id_eia, t.generator_id
+          """, [url]).fetchall()
+          assert len(evidence) == 87
+          from collections import Counter
+          print("TARGET_87_CLASSIFICATIONS=" + json.dumps({
+              str(year): dict(Counter(r[3] for r in evidence if r[0] == year))
+              for year in (2023, 2024, 2025)}, sort_keys=True))
+          import pathlib, hashlib
+          target_sha256 = hashlib.sha256(pathlib.Path("data/pudl/project_a_pudl_29_targets.csv").read_bytes()).hexdigest()
+          out = pathlib.Path("pudl_29_target_87_year_diagnostics.json")
+          out.write_text(json.dumps({
+              "release": release, "source_url": url,
+              "source_kind": "PUDL_annual_generators",
+              "target_csv_sha256": target_sha256,
+              "source_rows_by_year": {str(year): n for year, n in counts},
+              "records": [dict(year=r[0], plant_id_eia=r[1],
+                  generator_id=r[2], classification=r[3]) for r in evidence],
+              "physical_commissioning_verified": False,
+              "empirical_dispatch_approved": False}, indent=2) + "\n")
+
+
+
+          PY
+      - name: Export fixed PUDL annual generator CSV and execute evidence pipeline
+        run: |
+          mkdir -p /tmp/project-a-pudl-annual
+          python scripts/export_pudl_annual_generators.py \
+            --release v2026.11.0 \
+            --output /tmp/project-a-pudl-annual/annual_generators.csv
+          SHA=$(python -c 'import json; print(json.load(open("/tmp/project-a-pudl-annual/annual_generators.csv.provenance.json"))["sha256"])')
+          python scripts/run_pudl_annual_evidence_pipeline.py \
+            --annual-csv /tmp/project-a-pudl-annual/annual_generators.csv \
+            --release v2026.11.0 \
+            --sha256 "$SHA" \
+            --out-dir /tmp/project-a-pudl-annual/evidence
+          cp /tmp/project-a-pudl-annual/evidence/*.json .
+          cp /tmp/project-a-pudl-annual/annual_generators.csv.provenance.json .
+      - name: Upload descriptive annual coverage diagnostics
+        if: false # quota-blocked; retained in job logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: pudl-29-target-87-year-diagnostics
+          path: |
+            pudl_29_target_87_year_diagnostics.json
+            pudl_historical_target_plant_generator_ids.json
+            pudl_annual_coverage.json
+            pudl_eia860_87_row_evidence_matrix.json
+            annual_generators.csv.provenance.json
+          retention-days: 30
+  official-eia860-archive-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install official workbook parser
+        run: python -m pip install openpyxl
+      - name: Download and verify official annual archives
+        run: python scripts/inspect_official_eia860_archives.py --out-dir /tmp/eia860-official
+      - name: Independently audit 87 official generator target-year keys
+        run: python scripts/audit_official_eia860_generator_keys.py --archive-dir /tmp/eia860-official --output /tmp/eia860-official/official_eia860_87_row_key_audit.json
+      - name: Report official EIA860 source-sheet and duplicate-key diagnostics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path("/tmp/eia860-official/official_eia860_87_row_key_audit.json").read_text())
+          assert len(p["target_year_records"]) == 87
+          for source in p["annual_sources"]:
+              year = source["year"]
+              recognized = source["recognized_generator_sheets"]
+              duplicates = source["targets_with_multiple_official_rows"]
+              matches = source["target_exact_matches"]
+              print(f"OFFICIAL_EIA860_{year}: exact={matches}/29 recognized_sheets={recognized} ambiguous_target_keys={duplicates}")
+              print(f"OFFICIAL_EIA860_{year}_SHEETS=" + json.dumps(source["sheets"], sort_keys=True))
+              assert recognized > 0
+          assert p["empirical_dispatch_approved"] is False
+          PY
+      - name: Verify 2025 official generator metadata against fixed target cohort
+        run: python scripts/verify_official_eia860_target_metadata.py --official-json /tmp/eia860-official/official_eia860_87_row_key_audit.json
+      - name: Summarize official 2025 metadata availability
+        run: |
+          python - <<'PY'
+          import json
+          p = json.load(open("/tmp/eia860-official/official_eia860_87_row_key_audit.json"))
+          rows = [r for r in p["target_year_records"] if r["year"] == 2025]
+          assert len(rows) == 29 and all(r["exact_match"] for r in rows)
+          for r in rows:
+              fields = r["official_selected_metadata"]
+              assert len(fields) == 1, "Ambiguous 2025 official target row"
+              print("OFFICIAL_2025_TARGET_METADATA=" + json.dumps({
+                  "plant_id_eia": r["plant_id_eia"],
+                  "generator_id": r["generator_id"],
+                  "metadata": fields[0]}, sort_keys=True))
+          PY
+      - name: Inspect available official WGNS identity metadata
+        run: |
+          python - <<'PY'
+          import json
+          p = json.load(open("/tmp/eia860-official/official_eia860_87_row_key_audit.json"))
+          rows = [r for r in p["historical_four_plant_records"]
+                  if r["plant_id_eia"] == 50535 and r["generator_id"] == "WGNS"]
+          assert {r["year"] for r in rows} == {2023, 2024}
+          for row in rows:
+              print("OFFICIAL_WGNS_IDENTITY_FIELDS=" + json.dumps({
+                  "year": row["year"], "plant_id_eia": row["plant_id_eia"],
+                  "generator_id": row["generator_id"], "sheet": row["sheet"],
+                  "available_fields": row["fields"],
+                  "operator_identity_verified": False,
+                  "physical_identity_crosswalk_verified": False,
+              }, sort_keys=True))
+          PY
+      - name: Generate official historical transition report
+        run: python scripts/report_official_eia860_historical_transitions.py --audit-json /tmp/eia860-official/official_eia860_87_row_key_audit.json --output /tmp/eia860-official/official_historical_transitions.json
+      - name: Review official historical generator IDs at four ambiguous plants
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path("/tmp/eia860-official/official_eia860_87_row_key_audit.json").read_text())
+          rows = p["historical_four_plant_records"]
+          for year in (2023, 2024):
+              items = [r for r in rows if r["year"] == year]
+              print("OFFICIAL_HISTORICAL_FOUR_PLANTS_" + str(year) + "=" + json.dumps(items, sort_keys=True))
+          assert p["generator_identity_crosswalk_verified"] is False if "generator_identity_crosswalk_verified" in p else p["empirical_dispatch_approved"] is False
+          PY
+      - name: Upload archive manifest
+        if: false # quota-blocked; exact counts retained in job logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-eia860-2023-2025-archive-inventory
+          path: |
+            /tmp/eia860-official/official_eia860_archive_inventory.json
+            /tmp/eia860-official/official_eia860_87_row_key_audit.json
+          retention-days: 30
+  monthly-wgns-december-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install official monthly workbook reader
+        run: python -m pip install openpyxl
+      - name: Independently inspect December 2023 and 2024 EIA860M WGNS
+        run: python scripts/inspect_eia860m_wgns_december.py
+
+  mesa-2025-monthly-identity-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Twelve-month source coverage is required; failures must be visible in CI.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install EIA monthly workbook parser
+        run: python -m pip install openpyxl
+      - name: Verify all twelve 2025 monthly WGNS and MWD1 snapshots
+        run: python scripts/inspect_eia860m_mesa_2025.py
+
+  coverage-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pytest and workbook parser
+        run: python -m pip install pytest openpyxl
+      - name: Verify unresolved Mesa identity cannot be approved
+        run: |
+          python scripts/check_mesa_generator_identity_gate.py \
+            --evidence data/pudl/mesa_generator_identity_evidence.json \
+            --output /tmp/mesa_identity_gate.json
+          python - <<'PY'
+          import json
+          result = json.load(open("/tmp/mesa_identity_gate.json"))
+          assert result["identity_crosswalk_verified"] is False
+          assert result["empirical_dispatch_approved"] is False
+          PY
+      - name: Test fail-closed coverage semantics
+        run: python -m pytest -q tests/test_audit_pudl_annual_coverage.py tests/test_build_pudl_annual_eia860_evidence_matrix.py tests/test_run_pudl_annual_evidence_pipeline.py tests/test_verify_official_eia860_target_metadata.py tests/test_report_official_eia860_historical_transitions.py tests/test_historical_identity_review.py tests/test_inspect_eia860m_mesa_2025.py tests/test_check_mesa_generator_identity_gate.py
+
+# The live preflight queries the fixed PUDL Parquet release and uploads only
+# descriptive 29-target/87-year coverage evidence, not raw source data.
+# This does not verify physical commissioning or approve dispatch.

@@ -1,0 +1,2 @@
+# Wind common support scoring
+CI 46167939403 success. 28 BA-year-month groups per model. W0 annual/scalar/monthly mean NRMSE .7260624997/.7261113511/.7261092706; W2 .6917204517/.6917650245/.6917883475. Mean composition RMS MW .3904573939/.7727927584; maximum hourly absolute composition MW 24.3663132411/33.5977469444 (ERCO June 2024). Within-common-support effects small, not full fleet composition effects. BA observations cover full reporting fleet. No admission.

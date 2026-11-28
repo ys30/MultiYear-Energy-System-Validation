@@ -1,0 +1,19 @@
+name: Paper A1 PV conversion kernel
+on:
+  pull_request:
+    paths:
+      - "scripts/paper_a1_e4_pv_kernel.py"
+      - ".github/workflows/paper-a1-pv-kernel.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pvlib==0.11.2 numpy pandas
+      - run: python scripts/paper_a1_e4_pv_kernel.py
