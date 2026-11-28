@@ -5,12 +5,12 @@ import numpy as np
 import pandas as pd
 from paper_a1_e4_pv_kernel import pv_cf
 def main():
-    p=argparse.ArgumentParser();p.add_argument("--year",type=int,required=True);y=p.parse_args().year
+    p=argparse.ArgumentParser();p.add_argument("--year",type=int,required=True);p.add_argument("--month",type=int,default=7,choices=range(1,13));args=p.parse_args();y=args.year;month=args.month
     a=pd.read_csv("inputs/solar/exact_key_audit.csv",dtype={"gen":str});a=a[a.yr.eq(y)]
     w=pd.read_csv("inputs/weather/raw_weather.csv");w["time"]=pd.to_datetime(w.time,utc=True)
     if w.duplicated(["time","latitude","longitude"]).any():raise ValueError("duplicate weather")
     times=pd.DatetimeIndex(sorted(w.time.unique()))
-    if len(times)!=168 or not times.equals(pd.date_range(f"{y}-07-01",periods=168,freq="h",tz="UTC")):raise ValueError("unexpected weather window")
+    if len(times)!=168 or not times.equals(pd.date_range(f"{y}-{month:02d}-01",periods=168,freq="h",tz="UTC")):raise ValueError("unexpected weather window")
     grids={(round(float(lat),5),round(float(lon)%360,5)):g.sort_values("time") for (lat,lon),g in w.groupby(["latitude","longitude"])}
     rows=[];audit=[]
     for ba,f in a.groupby("ba"):
