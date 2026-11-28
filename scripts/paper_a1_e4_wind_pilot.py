@@ -5,14 +5,14 @@ import numpy as np
 import pandas as pd
 from paper_a1_e4_wind_curve_kernel import capacity_factor,hub_speed
 def main():
-    p=argparse.ArgumentParser();p.add_argument("--year",type=int,required=True);y=p.parse_args().year
+    p=argparse.ArgumentParser();p.add_argument("--year",type=int,required=True);p.add_argument("--month",type=int,default=7,choices=range(1,13));args=p.parse_args();y=args.year;month=args.month
     a=pd.read_csv("inputs/curves/assignments.csv",dtype={"gen":str})
     c={r["curve"]:r for r in json.loads(Path("inputs/curves/catalog.json").read_text())}
     f=pd.read_csv("inputs/weights/renewable_plant_coordinates.csv",dtype={"gen":str})
     f=f[(f.yr==y)&f.tech.eq("Onshore Wind Turbine")]
     a=f.merge(a[["yr","plant","gen","curve","within_25pct","hub_m"]],on=["yr","plant","gen"],how="left",validate="one_to_one")
     w=pd.read_csv("inputs/weather/raw_weather.csv");w["time"]=pd.to_datetime(w.time,utc=True)
-    times=pd.date_range(f"{y}-07-01",periods=168,freq="h",tz="UTC")
+    times=pd.date_range(f"{y}-{month:02d}-01",periods=168,freq="h",tz="UTC")
     if w.duplicated(["time","latitude","longitude"]).any():raise ValueError("duplicate weather")
     grids={(float(lat),float(lon)%360):g.sort_values("time") for (lat,lon),g in w.groupby(["latitude","longitude"])}
     rows=[];audit=[]
